@@ -1,0 +1,25 @@
+# macOS
+.DS_Store
+**/.DS_Store
+
+# Environment files
+**/.env
+**/.env.*
+!**/.env.example
+!**/.env.*.example
+
+# Dependencies
+**/vendor/
+**/node_modules/
+
+# Build outputs
+**/dist/
+**/build/
+**/coverage/
+
+# Logs
+**/*.log
+
+# IDE and editor
+**/.idea/
+**/.vscode/
