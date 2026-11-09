@@ -2,28 +2,71 @@
 
 namespace App\Http\Requests\Api\JobSeeker;
 
-use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateProfileRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, ValidationRule|array<mixed>|string>
-     */
     public function rules(): array
     {
         return [
-            //
+            'phone' => ['sometimes', 'nullable', 'string', 'max:50'],
+
+            'date_of_birth' => [
+                'sometimes',
+                'nullable',
+                'date',
+                'before_or_equal:today',
+            ],
+
+            'gender' => ['sometimes', 'nullable', 'string', 'max:50'],
+
+            'address' => ['sometimes', 'nullable', 'string'],
+
+            'city' => ['sometimes', 'nullable', 'string', 'max:100'],
+
+            'professional_title' => [
+                'sometimes',
+                'nullable',
+                'string',
+                'max:255',
+            ],
+
+            'bio' => ['sometimes', 'nullable', 'string'],
+
+            'expected_salary' => [
+                'sometimes',
+                'nullable',
+                'numeric',
+                'min:0',
+                'max:9999999999.99',
+            ],
+
+            'experience_years' => [
+                'sometimes',
+                'nullable',
+                'numeric',
+                'min:0',
+                'max:999.9',
+            ],
+
+            'linkedin_url' => [
+                'sometimes',
+                'nullable',
+                'url',
+                'max:255',
+            ],
+
+            'portfolio_url' => [
+                'sometimes',
+                'nullable',
+                'url',
+                'max:255',
+            ],
         ];
     }
 }
