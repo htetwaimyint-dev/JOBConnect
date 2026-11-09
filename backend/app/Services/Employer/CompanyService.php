@@ -1,14 +1,16 @@
 <?php
 
-namespace App\Services\Employer;
+namespace App\Services;
+
+use App\Models\Company;
 
 class CompanyService
 {
     /**
-     * Create a new class instance.
+     * Get company profile by employer ID.
      */
-    public function __construct()
+    public function getCompanyByEmployerId(int $employerId): ?Company
     {
-        //
+        return Company::where('employer_id', $employerId)->first();
     }
 }

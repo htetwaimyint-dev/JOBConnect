@@ -17,8 +17,34 @@ class AuthController extends Controller
     public function register(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
-            'email' => 'required|email:rfc|unique:users,email',
+            'name'        => 'required|string|max:255',
+            'email'       => 'required|email:rfc,dns|unique:users',
+            'password'    => 'required|string|min:6',
+        ]);
+
+        // 2. Check if validation failed
+        if ($validator->fails()) {
+            return $this->failResponse('Validation Fail', $validator->messages(), 422);
+            
+        }
+
+        $validatedData = $validator->validated();
+        // make new register
+        $user = User::create($validatedData);
+
+        // Generate token
+        $token = $user->createToken('auth_token')->plainTextToken;
+
+        // Your logic to save to database goes here...
+        return $this->successResponse('Register Successfully', $user, $token, 201);   
+
+    }
+
+    // LOGIN
+    public function login(Request $request)
+    {
+        $validator = Validator::make($request->all(),[
+            'email' => 'required|email:rfc,dns',
             'password' => 'required|string|min:6',
         ]);
 
