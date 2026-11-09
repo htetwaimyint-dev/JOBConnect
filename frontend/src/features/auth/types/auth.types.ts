@@ -8,6 +8,7 @@ export interface RegisterData {
   name: string;
   email: string;
   password: string;
+  role: "job_seeker" | "employer";
 }
 
 export interface AuthResponse {

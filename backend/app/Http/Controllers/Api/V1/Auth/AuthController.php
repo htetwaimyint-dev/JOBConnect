@@ -36,7 +36,7 @@ class AuthController extends Controller
         'name'     => $validatedData['name'],
         'email'    => $validatedData['email'],
         'password' => $validatedData['password'],
-        'role'     => UserRole::JOB_SEEKER,
+        'role' => 'required|in:job_seeker,employer',
     ]);
 
         // Generate token
