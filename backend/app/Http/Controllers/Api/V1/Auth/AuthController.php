@@ -37,40 +37,9 @@ class AuthController extends Controller
 
         // Your logic to save to database goes here...
         return $this->successResponse('Register Successfully', $user, $token, 201);   
-
     }
 
     // LOGIN
-    public function login(Request $request)
-    {
-        $validator = Validator::make($request->all(),[
-            'email' => 'required|email:rfc,dns',
-            'password' => 'required|string|min:6',
-        ]);
-
-        if ($validator->fails()) {
-            return $this->failResponse(
-                'Validation Failed',
-                $validator->errors(),
-                422
-            );
-        }
-
-        $validatedData = $validator->validated();
-
-        $user = User::create($validatedData);
-
-        // Generate Sanctum token for the newly registered user
-        $token = $user->createToken('auth_token')->plainTextToken;
-
-        return $this->successResponse(
-            'Register Successfully',
-            $user,
-            $token,
-            201
-        );
-    }
-
     public function login(Request $request)
     {
         $validator = Validator::make($request->all(), [
