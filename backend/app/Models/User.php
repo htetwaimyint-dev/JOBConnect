@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use App\Enums\Enums\UserRole;
-use App\Enums\Enums\UserStatus;
+use App\Enums\UserRole;
+use App\Enums\UserStatus;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;

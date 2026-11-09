@@ -9,12 +9,9 @@ use Symfony\Component\HttpFoundation\Response;
 
 class EnsureUserIsJobSeeker
 {
-    /**
-     * Handle an incoming request.
-     */
     public function handle(Request $request, Closure $next): Response
     {
-        if ($request->user()->role !== UserRole::JobSeeker->value) {
+        if ($request->user()->role !== UserRole::JOB_SEEKER) {
             return response()->json([
                 'success' => false,
                 'message' => 'Access denied. Job Seeker account required.',
