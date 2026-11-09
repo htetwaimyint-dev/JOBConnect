@@ -21,7 +21,7 @@ const handleRegister = async (data: RegisterData) => {
 
     await authStore.register(data);
 
-    router.push("/dashboard");
+    router.push("/login");
   } catch (error: any) {
     errorMessage.value = error.response?.data?.message || "Registration failed";
   } finally {

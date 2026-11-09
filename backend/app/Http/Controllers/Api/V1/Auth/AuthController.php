@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1\Auth;
 
+use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Validator;
 use App\Models\User;
@@ -30,11 +31,16 @@ class AuthController extends Controller
         }
 
         $validatedData = $validator->validated();
-        // make new register
-        $user = User::create($validatedData);
+        // 4. Create new user with default role
+       $user = User::create([
+        'name'     => $validatedData['name'],
+        'email'    => $validatedData['email'],
+        'password' => $validatedData['password'],
+        'role'     => UserRole::JOB_SEEKER,
+    ]);
 
         // Generate token
-        $token = $request->user()->createToken('auth_token')->plainTextToken;
+        $token = $user->createToken('auth_token')->plainTextToken;
 
         // Your logic to save to database goes here...
         return $this->successResponse('Register Successfully', $user, $token, 201);   
