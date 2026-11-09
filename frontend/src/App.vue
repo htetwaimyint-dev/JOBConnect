@@ -35,40 +35,8 @@ function goToJobs() {
 </script>
 
 <template>
-    <main class="min-h-screen bg-[#f7f7fb]">
-        <div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-            <!-- Main Two Column Layout -->
-            <div
-                class="mt-8 grid grid-cols-1 items-start gap-8 lg:grid-cols-14"
-            >
-                <!-- Left Column -->
-                <section class="min-w-0 lg:col-span-10">
-                    <!-- Company Banner -->
-                    <CompanyBanner
-                        :company="company"
-                        :is-following="isFollowing"
-                        @follow="toggleFollow"
-                        @view-jobs="goToJobs"
-                    />
-                    <!-- Tab Navigation -->
-                    <div class="border-b border-gray-200 pt-3">
-                        <nav
-                            class="-mb-px flex gap-8"
-                            aria-label="Company sections"
-                        >
-                            <BaseButton
-                                v-for="tab in tabs"
-                                type="button"
-                                variant="ghost"
-                                @click="activeTab = tab.value"
-                                class="rounded-none! border-b-2 px-1 pb-2 text-sm font-semibold transition-colors hover:bg-gray-100 active:bg-gray-100"
-                                :class="
-                                    activeTab === tab.value
-                                        ? 'border-violet-600 text-violet-700'
-                                        : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
-                                "
-                            >
-                                {{ tab.label }}
+  <RouterView />
+</template>
 
                                 <span
                                     v-if="tab.value === 'jobs'"
