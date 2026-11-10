@@ -94,6 +94,7 @@ const router = createRouter({
 
 router.beforeEach((to) => {
   const authStore = useAuthStore();
+  const token = localStorage.getItem("token");
 
   // Check Authentication
   if (to.meta.requiresAuth && !authStore.token) {
