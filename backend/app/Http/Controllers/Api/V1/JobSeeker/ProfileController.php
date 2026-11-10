@@ -5,20 +5,21 @@ namespace App\Http\Controllers\Api\V1\JobSeeker;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\JobSeeker\UpdateProfileRequest;
 use App\Http\Resources\Api\JobSeekerProfileResource;
+use App\Services\JobSeeker\ProfileService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class ProfileController extends Controller
 {
-    /**
-     * Get authenticated job seeker's profile.
-     */
+    public function __construct(
+        private ProfileService $profileService
+    ) {}
+
     public function show(Request $request): JsonResponse
     {
-        $profile = $request->user()
-            ->jobSeekerProfile()
-            ->first();
+        $profile = $this->profileService->getProfile(
+            $request->user()
+        );
 
         if (!$profile) {
             return response()->json([
@@ -34,20 +35,18 @@ class ProfileController extends Controller
         ]);
     }
 
-    /**
-     * Update authenticated job seeker's profile.
-     */
     public function update(
         UpdateProfileRequest $request
     ): JsonResponse {
-        $profile = DB::transaction(function () use ($request) {
-            return $request->user()
-                ->jobSeekerProfile()
-                ->updateOrCreate(
-                    [],
-                    $request->validated()
-                );
-        });
+        $data = $request->validated();
+
+        unset($data['profile_photo']);
+
+        $profile = $this->profileService->updateProfile(
+            $request->user(),
+            $data,
+            $request->file('profile_photo')
+        );
 
         return response()->json([
             'success' => true,

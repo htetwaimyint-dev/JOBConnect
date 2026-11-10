@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\V1\JobSeeker\EducationController;
 use App\Http\Controllers\Api\V1\JobSeeker\ExperienceController;
 use App\Http\Controllers\Api\V1\JobSeeker\ResumeController;
 
+
 Route::middleware(['auth:sanctum', 'job-seeker'])
     ->prefix('job-seeker')
     ->group(function () {

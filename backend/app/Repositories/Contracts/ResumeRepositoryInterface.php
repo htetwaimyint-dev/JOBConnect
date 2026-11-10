@@ -15,6 +15,7 @@ interface ResumeRepositoryInterface
         int $resumeId
     ): ?Resume;
     public function findById(int $resumeId): ?Resume;
+    
     public function create(
         User $user,
         array $data
