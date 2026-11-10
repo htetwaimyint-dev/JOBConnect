@@ -26,12 +26,12 @@ const routes = [
         component: () =>
           import("@/features/job-seeker/pages/Dashboard.vue"),
       },
-      // {
-      //     path: "settings",
-      //     name: "JobSeekerSettings",
-      //     component: () =>
-      //         import("@/features/job-seeker/pages/JobSeekerSettingsPage.vue"),
-      // },
+    //   {
+    //       path: "settings",
+    //       name: "JobSeekerSettings",
+    //       component: () =>
+    //           import("@/features/job-seeker/pages/JobSeekerSettingsPage.vue"),
+    //   },
     ],
   },
 

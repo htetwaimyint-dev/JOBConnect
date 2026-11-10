@@ -24,15 +24,13 @@ class ProfileService
     public function updateProfile(
         User $user,
         array $data,
-        ?UploadedFile $profilePhoto = null
+        ?UploadedFile $profilePhoto = null,
+        bool $removeProfilePhoto = false
     ): JobSeekerProfile {
 
         $profile = $this->profileRepository->findByUser($user);
 
-        // Keep the old photo path.
         $oldPhotoPath = $profile?->profile_photo;
-
-        // Store the new photo first.
         $newPhotoPath = null;
 
         if ($profilePhoto) {
@@ -43,14 +41,40 @@ class ProfileService
         }
 
         try {
-            // Update database inside a transaction.
             $profile = DB::transaction(function () use (
                 $user,
                 $data,
-                $newPhotoPath
+                $newPhotoPath,
+                $removeProfilePhoto
             ) {
+                // Update users table
+                $userData = [];
+
+                if (array_key_exists('name', $data)) {
+                    $userData['name'] = $data['name'];
+                }
+
+                if (array_key_exists('email', $data)) {
+                    $userData['email'] = $data['email'];
+                }
+
+                if (!empty($userData)) {
+                    $user->update($userData);
+                }
+
+                // Remove user information from profile data
+                unset(
+                    $data['name'],
+                    $data['email'],
+                    $data['profile_photo'],
+                    $data['remove_profile_photo']
+                );
+
+                // New photo takes priority over remove request
                 if ($newPhotoPath) {
                     $data['profile_photo'] = $newPhotoPath;
+                } elseif ($removeProfilePhoto) {
+                    $data['profile_photo'] = null;
                 }
 
                 return $this->profileRepository->createOrUpdate(
@@ -60,7 +84,6 @@ class ProfileService
             });
         } catch (Throwable $exception) {
 
-            // Remove the new photo if database update fails.
             if ($newPhotoPath) {
                 Storage::disk('public')->delete($newPhotoPath);
             }
@@ -68,8 +91,11 @@ class ProfileService
             throw $exception;
         }
 
-        // Delete old photo only after successful database update.
-        if ($newPhotoPath && $oldPhotoPath) {
+        // Delete old photo after successful update
+        if (
+            $oldPhotoPath &&
+            ($newPhotoPath || $removeProfilePhoto)
+        ) {
             Storage::disk('public')->delete($oldPhotoPath);
         }
 

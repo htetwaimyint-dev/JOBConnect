@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Api\JobSeeker;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateProfileRequest extends FormRequest
 {
@@ -14,6 +15,22 @@ class UpdateProfileRequest extends FormRequest
     public function rules(): array
     {
         return [
+            //user information 
+            'name' => [
+                'sometimes',
+                'required',
+                'string',
+                'max:255',
+            ],
+
+            'email' => [
+                'sometimes',
+                'required',
+                'email',
+                'max:255',
+                Rule::unique('user', 'email')->ignore($this->user()->id),
+            ],
+
             'phone' => ['sometimes', 'nullable', 'string', 'max:50'],
 
             'date_of_birth' => [
@@ -22,6 +39,7 @@ class UpdateProfileRequest extends FormRequest
                 'date',
                 'before_or_equal:today',
             ],
+
             'profile_photo' => [
                 'sometimes',
                 'nullable',
@@ -29,6 +47,11 @@ class UpdateProfileRequest extends FormRequest
                 'mimes:jpg,jpeg,png,webp',
                 'max:2048',
             ],
+            //remove profile
+            // 'remove_profile_photo' => [
+            //     'sometimes',
+            //     'boolean',
+            // ],
 
             'gender' => ['sometimes', 'nullable', 'string', 'max:50'],
 

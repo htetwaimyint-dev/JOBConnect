@@ -38,14 +38,14 @@ class ProfileController extends Controller
     public function update(
         UpdateProfileRequest $request
     ): JsonResponse {
-        $data = $request->validated();
 
-        unset($data['profile_photo']);
+        $data = $request->validated();
 
         $profile = $this->profileService->updateProfile(
             $request->user(),
             $data,
-            $request->file('profile_photo')
+            $request->file('profile_photo'),
+            (bool) ($data['remove_profile_photo'] ?? false)
         );
 
         return response()->json([
