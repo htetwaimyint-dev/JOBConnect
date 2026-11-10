@@ -1,11 +1,31 @@
-import { createRouter, createWebHistory } from "vue-router";
+import {
+  createRouter,
+  createWebHistory,
+  type RouteRecordRaw,
+} from "vue-router";
+
+// Demo Components
+import { useAuthStore } from "@/stores/auth.store.ts";
+
 // Layouts
 import PublicLayout from "@/layouts/PublicLayout.vue";
 import JobSeekerLayout from "@/layouts/JobSeekerLayout.vue";
 import EmployeeLayout from "@/layouts/EmployerLayout.vue";
 import AdminLayout from "@/layouts/AdminLayout.vue";
 
-const routes = [
+// Dashboard Components
+import JobSeekerDashboard from "@/features/job-seeker/pages/Dashboard.vue";
+import AdminDashboard from "@/features/admin/pages/Dashboard.vue";
+import EmployerDashboard from "@/features/employer/pages/Dashboard.vue";
+
+// Import Route Files
+import { authRoutes } from "./auth.routes";
+
+// Combine All Routes
+const routes: RouteRecordRaw[] = [
+  //Auth Routes
+  ...authRoutes,
+
   // Public Website Layout
   {
     path: "/",
@@ -19,19 +39,33 @@ const routes = [
   {
     path: "/jobseeker",
     component: JobSeekerLayout,
+    meta: {
+      requiresAuth: true,
+      role: "job_seeker",
+    },
     children: [
       {
         path: "dashboard",
         name: "JobSeekerDashboard",
-        component: () =>
-          import("@/features/job-seeker/pages/Dashboard.vue"),
+        component: JobSeekerDashboard,
       },
-      // {
-      //     path: "settings",
-      //     name: "JobSeekerSettings",
-      //     component: () =>
-      //         import("@/features/job-seeker/pages/JobSeekerSettingsPage.vue"),
-      // },
+    ],
+  },
+
+  //admin
+  {
+    path: "/admin",
+    component: AdminLayout,
+    meta: {
+      requiresAuth: true,
+      role: "admin",
+    },
+    children: [
+      {
+        path: "dashboard",
+        name: "AdminDashboard",
+        component: AdminDashboard,
+      },
     ],
   },
 
@@ -39,46 +73,39 @@ const routes = [
   {
     path: "/employer",
     component: EmployeeLayout,
+    meta: {
+      requiresAuth: true,
+      role: "employer",
+    },
     children: [
       {
         path: "dashboard",
         name: "EmployerDashboard",
-        component: () =>
-          import("@/features/employer/pages/Dashboard.vue"),
-      },
-
-    ],
-  },
-  {
-    path: "/admin",
-    component: AdminLayout,
-    children: [
-      {
-        path: "dashboard",
-        name: "AdminDashboard",
-        component: () => import("@/features/admin/pages/Dashboard.vue"),
+        component: EmployerDashboard,
       },
     ],
   },
-
-
-
 ];
 
 const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL),
+  history: createWebHistory(),
   routes,
 });
 
 router.beforeEach((to) => {
+  const authStore = useAuthStore();
   const token = localStorage.getItem("token");
 
-  if (to.meta.requiresAuth && !token) {
+  // Check Authentication
+  if (to.meta.requiresAuth && !authStore.token) {
     return "/login";
   }
-  if ((to.path === "/login" || to.path === "/register") && token) {
-    return "/dashboard";
+
+  // Check Authorization
+  if (to.meta.role && authStore.user?.role !== to.meta.role) {
+    return "/";
   }
+  return true;
 });
 
 export default router;
