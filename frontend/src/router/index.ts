@@ -4,6 +4,7 @@ import PublicLayout from "@/layouts/PublicLayout.vue";
 import JobSeekerLayout from "@/layouts/JobSeekerLayout.vue";
 import EmployeeLayout from "@/layouts/EmployerLayout.vue";
 import AdminLayout from "@/layouts/AdminLayout.vue";
+import CompanyProfileForm from "@/features/employer/pages/CompanyProfileForm.vue";
 
 const routes = [
     // Public Website Layout
@@ -38,13 +39,17 @@ const routes = [
     // Employee Layout
     {
         path: "/employer",
-        component: EmployeeLayout,
         children: [
             {
                 path: "dashboard",
                 name: "EmployerDashboard",
                 component: () =>
                     import("@/features/employer/pages/Dashboard.vue"),
+            },
+            {
+                path: "profile/create",
+                name: "profileform",
+                component: CompanyProfileForm,
             },
         ],
     },

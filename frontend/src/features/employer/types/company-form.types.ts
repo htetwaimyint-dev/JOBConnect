@@ -1,3 +1,10 @@
+export interface CompanyOverviewSection {
+    id: string;
+    title: string;
+    content: string;
+    icon?: "lightbulb" | "briefcase" | "star" | "building" | "target" | "users";
+}
+
 export interface CompanyForm {
     name: string;
     tagline: string;
@@ -5,11 +12,12 @@ export interface CompanyForm {
     website: string;
     company_email: string;
     phone: string;
-    description: string;
-    address: string;
-    city: string;
-    foundedYear: number | null;
+    foundedYear: string | number;
     employeeCount: string;
+    city: string;
+    address: string;
+    // Replaced plain string description with structured sections array
+    sections: CompanyOverviewSection[];
 }
 
 export interface GalleryImage {

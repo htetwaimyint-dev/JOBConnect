@@ -1,54 +1,30 @@
 <script setup lang="ts">
 import BaseButton from "@/components/common/BaseButton.vue";
+defineProps<{ coverPreview: string | null }>();
+const emit = defineEmits<{ selectCover: [file: File] }>();
 
-defineProps<{
-    coverPreview: string | null;
-}>();
-
-const emit = defineEmits<{
-    selectCover: [file: File];
-}>();
-
-function onCoverChange(event: Event) {
-    const file = (event.target as HTMLInputElement).files?.[0];
+function onCoverChange(e: Event) {
+    const file = (e.target as HTMLInputElement).files?.[0];
     if (file) emit("selectCover", file);
 }
 </script>
 
 <template>
-    <section
-        class="rounded-xl border border-slate-200 bg-white p-6 sm:p-8 shadow-2xs"
-    >
-        <div class="mb-6 border-b border-slate-100 pb-4">
-            <h2 class="text-lg font-bold text-slate-900">
-                Profile Style & Cover Photo
-            </h2>
-            <p class="text-xs text-slate-500 mt-0.5">
-                Customize your brand appearance and header banner background.
-            </p>
-        </div>
+    <section class="rounded-xl border border-slate-200 bg-white p-6 shadow-2xs">
+        <h5 class="text-xl font-bold text-slate-900 mb-6">Profile Style</h5>
 
         <div
-            class="relative flex h-40 items-center justify-center overflow-hidden rounded-xl border border-dashed border-slate-300 bg-slate-50 sm:h-48"
+            class="relative flex h-40 items-center justify-center overflow-hidden rounded-xl border border-dashed border-slate-300 bg-slate-50 mt-3"
         >
             <img
                 v-if="coverPreview"
                 :src="coverPreview"
-                alt="Cover background"
+                alt="Cover"
                 class="absolute inset-0 h-full w-full object-cover"
             />
-
-            <div
-                v-else
-                class="flex flex-col items-center gap-1 text-center p-4"
+            <span v-else class="text-xs text-slate-400"
+                >Cover Photo (16:9 Landscape recommended)</span
             >
-                <span class="text-xs font-medium text-slate-600"
-                    >No cover photo selected</span
-                >
-                <span class="text-[11px] text-slate-400"
-                    >Recommended landscape aspect ratio</span
-                >
-            </div>
 
             <label class="absolute bottom-3 right-3 cursor-pointer">
                 <BaseButton

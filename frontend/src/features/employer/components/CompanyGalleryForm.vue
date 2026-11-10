@@ -1,52 +1,35 @@
 <script setup lang="ts">
 import type { GalleryImage } from "../types/company-form.types";
 
-defineProps<{
-    existingImages: string[];
-    newImages: GalleryImage[];
-}>();
-
+defineProps<{ existingImages: string[]; newImages: GalleryImage[] }>();
 const emit = defineEmits<{
     addImages: [files: File[]];
     removeExisting: [index: number];
     removeNew: [index: number];
 }>();
 
-function handleFiles(event: Event) {
-    const input = event.target as HTMLInputElement;
+function handleFiles(e: Event) {
+    const input = e.target as HTMLInputElement;
     const files = Array.from(input.files ?? []);
-
     if (files.length) emit("addImages", files);
-
     input.value = "";
 }
 </script>
 
 <template>
-    <section
-        class="rounded-xl border border-slate-200 bg-white p-6 sm:p-8 shadow-2xs"
-    >
-        <div class="mb-6 border-b border-slate-100 pb-4">
-            <h2 class="text-lg font-bold text-slate-900">
-                Gallery Images + Video
-            </h2>
-            <p class="text-xs text-slate-500 mt-0.5">
-                Upload office environment shots and culture imagery.
-            </p>
-        </div>
+    <section class="rounded-xl border border-slate-200 bg-white p-6 shadow-2xs">
+        <h5 class="text-xl font-bold text-slate-900 mb-6">Gallery Images</h5>
 
-        <!-- Upload Dropzone -->
         <label
-            class="flex cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-50/60 p-6 text-center transition hover:bg-slate-100"
+            class="flex cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-50 p-6 transition hover:bg-slate-100 w-full mt-2"
         >
-            <span class="text-lg text-slate-400 mb-1">+</span>
-            <span class="text-xs font-semibold text-slate-700">
-                Add Gallery Images
-            </span>
-            <span class="mt-0.5 text-[11px] text-slate-400">
-                PNG, JPG, WebP up to 5MB. Multiple selection supported.
-            </span>
-
+            <span class="text-base text-slate-400 mb-1">+</span>
+            <span class="text-xs font-semibold text-slate-700"
+                >Add Gallery Images</span
+            >
+            <span class="text-[10px] text-slate-400 ml-10"
+                >PNG, JPG, WebP up to 5MB</span
+            >
             <input
                 type="file"
                 accept="image/png,image/jpeg,image/webp"
@@ -56,65 +39,43 @@ function handleFiles(event: Event) {
             />
         </label>
 
-        <!-- Gallery Grid -->
         <div
             v-if="existingImages.length || newImages.length"
-            class="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3"
+            class="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3"
         >
-            <!-- Existing Images -->
             <div
-                v-for="(image, index) in existingImages"
-                :key="`existing-${image}-${index}`"
-                class="group relative overflow-hidden rounded-xl border border-slate-200 bg-slate-100 aspect-square"
+                v-for="(img, idx) in existingImages"
+                :key="`existing-${img}-${idx}`"
+                class="relative aspect-square overflow-hidden rounded-lg border bg-slate-100"
             >
-                <img
-                    :src="image"
-                    :alt="`Gallery photo ${index + 1}`"
-                    class="h-full w-full object-cover"
-                />
-
+                <img :src="img" class="h-full w-full object-cover" />
                 <button
                     type="button"
-                    @click="emit('removeExisting', index)"
-                    class="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full bg-slate-900/70 text-white text-xs transition hover:bg-rose-600"
-                    aria-label="Remove image"
+                    @click="emit('removeExisting', idx)"
+                    class="absolute top-1.5 right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-slate-900/70 text-white text-xs"
                 >
                     ×
                 </button>
             </div>
 
-            <!-- New Images -->
             <div
-                v-for="(item, index) in newImages"
+                v-for="(item, idx) in newImages"
                 :key="item.preview"
-                class="group relative overflow-hidden rounded-xl border border-slate-200 bg-slate-100 aspect-square"
+                class="relative aspect-square overflow-hidden rounded-lg border bg-slate-100"
             >
-                <img
-                    :src="item.preview"
-                    :alt="item.file.name"
-                    class="h-full w-full object-cover"
-                />
-
+                <img :src="item.preview" class="h-full w-full object-cover" />
                 <button
                     type="button"
-                    @click="emit('removeNew', index)"
-                    class="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full bg-slate-900/70 text-white text-xs transition hover:bg-rose-600"
-                    aria-label="Remove image"
+                    @click="emit('removeNew', idx)"
+                    class="absolute top-1.5 right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-slate-900/70 text-white text-xs"
                 >
                     ×
                 </button>
-
                 <span
-                    class="absolute bottom-2 left-2 rounded bg-slate-900/80 px-1.5 py-0.5 text-[9px] font-medium text-white"
+                    class="absolute bottom-1.5 left-1.5 rounded bg-slate-900/80 px-1 py-0.5 text-[9px] text-white"
+                    >New</span
                 >
-                    New
-                </span>
             </div>
         </div>
-
-        <!-- Empty State -->
-        <p v-else class="mt-5 text-center text-xs text-slate-400">
-            No gallery photos uploaded yet.
-        </p>
     </section>
 </template>
