@@ -5,5 +5,6 @@ import CompanyProfileForm from "./features/employer/pages/CompanyProfileForm.vue
 </script>
 
 <template>
-    <CompanyProfileForm></CompanyProfileForm>
+    <!-- <PublicLayout /> -->
+    <RouterView />
 </template>

@@ -1,4 +1,7 @@
+
 import { createRouter, createWebHistory } from "vue-router";
+
+// Demo Components
 import Button from "@/components/common/demo/Button.vue";
 import Checkbox from "@/components/common/demo/Checkbox.vue";
 import Input from "@/components/common/demo/Input.vue";
@@ -11,7 +14,69 @@ import RegisterPage from "@/features/auth/pages/RegisterPage.vue";
 import DashboardPage from "@/features/auth/pages/DashboardPage(test).vue";
 import CompanyProfilePage from "@/features/employer/pages/CompanyProfilePage.vue";
 
+// Layouts
+import PublicLayout from "@/layouts/PublicLayout.vue";
+import JobSeekerLayout from "@/layouts/JobSeekerLayout.vue";
+import EmployeeLayout from "@/layouts/EmployerLayout.vue";
+import AdminLayout from "@/layouts/AdminLayout.vue";
+
 const routes = [
+    // Public Website Layout
+    {
+        path: "/",
+        component: PublicLayout,
+        children: [
+            // Add your public website pages here later
+        ],
+    },
+
+    // Job Seeker Layout
+    {
+        path: "/jobseeker",
+        component: JobSeekerLayout,
+        children: [
+            {
+                path: "dashboard",
+                name: "JobSeekerDashboard",
+                component: () =>
+                    import("@/features/job-seeker/pages/Dashboard.vue"),
+            },
+            {
+                path: "settings",
+                name: "JobSeekerSettings",
+                component: () =>
+                    import("@/features/job-seeker/pages/JobSeekerSettingsPage.vue"),
+            },
+        ],
+    },
+
+    // Employee Layout
+    {
+        path: "/employer",
+        component: EmployeeLayout,
+        children: [
+            {
+                path: "dashboard",
+                name: "EmployerDashboard",
+                component: () =>
+                    import("@/features/employer/pages/Dashboard.vue"),
+            },
+        ],
+    },
+    {
+        path: "/admin",
+        component: AdminLayout,
+        children: [
+            {
+            path: "dashboard",
+            name: "AdminDashboard",
+            component: () =>
+                import("@/features/admin/pages/Dashboard.vue"),
+            },
+        ],
+    },
+
+    // Demo Routes
     {
         path: "/button",
         component: Button,
@@ -70,7 +135,7 @@ const routes = [
 
 const router = createRouter({
     history: createWebHistory(import.meta.env.BASE_URL),
-    routes: routes,
+    routes,
 });
 
 router.beforeEach((to) => {
