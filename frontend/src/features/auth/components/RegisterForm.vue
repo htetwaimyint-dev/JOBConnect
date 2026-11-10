@@ -10,13 +10,23 @@ const emit = defineEmits<{
 const name = ref("");
 const email = ref("");
 const password = ref("");
+const confirmPassword = ref("");
+const passwordError = ref("");
 const role = ref<"job_seeker" | "employer">("job_seeker");
 
 const handleSubmit = () => {
+  if (password.value !== confirmPassword.value) {
+    passwordError.value = "Passwords do not match!";
+    return;
+  }
+
+  passwordError.value = "";
+
   emit("submit", {
     name: name.value,
     email: email.value,
     password: password.value,
+    password_confirmation: confirmPassword.value,
     role: role.value,
   });
 };

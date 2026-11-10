@@ -33,7 +33,12 @@ const handleLogin = async (data: LoginData) => {
       errorMessage.value = "Invalid user role";
     }
   } catch (error: any) {
-    errorMessage.value = error.response?.data?.message || "Login failed";
+    console.log("Login Error:", error);
+    console.log("Response Data:", error.response?.data);
+    console.log("Status Code:", error.response?.status);
+
+    errorMessage.value =
+      error.response?.data?.message || error.message || "Login failed";
   } finally {
     loading.value = false;
   }
