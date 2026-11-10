@@ -21,7 +21,7 @@ const routes = [
         path: "/",
         component: PublicLayout,
         children: [
-            // Add your public website pages here later
+            
         ],
     },
 

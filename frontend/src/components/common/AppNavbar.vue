@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, computed } from "vue";
+import { useRoute, RouterLink } from "vue-router";
+
 import {
   Bell,
   ChevronDown,
@@ -7,6 +9,8 @@ import {
   Settings,
   LogOut,
 } from "lucide-vue-next";
+
+const route = useRoute();
 
 const showProfileMenu = ref(false);
 const showNotifications = ref(false);
@@ -27,6 +31,23 @@ const user = {
   notifications: 3,
 };
 
+// Settings URL based on current role
+const settingsPath = computed(() => {
+  if (route.path.startsWith("/jobseeker")) {
+    return "/jobseeker/settings";
+  }
+
+  if (route.path.startsWith("/employer")) {
+    return "/employer/settings";
+  }
+
+  if (route.path.startsWith("/admin")) {
+    return "/admin/settings";
+  }
+
+  return "/";
+});
+
 const toggleProfileMenu = () => {
   showProfileMenu.value = !showProfileMenu.value;
   showNotifications.value = false;
@@ -39,6 +60,7 @@ const toggleNotifications = () => {
 
 const handleLogout = () => {
   console.log("Logout clicked");
+  showProfileMenu.value = false;
 };
 </script>
 
@@ -127,7 +149,7 @@ const handleLogout = () => {
         <!-- Profile Dropdown -->
         <div
           v-if="showProfileMenu"
-          class="absolute right-0 top-14 w-52 rounded-xl border border-slate-200 bg-white p-2 shadow-xl"
+          class="absolute right-0 top-14 w-52 rounded-lg border border-slate-200 bg-white p-2 shadow-xl"
         >
           <button
             type="button"
@@ -137,20 +159,22 @@ const handleLogout = () => {
             My Profile
           </button>
 
-          <button
-            type="button"
-            class="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-slate-600 hover:bg-blue-50 hover:text-blue-600"
+          <!-- Settings -->
+          <RouterLink
+            :to="settingsPath"
+            @click="showProfileMenu = false"
+            class="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-slate-600 hover:bg-blue-50"
           >
             <Settings :size="18" />
             Settings
-          </button>
+          </RouterLink>
 
           <div class="my-1 border-t border-slate-100"></div>
 
           <button
             type="button"
             @click="handleLogout"
-            class="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-red-500 hover:bg-red-50"
+            class="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-red-600 hover:bg-red-50"
           >
             <LogOut :size="18" />
             Logout
