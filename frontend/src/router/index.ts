@@ -1,18 +1,10 @@
-
 import { createRouter, createWebHistory } from "vue-router";
-
-// Demo Components
-import Button from "@/components/common/demo/Button.vue";
-import Checkbox from "@/components/common/demo/Checkbox.vue";
-import Input from "@/components/common/demo/Input.vue";
-import PasswordInput from "@/components/common/demo/PasswordInput.vue";
-import Select from "@/components/common/demo/Select.vue";
-import Alert from "@/components/common/demo/Alert.vue";
 import AuthLayout from "@/layouts/AuthLayout.vue";
 import LoginPage from "@/features/auth/pages/LoginPage.vue";
 import RegisterPage from "@/features/auth/pages/RegisterPage.vue";
 import DashboardPage from "@/features/auth/pages/DashboardPage(test).vue";
 import CompanyProfilePage from "@/features/employer/pages/CompanyProfilePage.vue";
+import CompanyProfileForm from "@/features/employer/pages/CompanyProfileForm.vue";
 
 // Layouts
 import PublicLayout from "@/layouts/PublicLayout.vue";
@@ -41,25 +33,34 @@ const routes = [
                 component: () =>
                     import("@/features/job-seeker/pages/Dashboard.vue"),
             },
-            {
-                path: "settings",
-                name: "JobSeekerSettings",
-                component: () =>
-                    import("@/features/job-seeker/pages/JobSeekerSettingsPage.vue"),
-            },
+            // {
+            //     path: "settings",
+            //     name: "JobSeekerSettings",
+            //     component: () =>
+            //         import("@/features/job-seeker/pages/JobSeekerSettingsPage.vue"),
+            // },
         ],
     },
 
     // Employee Layout
     {
         path: "/employer",
-        component: EmployeeLayout,
         children: [
             {
                 path: "dashboard",
                 name: "EmployerDashboard",
                 component: () =>
                     import("@/features/employer/pages/Dashboard.vue"),
+            },
+            {
+                path: "profile",
+                name: "CompanyProfilePage",
+                component: CompanyProfilePage,
+            },
+            {
+                path: "profile/create",
+                name: "CompanyProfileForm",
+                component: CompanyProfileForm,
             },
         ],
     },
@@ -68,43 +69,11 @@ const routes = [
         component: AdminLayout,
         children: [
             {
-            path: "dashboard",
-            name: "AdminDashboard",
-            component: () =>
-                import("@/features/admin/pages/Dashboard.vue"),
+                path: "dashboard",
+                name: "AdminDashboard",
+                component: () => import("@/features/admin/pages/Dashboard.vue"),
             },
         ],
-    },
-
-    // Demo Routes
-    {
-        path: "/button",
-        component: Button,
-    },
-    {
-        path: "/checkbox",
-        component: Checkbox,
-    },
-    {
-        path: "/input",
-        component: Input,
-    },
-    {
-        path: "/passwordinput",
-        component: PasswordInput,
-    },
-    {
-        path: "/select",
-        component: Select,
-    },
-    {
-        path: "/alert",
-        component: Alert,
-    },
-
-    {
-        path: "/",
-        redirect: "/login",
     },
     {
         path: "/",

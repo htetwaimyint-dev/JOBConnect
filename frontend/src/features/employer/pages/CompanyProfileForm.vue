@@ -1,586 +1,341 @@
 <script setup lang="ts">
-import { computed, reactive, ref, watch, onBeforeUnmount } from "vue";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/vue-query";
-
-import type { Company } from "../types/company.types.ts";
-import type { CompanyForm, GalleryImage } from "../types/company-form.types.ts";
-import { companyService } from "@/services/company.service";
-
+import { ref } from "vue";
+import BaseButton from "@/components/common/BaseButton.vue";
 import CompanyBasicInfoForm from "../components/CompanyBasicInfoForm.vue";
 import CompanyOverviewForm from "../components/CompanyOverviewForm.vue";
 import CompanyBrandingForm from "../components/CompanyBrandingForm.vue";
 import CompanyGalleryForm from "../components/CompanyGalleryForm.vue";
-
-import BaseButton from "@/components/common/BaseButton.vue";
-
-// --------------------------------------------------
-// Configuration
-// --------------------------------------------------
-
-const MAX_FILE_SIZE = 5 * 1024 * 1024;
-const MAX_GALLERY_IMAGES = 10;
-
-const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
-
-const queryClient = useQueryClient();
-
-// --------------------------------------------------
-// Form state
-// --------------------------------------------------
-
-function createEmptyForm(): CompanyForm {
-    return {
-        name: "",
-        tagline: "",
-        industry: "",
-        website: "",
-        company_email: "",
-        phone: "",
-        description: "",
-        address: "",
-        city: "",
-        foundedYear: null,
-        employeeCount: "",
-    };
-}
-
-const form = reactive<CompanyForm>(createEmptyForm());
-
-const logoFile = ref<File | null>(null);
-const coverFile = ref<File | null>(null);
-
-const logoPreview = ref<string | null>(null);
-const coverPreview = ref<string | null>(null);
-
-const existingGallery = ref<string[]>([]);
-const newGallery = ref<GalleryImage[]>([]);
-
-const errorMessage = ref("");
-const successMessage = ref("");
-
-const isEditMode = computed(() => !!companyQuery.data.value);
-
-// --------------------------------------------------
-// Helpers
-// --------------------------------------------------
-
-function revokePreview(url: string | null) {
-    if (url?.startsWith("blob:")) {
-        URL.revokeObjectURL(url);
-    }
-}
-
-function clearMessages() {
-    errorMessage.value = "";
-    successMessage.value = "";
-}
-
-function setLogoPreview(url: string | null) {
-    revokePreview(logoPreview.value);
-    logoPreview.value = url;
-}
-
-function setCoverPreview(url: string | null) {
-    revokePreview(coverPreview.value);
-    coverPreview.value = url;
-}
-
-function validateImage(file: File): string | null {
-    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
-        return "Only JPG, PNG, and WEBP images are allowed.";
-    }
-
-    if (file.size > MAX_FILE_SIZE) {
-        return "Image size must not exceed 5MB.";
-    }
-
-    return null;
-}
-
-function populateForm(company: Company) {
-    form.name = company.name ?? "";
-    form.tagline = company.tagline ?? "";
-    form.industry = company.industry ?? "";
-    form.website = company.website ?? "";
-    form.company_email = company.company_email ?? "";
-    form.phone = company.phone ?? "";
-    form.description = company.description ?? "";
-    form.address = company.address ?? "";
-    form.city = company.city ?? "";
-    form.foundedYear = company.foundedYear ?? null;
-    form.employeeCount = company.employeeCount ?? "";
-
-    logoFile.value = null;
-    coverFile.value = null;
-
-    setLogoPreview(company.logo ?? null);
-    setCoverPreview(company.coverImage ?? null);
-
-    existingGallery.value = [...(company.gallery ?? [])];
-
-    newGallery.value.forEach((image: { preview: string | null }) => {
-        revokePreview(image.preview);
-    });
-
-    newGallery.value = [];
-}
-
-function resetEmptyForm() {
-    Object.assign(form, createEmptyForm());
-
-    logoFile.value = null;
-    coverFile.value = null;
-
-    setLogoPreview(null);
-    setCoverPreview(null);
-
-    existingGallery.value = [];
-
-    newGallery.value.forEach((image: { preview: string | null }) => {
-        revokePreview(image.preview);
-    });
-
-    newGallery.value = [];
-}
-
-// --------------------------------------------------
-// Fetch company profile
-// --------------------------------------------------
-
-const companyQuery = useQuery({
-    queryKey: ["company", "profile"],
-
-    queryFn: async (): Promise<Company | null> => {
-        try {
-            return await companyService.getCompanyProfile();
-        } catch (error) {
-            const status = (
-                error as {
-                    response?: {
-                        status?: number;
-                    };
-                }
-            )?.response?.status;
-
-            // No company profile exists yet.
-            if (status === 404) {
-                return null;
-            }
-
-            throw error;
-        }
-    },
-
-    staleTime: 1000 * 60 * 5,
-    retry: 1,
-});
-
-// Populate the form when the initial profile loads.
-let initialized = false;
-
-watch(
-    () => companyQuery.data.value,
-    (company) => {
-        if (initialized) return;
-
-        if (company) {
-            populateForm(company);
-        }
-
-        initialized = true;
-    },
-    { immediate: true },
-);
-
-// --------------------------------------------------
-// Image selection
-// --------------------------------------------------
-
-function handleLogoSelect(file: File) {
-    clearMessages();
-
-    const validationError = validateImage(file);
-
-    if (validationError) {
-        errorMessage.value = validationError;
-        return;
-    }
-
-    logoFile.value = file;
-    setLogoPreview(URL.createObjectURL(file));
-}
-
-function handleCoverSelect(file: File) {
-    clearMessages();
-
-    const validationError = validateImage(file);
-
-    if (validationError) {
-        errorMessage.value = validationError;
-        return;
-    }
-
-    coverFile.value = file;
-    setCoverPreview(URL.createObjectURL(file));
-}
-
-// --------------------------------------------------
-// Gallery management
-// --------------------------------------------------
-
-function handleGalleryAdd(files: FileList) {
-    clearMessages();
-
-    const selectedFiles = Array.from(files);
-
-    const totalImages = existingGallery.value.length + newGallery.value.length;
-
-    for (const file of selectedFiles) {
-        if (totalImages + newGallery.value.length >= MAX_GALLERY_IMAGES) {
-            errorMessage.value = `You can upload a maximum of ${MAX_GALLERY_IMAGES} gallery images.`;
-            break;
-        }
-
-        const validationError = validateImage(file);
-
-        if (validationError) {
-            errorMessage.value = `${file.name}: ${validationError}`;
-            continue;
-        }
-
-        newGallery.value.push({
-            file,
-            preview: URL.createObjectURL(file),
-        });
-    }
-}
-
-function removeExistingGallery(index: number) {
-    existingGallery.value.splice(index, 1);
-}
-
-function removeNewGallery(index: number) {
-    const image = newGallery.value[index];
-
-    if (image) {
-        revokePreview(image.preview);
-        newGallery.value.splice(index, 1);
-    }
-}
-
-// --------------------------------------------------
-// FormData
-// --------------------------------------------------
-
-function buildFormData(): FormData {
-    const data = new FormData();
-
-    data.append("name", form.name.trim());
-    data.append("tagline", form.tagline.trim());
-    data.append("industry", form.industry.trim());
-    data.append("website", form.website.trim());
-    data.append("company_email", form.company_email.trim());
-    data.append("phone", form.phone.trim());
-    data.append("description", form.description.trim());
-    data.append("address", form.address.trim());
-    data.append("city", form.city.trim());
-
-    if (form.foundedYear !== null) {
-        data.append("foundedYear", String(form.foundedYear));
-    }
-
-    data.append("employeeCount", form.employeeCount);
-
-    // Upload logo only when a new file was selected.
-    if (logoFile.value) {
-        data.append("logo", logoFile.value);
-    }
-
-    // Upload cover only when a new file was selected.
-    if (coverFile.value) {
-        data.append("cover_image", coverFile.value);
-    }
-
-    // Existing gallery URLs retained by the user.
-    existingGallery.value.forEach((image) => {
-        data.append("existing_gallery[]", image);
-    });
-
-    // Newly uploaded gallery files.
-    newGallery.value.forEach((image: { file: string | Blob }) => {
-        data.append("gallery[]", image.file);
-    });
-
-    return data;
-}
-
-// --------------------------------------------------
-// Validation
-// --------------------------------------------------
-
-function validateForm(): boolean {
-    if (!form.name.trim()) {
-        errorMessage.value = "Company name is required.";
-        return false;
-    }
-
-    if (
-        form.foundedYear !== null &&
-        (Number(form.foundedYear) < 1800 ||
-            Number(form.foundedYear) > new Date().getFullYear())
-    ) {
-        errorMessage.value = "Please enter a valid founded year.";
-        return false;
-    }
-
-    if (
-        existingGallery.value.length + newGallery.value.length >
-        MAX_GALLERY_IMAGES
-    ) {
-        errorMessage.value = `You can upload a maximum of ${MAX_GALLERY_IMAGES} gallery images.`;
-        return false;
-    }
-
-    return true;
-}
-
-// --------------------------------------------------
-// Save mutation
-// --------------------------------------------------
-
-interface SaveVariables {
-    data: FormData;
-    mode: "create" | "update";
-}
-
-const mutation = useMutation({
-    mutationFn: async ({ data, mode }: SaveVariables) => {
-        if (mode === "update") {
-            return companyService.updateCompanyProfile(data);
-        }
-
-        return companyService.createCompanyProfile(data);
-    },
-
-    onSuccess: (company, variables) => {
-        queryClient.setQueryData(["company", "profile"], company);
-
-        populateForm(company);
-
-        successMessage.value =
-            variables.mode === "update"
-                ? "Company profile updated successfully."
-                : "Company profile created successfully.";
-
-        errorMessage.value = "";
-    },
-
-    onError: (error: unknown) => {
-        const apiError = error as {
-            response?: {
-                data?: {
-                    message?: string;
-                };
-            };
-            message?: string;
-        };
-
-        errorMessage.value =
-            apiError.response?.data?.message ||
-            apiError.message ||
-            "Something went wrong. Please try again.";
-    },
-});
-
-const isSaving = computed(() => mutation.isPending.value);
-
-// --------------------------------------------------
-// Submit
-// --------------------------------------------------
-
-function submitForm() {
-    clearMessages();
-
-    if (!validateForm()) {
-        return;
-    }
-
-    const mode = isEditMode.value ? "update" : "create";
-
-    mutation.mutate({
-        data: buildFormData(),
-        mode,
-    });
-}
-
-// --------------------------------------------------
-// Reset
-// --------------------------------------------------
-
-function resetForm() {
-    clearMessages();
-
-    const company = companyQuery.data.value;
-
-    if (company) {
-        populateForm(company);
-    } else {
-        resetEmptyForm();
-    }
-}
-
-// --------------------------------------------------
-// Cleanup
-// --------------------------------------------------
-
-onBeforeUnmount(() => {
-    revokePreview(logoPreview.value);
-    revokePreview(coverPreview.value);
-
-    newGallery.value.forEach((image: { preview: string | null }) => {
-        revokePreview(image.preview);
-    });
-});
+import { useCompanyProfile } from "@/composables/useCompany.ts";
+import { useCompanyProfileStore } from "@/stores/company-profile.store.ts";
+
+const store = useCompanyProfileStore();
+const { isPending, mutation, submitForm } = useCompanyProfile();
+
+// Active tab simulation for the Built In sub-nav bar
+const activeSubTab = ref("Overview");
+const subTabs = [
+    "Overview",
+    "Offices",
+    "Perks + Benefits",
+    "Teams",
+    "Culture",
+    "Articles",
+    "Employer Reputation",
+];
 </script>
 
 <template>
-    <div class="mx-auto w-full max-w-5xl space-y-3 pb-8">
-        <!-- Page heading -->
-        <div class="flex flex-wrap items-center justify-between gap-2">
-            <div>
-                <h1 class="text-lg font-semibold text-gray-900">
-                    Company profile
-                </h1>
-
-                <p class="mt-0.5 text-xs text-gray-500">
-                    Manage your company's public profile and branding.
-                </p>
-            </div>
-
-            <span
-                v-if="isEditMode"
-                class="rounded-full bg-green-50 px-2.5 py-1 text-xs font-medium text-green-700"
-            >
-                Editing profile
-            </span>
-
-            <span
-                v-else-if="!companyQuery.isLoading.value"
-                class="rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700"
-            >
-                New profile
-            </span>
-        </div>
-
-        <!-- Initial loading -->
-        <div
-            v-if="companyQuery.isLoading.value"
-            class="rounded-lg border border-gray-200 bg-white px-4 py-10 text-center"
-        >
-            <div
-                class="mx-auto h-6 w-6 animate-spin rounded-full border-2 border-blue-600 border-r-transparent"
-            />
-
-            <p class="mt-3 text-sm text-gray-500">Loading company profile...</p>
-        </div>
-
-        <!-- Fetch error -->
-        <div
-            v-else-if="companyQuery.isError.value"
-            class="rounded-lg border border-red-200 bg-red-50 p-4"
-        >
-            <p class="text-sm font-medium text-red-700">
-                Unable to load company profile.
-            </p>
-
-            <p class="mt-1 text-xs text-red-600">
-                {{ companyQuery.error.value?.message || "Please try again." }}
-            </p>
-
-            <div class="mt-3">
-                <BaseButton
-                    size="28"
-                    color="danger"
-                    variant="outline"
-                    @click="companyQuery.refetch()"
+    <div
+        class="min-h-screen bg-[#F8F9FC] pb-28 font-sans text-slate-900 antialiased"
+    >
+        <form @submit.prevent="submitForm">
+            <!-- Top Portal Navbar Header (Dark Theme Header from Reference) -->
+            <header class="bg-[#0B132B] text-white">
+                <div
+                    class="mx-auto flex max-w-7xl items-center justify-between px-6 py-4"
                 >
-                    Retry
-                </BaseButton>
+                    <div class="flex items-center gap-3">
+                        <div
+                            class="flex items-center gap-2 font-black tracking-wider text-lg"
+                        >
+                            <span
+                                class="rounded bg-blue-600 px-2 py-1 text-white"
+                                >builtin</span
+                            >
+                            <span
+                                class="font-normal text-slate-300 text-sm border-l border-slate-700 pl-3"
+                                >Employer Portal</span
+                            >
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-4">
+                        <BaseButton
+                            type="button"
+                            size="28"
+                            variant="outline"
+                            color="neutral"
+                            class="border-slate-700 bg-transparent text-slate-200 hover:bg-slate-800 text-xs font-medium"
+                        >
+                            VISIT HOMEPAGE
+                        </BaseButton>
+                        <div
+                            class="h-8 w-8 rounded-full bg-slate-700 flex items-center justify-center text-xs font-bold text-white"
+                        >
+                            BP
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Manage Profile Title & Action Bar -->
+            <div class="border-b border-slate-200 bg-white shadow-2xs">
+                <div
+                    class="mx-auto max-w-7xl px-6 py-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+                >
+                    <div>
+                        <h1
+                            class="text-2xl font-bold tracking-tight text-slate-900"
+                        >
+                            Manage Profile
+                        </h1>
+                    </div>
+
+                    <!-- Header Actions -->
+                    <div v-if="!isPending" class="flex items-center gap-3">
+                        <BaseButton
+                            type="button"
+                            size="32"
+                            color="neutral"
+                            variant="outline"
+                            :disabled="mutation.isPending.value"
+                            @click="store.reset"
+                            class="text-xs font-semibold"
+                        >
+                            Cancel
+                        </BaseButton>
+                        <BaseButton
+                            type="submit"
+                            size="32"
+                            :loading="mutation.isPending.value"
+                            :disabled="mutation.isPending.value"
+                            class="bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700"
+                        >
+                            {{
+                                store.isEditMode
+                                    ? "Save Changes"
+                                    : "Create Profile"
+                            }}
+                        </BaseButton>
+                    </div>
+                </div>
+
+                <!-- Built In Sub-navigation Tab Bar -->
+                <div class="mx-auto max-w-7xl px-6">
+                    <nav class="flex space-x-8 overflow-x-auto scrollbar-none">
+                        <button
+                            v-for="tab in subTabs"
+                            :key="tab"
+                            type="button"
+                            @click="activeSubTab = tab"
+                            :class="[
+                                activeSubTab === tab
+                                    ? 'border-blue-600 text-blue-600 font-bold'
+                                    : 'border-transparent text-slate-500 font-medium hover:text-slate-900 hover:border-slate-300',
+                                'whitespace-nowrap border-b-2 py-3.5 text-xs sm:text-sm transition-colors',
+                            ]"
+                        >
+                            {{ tab }}
+                        </button>
+                    </nav>
+                </div>
             </div>
-        </div>
 
-        <!-- Form -->
-        <form v-else class="space-y-3" @submit.prevent="submitForm">
-            <!-- Success message -->
-            <div
-                v-if="successMessage"
-                class="flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 px-3 py-2.5"
-                role="status"
-            >
-                <span class="text-sm text-green-700">
-                    {{ successMessage }}
-                </span>
+            <!-- Main Layout Container with Right-Side Anchor Navigation -->
+            <div class="mx-auto max-w-7xl px-6 pt-6">
+                <!-- Loading Indicator -->
+                <div
+                    v-if="isPending"
+                    class="flex flex-col items-center justify-center py-24"
+                >
+                    <div
+                        class="h-8 w-8 animate-spin rounded-full border-2 border-slate-200 border-t-blue-600"
+                    ></div>
+                    <p class="mt-3 text-xs font-medium text-slate-400">
+                        Loading company profile...
+                    </p>
+                </div>
+
+                <!-- Content Grid (Forms Left / Right Sticky Anchor Navigation Menu) -->
+                <div
+                    v-else
+                    class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start"
+                >
+                    <!-- Left Forms Column (Span 8) -->
+                    <div class="lg:col-span-8 space-y-6">
+                        <!-- Notification Banners -->
+                        <div
+                            v-if="store.successMessage"
+                            class="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-xs font-medium text-emerald-900 shadow-2xs"
+                        >
+                            {{ store.successMessage }}
+                        </div>
+                        <div
+                            v-if="store.errorMessage"
+                            class="rounded-xl border border-rose-200 bg-rose-50 p-4 text-xs font-medium text-rose-900 shadow-2xs"
+                        >
+                            {{ store.errorMessage }}
+                        </div>
+
+                        <!-- Built In Tip Banner -->
+                        <div
+                            class="flex items-start gap-3.5 rounded-xl border border-teal-200/80 bg-teal-50/40 p-4 shadow-2xs"
+                        >
+                            <div
+                                class="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded border border-teal-500 bg-teal-50 text-teal-600 text-xs font-bold"
+                            >
+                                ✓
+                            </div>
+                            <p
+                                class="text-xs font-medium leading-relaxed text-slate-700"
+                            >
+                                <strong class="text-slate-900"
+                                    >Getting top talent excited about your
+                                    company starts here.</strong
+                                >
+                                Be sure to share plenty of details, especially
+                                about your culture, perks and mission. This info
+                                will go a long way to helping your company stand
+                                out.
+                            </p>
+                        </div>
+
+                        <!-- Form Modules -->
+                        <div id="who-we-are">
+                            <CompanyBasicInfoForm
+                                v-model:form="store.form"
+                                :logo-preview="store.logoPreview"
+                                @select-logo="store.selectImage($event, 'logo')"
+                            />
+                        </div>
+
+                        <div id="about-us">
+                            <CompanyOverviewForm v-model:form="store.form" />
+                        </div>
+
+                        <div id="profile-style">
+                            <CompanyBrandingForm
+                                :cover-preview="store.coverPreview"
+                                @select-cover="
+                                    store.selectImage($event, 'cover')
+                                "
+                            />
+                        </div>
+
+                        <div id="gallery-images">
+                            <CompanyGalleryForm
+                                :existing-images="store.existingGallery"
+                                :new-images="store.newGallery"
+                                @add-images="store.addGallery"
+                                @remove-existing="store.removeGallery($event)"
+                                @remove-new="store.removeGallery($event, true)"
+                            />
+                        </div>
+                    </div>
+
+                    <!-- Right Side Quick Anchor Menu (Matching Built In Reference Sidebar) -->
+                    <aside class="hidden lg:block lg:col-span-4 sticky top-6">
+                        <div
+                            class="rounded-xl border border-slate-200 bg-white p-5 shadow-2xs"
+                        >
+                            <nav class="space-y-4 text-xs">
+                                <div>
+                                    <a
+                                        href="#who-we-are"
+                                        class="font-bold text-slate-900 hover:text-blue-600 block"
+                                        >Who We Are</a
+                                    >
+                                </div>
+                                <div>
+                                    <a
+                                        href="#about-us"
+                                        class="font-bold text-slate-900 hover:text-blue-600 block"
+                                        >About Us</a
+                                    >
+                                    <div
+                                        class="mt-2.5 space-y-2 pl-3 border-l-2 border-slate-100 text-slate-600"
+                                    >
+                                        <a
+                                            href="#about-us"
+                                            class="block hover:text-blue-600"
+                                            >Description</a
+                                        >
+                                        <a
+                                            href="#about-us"
+                                            class="block hover:text-blue-600"
+                                            >Industry Type</a
+                                        >
+                                        <a
+                                            href="#about-us"
+                                            class="block hover:text-blue-600"
+                                            >Awards</a
+                                        >
+                                    </div>
+                                </div>
+                                <div>
+                                    <a
+                                        href="#profile-style"
+                                        class="font-bold text-slate-900 hover:text-blue-600 block"
+                                        >Profile Style</a
+                                    >
+                                    <div
+                                        class="mt-2.5 space-y-2 pl-3 border-l-2 border-slate-100 text-slate-600"
+                                    >
+                                        <a
+                                            href="#profile-style"
+                                            class="block hover:text-blue-600"
+                                            >Logo</a
+                                        >
+                                        <a
+                                            href="#profile-style"
+                                            class="block hover:text-blue-600"
+                                            >Cover Photo</a
+                                        >
+                                        <a
+                                            href="#profile-style"
+                                            class="block hover:text-blue-600"
+                                            >Brand Background Color</a
+                                        >
+                                        <a
+                                            href="#gallery-images"
+                                            class="block hover:text-blue-600"
+                                            >Gallery Images + Video</a
+                                        >
+                                    </div>
+                                </div>
+                                <div>
+                                    <span class="font-bold text-slate-900 block"
+                                        >Technologies We Use</span
+                                    >
+                                    <div
+                                        class="mt-2.5 space-y-2 pl-3 border-l-2 border-slate-100 text-slate-600"
+                                    >
+                                        <span class="block text-slate-400"
+                                            >Engineering</span
+                                        >
+                                        <span class="block text-slate-400"
+                                            >People Operations</span
+                                        >
+                                    </div>
+                                </div>
+                            </nav>
+                        </div>
+                    </aside>
+                </div>
             </div>
 
-            <!-- Error message -->
+            <!-- Mobile Sticky Footer Bar -->
             <div
-                v-if="errorMessage"
-                class="rounded-lg border border-red-200 bg-red-50 px-3 py-2.5"
-                role="alert"
-            >
-                <p class="text-sm text-red-700">
-                    {{ errorMessage }}
-                </p>
-            </div>
-
-            <!-- Basic information -->
-            <CompanyBasicInfoForm
-                v-model:form="form"
-                :logo-preview="logoPreview"
-                @select-logo="handleLogoSelect"
-            />
-
-            <!-- Company overview -->
-            <CompanyOverviewForm v-model:form="form" />
-
-            <!-- Branding -->
-            <CompanyBrandingForm
-                :cover-preview="coverPreview"
-                @select-cover="handleCoverSelect"
-            />
-
-            <!-- Gallery -->
-            <CompanyGalleryForm
-                :existing-images="existingGallery"
-                :new-images="newGallery"
-                @remove-existing="removeExistingGallery"
-                @remove-new="removeNewGallery"
-            />
-            <!-- @add-images="handleGalleryAdd" -->
-
-            <!-- Actions -->
-            <div
-                class="sticky bottom-0 z-10 flex items-center justify-end gap-2 border-t border-gray-200 bg-white/95 py-3 backdrop-blur"
+                v-if="!isPending"
+                class="fixed bottom-0 inset-x-0 z-30 flex items-center justify-end gap-3 border-t border-slate-200 bg-white/95 px-6 py-3.5 backdrop-blur-md sm:hidden shadow-lg"
             >
                 <BaseButton
                     type="button"
                     size="32"
                     color="neutral"
                     variant="outline"
-                    :disabled="isSaving"
-                    @click="resetForm"
+                    :disabled="mutation.isPending.value"
+                    @click="store.reset"
                 >
                     Cancel
                 </BaseButton>
-
                 <BaseButton
                     type="submit"
                     size="32"
-                    color="primary"
-                    :loading="isSaving"
-                    :disabled="isSaving"
+                    :loading="mutation.isPending.value"
+                    :disabled="mutation.isPending.value"
                 >
-                    {{ isEditMode ? "Save changes" : "Create profile" }}
+                    {{ store.isEditMode ? "Save Changes" : "Create Profile" }}
                 </BaseButton>
             </div>
         </form>
