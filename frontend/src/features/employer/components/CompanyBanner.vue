@@ -54,13 +54,13 @@ const emit = defineEmits<{
                             {{ company.name }}
                         </h2>
 
-                        <span
+                        <!-- <span
                             v-if="company.isVerified"
                             class="inline-flex items-center gap-1 rounded-full bg-white/15 px-2 py-1 text-[10px] font-medium text-white"
                         >
                             <span class="text-green-300">✓</span>
                             Verified
-                        </span>
+                        </span> -->
                     </div>
 
                     <p class="line-clamp-2 text-xs text-violet-100">
@@ -72,20 +72,20 @@ const emit = defineEmits<{
                     >
                         <span class="flex items-center gap-1.5">
                             <span>⌖</span>
-                            {{ company.location }}
+                            {{ company.address }}
                         </span>
 
                         <span class="flex items-center gap-1.5">
                             <span>♙</span>
-                            {{ company.employeeCount }} employees
+                            {{ company.employeeCount || 0 }} employees
                         </span>
                     </div>
                 </div>
             </div>
 
             <!-- Actions -->
-            <div class="flex shrink-0 items-center gap-3 sm:pl-4">
-                <!-- <button
+            <!-- <div class="flex shrink-0 items-center gap-3 sm:pl-4">
+                <button
                     type="button"
                     class="rounded-lg border border-white/40 bg-white/10 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-white/20"
                     @click="emit('follow')"
@@ -100,8 +100,8 @@ const emit = defineEmits<{
                 >
                     View Jobs
                     <span class="ml-1">→</span>
-                </button> -->
-            </div>
+                </button>
+            </div> -->
         </div>
     </section>
 </template>

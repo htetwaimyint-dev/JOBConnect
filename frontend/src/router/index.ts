@@ -9,75 +9,80 @@ import AuthLayout from "@/layouts/AuthLayout.vue";
 import LoginPage from "@/features/auth/pages/LoginPage.vue";
 import RegisterPage from "@/features/auth/pages/RegisterPage.vue";
 import DashboardPage from "@/features/auth/pages/DashboardPage(test).vue";
+import CompanyProfilePage from "@/features/employer/pages/CompanyProfilePage.vue";
 
 const routes = [
-  {
-    path: "/button",
-    component: Button,
-  },
-  {
-    path: "/checkbox",
-    component: Checkbox,
-  },
-  {
-    path: "/input",
-    component: Input,
-  },
-  {
-    path: "/passwordinput",
-    component: PasswordInput,
-  },
-  {
-    path: "/select",
-    component: Select,
-  },
-  {
-    path: "/alert",
-    component: Alert,
-  },
-
-  {
-    path: "/",
-    redirect: "/login",
-  },
-  {
-    path: "/",
-    component: AuthLayout,
-    children: [
-      {
-        path: "login",
-        component: LoginPage,
-      },
-      {
-        path: "register",
-        component: RegisterPage,
-      },
-    ],
-  },
-  {
-    path: "/dashboard",
-    component: DashboardPage,
-    meta: {
-      requiresAuth: true,
+    {
+        path: "/button",
+        component: Button,
     },
-  },
+    {
+        path: "/checkbox",
+        component: Checkbox,
+    },
+    {
+        path: "/input",
+        component: Input,
+    },
+    {
+        path: "/passwordinput",
+        component: PasswordInput,
+    },
+    {
+        path: "/select",
+        component: Select,
+    },
+    {
+        path: "/alert",
+        component: Alert,
+    },
+
+    {
+        path: "/",
+        redirect: "/login",
+    },
+    {
+        path: "/",
+        component: AuthLayout,
+        children: [
+            {
+                path: "login",
+                component: LoginPage,
+            },
+            {
+                path: "register",
+                component: RegisterPage,
+            },
+        ],
+    },
+    {
+        path: "/dashboard",
+        component: DashboardPage,
+        meta: {
+            requiresAuth: true,
+        },
+    },
+    {
+        path: "/company/profile",
+        component: CompanyProfilePage,
+    },
 ];
 
 const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL),
-  routes: routes,
+    history: createWebHistory(import.meta.env.BASE_URL),
+    routes: routes,
 });
 
 router.beforeEach((to) => {
-  const token = localStorage.getItem("token");
+    const token = localStorage.getItem("token");
 
-  if (to.meta.requiresAuth && !token) {
-    return "/login";
-  }
+    if (to.meta.requiresAuth && !token) {
+        return "/login";
+    }
 
-  if ((to.path === "/login" || to.path === "/register") && token) {
-    return "/dashboard";
-  }
+    if ((to.path === "/login" || to.path === "/register") && token) {
+        return "/dashboard";
+    }
 });
 
 export default router;

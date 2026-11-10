@@ -35,7 +35,7 @@ defineProps<{
                 <div>
                     <p class="text-xs font-medium text-gray-400">Location</p>
                     <p class="mt-1 text-sm font-semibold text-gray-800">
-                        {{ company.location }}
+                        {{ company.address }}
                     </p>
                 </div>
 

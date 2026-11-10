@@ -15,7 +15,7 @@ const emit = defineEmits<{
         <!-- Company Information -->
         <section class="rounded-none border border-gray-100 bg-white p-6">
             <img
-                :src="company.logo"
+                :src="company.logo ?? ''"
                 :alt="`${company.name} logo`"
                 class="h-20 w-20 rounded-xl border border-gray-100 object-cover"
             />
@@ -47,7 +47,7 @@ const emit = defineEmits<{
                 <div class="flex items-start justify-between gap-3">
                     <span class="text-xs text-gray-400">Location</span>
                     <span class="text-right text-xs font-medium text-gray-700">
-                        {{ company.location }}
+                        {{ company.address }}
                     </span>
                 </div>
 
@@ -71,7 +71,7 @@ const emit = defineEmits<{
             <h3 class="text-sm font-bold text-gray-900">Website</h3>
 
             <a
-                :href="company.website"
+                :href="company.website ?? ''"
                 target="_blank"
                 rel="noopener noreferrer"
                 class="mt-2 block break-all text-sm font-medium text-violet-600 hover:text-violet-700"
