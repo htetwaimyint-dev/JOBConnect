@@ -1,4 +1,7 @@
+
 import { createRouter, createWebHistory } from "vue-router";
+
+// Demo Components
 import Button from "@/components/common/demo/Button.vue";
 import Checkbox from "@/components/common/demo/Checkbox.vue";
 import Input from "@/components/common/demo/Input.vue";
@@ -9,6 +12,12 @@ import AuthLayout from "@/layouts/AuthLayout.vue";
 import LoginPage from "@/features/auth/pages/LoginPage.vue";
 import RegisterPage from "@/features/auth/pages/RegisterPage.vue";
 import { useAuthStore } from "@/stores/auth.store.ts";
+
+// Layouts
+import PublicLayout from "@/layouts/PublicLayout.vue";
+import JobSeekerLayout from "@/layouts/JobSeekerLayout.vue";
+import EmployeeLayout from "@/layouts/EmployerLayout.vue";
+import AdminLayout from "@/layouts/AdminLayout.vue";
 
 const routes = [
   {
@@ -52,6 +61,66 @@ const routes = [
       role: "job_seeker",
     },
   },
+  // Public Website Layout
+  {
+    path: "/",
+    component: PublicLayout,
+    children: [
+      // Add your public website pages here later
+    ],
+  },
+
+  // Job Seeker Layout
+  {
+    path: "/jobseeker",
+    component: JobSeekerLayout,
+    children: [
+      {
+        path: "dashboard",
+        name: "JobSeekerDashboard",
+        component: () =>
+          import("@/features/job-seeker/pages/Dashboard.vue"),
+      },
+      // {
+      //     path: "settings",
+      //     name: "JobSeekerSettings",
+      //     component: () =>
+      //         import("@/features/job-seeker/pages/JobSeekerSettingsPage.vue"),
+      // },
+    ],
+  },
+
+  // Employee Layout
+  {
+    path: "/employer",
+    component: EmployeeLayout,
+    children: [
+      {
+        path: "dashboard",
+        name: "EmployerDashboard",
+        component: () =>
+          import("@/features/employer/pages/Dashboard.vue"),
+      },
+    ],
+  },
+  {
+    path: "/admin",
+    component: AdminLayout,
+    children: [
+      {
+        path: "dashboard",
+        name: "AdminDashboard",
+        component: () =>
+          import("@/features/admin/pages/Dashboard.vue"),
+      },
+    ],
+  },
+
+  // Demo Routes
+  {
+    path: "/button",
+    component: Button,
+  },
   {
     path: "/admin/dashboard",
     component: LoginPage,
@@ -85,6 +154,7 @@ router.beforeEach((to) => {
   if (to.meta.role && authStore.user?.role !== to.meta.role) {
     return "/login";
   }
+
 });
 
 export default router;
