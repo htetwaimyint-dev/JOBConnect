@@ -2,13 +2,24 @@
 
 namespace App\Repositories\Eloquent;
 
-class JobSeekerProfileRepository
+use App\Models\JobSeekerProfile;
+use App\Models\User;
+use App\Repositories\Contracts\JobSeekerProfileRepositoryInterface;
+
+class JobSeekerProfileRepository implements JobSeekerProfileRepositoryInterface
 {
-    /**
-     * Create a new class instance.
-     */
-    public function __construct()
+    public function findByUser(User $user): ?JobSeekerProfile
     {
-        //
+        return $user->jobSeekerProfile()->first();
+    }
+
+    public function createOrUpdate(
+        User $user,
+        array $data
+    ): JobSeekerProfile {
+        return $user->jobSeekerProfile()->updateOrCreate(
+            [],
+            $data
+        );
     }
 }
