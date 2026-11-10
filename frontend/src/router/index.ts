@@ -8,7 +8,7 @@ import Alert from "@/components/common/demo/Alert.vue";
 import AuthLayout from "@/layouts/AuthLayout.vue";
 import LoginPage from "@/features/auth/pages/LoginPage.vue";
 import RegisterPage from "@/features/auth/pages/RegisterPage.vue";
-import DashboardPage from "@/features/auth/pages/DashboardPage(test).vue";
+import { useAuthStore } from "@/stores/auth.store.ts";
 
 const routes = [
   {
@@ -37,46 +37,53 @@ const routes = [
   },
 
   {
-    path: "/",
-    redirect: "/login",
+    path: "/login",
+    component: LoginPage,
   },
   {
-    path: "/",
-    component: AuthLayout,
-    children: [
-      {
-        path: "login",
-        component: LoginPage,
-      },
-      {
-        path: "register",
-        component: RegisterPage,
-      },
-    ],
+    path: "/register",
+    component: RegisterPage,
   },
   {
-    path: "/dashboard",
-    component: DashboardPage,
+    path: "/jobs",
+    component: LoginPage,
     meta: {
       requiresAuth: true,
+      role: "job_seeker",
+    },
+  },
+  {
+    path: "/admin/dashboard",
+    component: LoginPage,
+    meta: {
+      requiresAuth: true,
+      role: "admin",
+    },
+  },
+  {
+    path: "/employer/dashboard",
+    component: LoginPage,
+    meta: {
+      requiresAuth: true,
+      role: "employer",
     },
   },
 ];
 
 const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL),
-  routes: routes,
+  history: createWebHistory(),
+  routes,
 });
 
 router.beforeEach((to) => {
-  const token = localStorage.getItem("token");
+  const authStore = useAuthStore();
 
-  if (to.meta.requiresAuth && !token) {
+  if (to.meta.requiresAuth && !authStore.token) {
     return "/login";
   }
 
-  if ((to.path === "/login" || to.path === "/register") && token) {
-    return "/dashboard";
+  if (to.meta.role && authStore.user?.role !== to.meta.role) {
+    return "/login";
   }
 });
 
