@@ -22,6 +22,13 @@ class UpdateProfileRequest extends FormRequest
                 'date',
                 'before_or_equal:today',
             ],
+            'profile_photo' => [
+                'sometimes',
+                'nullable',
+                'image',
+                'mimes:jpg,jpeg,png,webp',
+                'max:2048',
+            ],
 
             'gender' => ['sometimes', 'nullable', 'string', 'max:50'],
 

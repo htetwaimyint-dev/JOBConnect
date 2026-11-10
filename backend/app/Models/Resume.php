@@ -17,6 +17,7 @@ class Resume extends Model
         'file_path',
         'file_type',
         'is_default',
+        'visibility',
     ];
 
     protected function casts(): array

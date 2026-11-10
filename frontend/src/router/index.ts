@@ -1,11 +1,4 @@
 import { createRouter, createWebHistory } from "vue-router";
-import AuthLayout from "@/layouts/AuthLayout.vue";
-import LoginPage from "@/features/auth/pages/LoginPage.vue";
-import RegisterPage from "@/features/auth/pages/RegisterPage.vue";
-import DashboardPage from "@/features/auth/pages/DashboardPage(test).vue";
-import CompanyProfilePage from "@/features/employer/pages/CompanyProfilePage.vue";
-import CompanyProfileForm from "@/features/employer/pages/CompanyProfileForm.vue";
-
 // Layouts
 import PublicLayout from "@/layouts/PublicLayout.vue";
 import JobSeekerLayout from "@/layouts/JobSeekerLayout.vue";
@@ -45,22 +38,13 @@ const routes = [
     // Employee Layout
     {
         path: "/employer",
+        component: EmployeeLayout,
         children: [
             {
                 path: "dashboard",
                 name: "EmployerDashboard",
                 component: () =>
                     import("@/features/employer/pages/Dashboard.vue"),
-            },
-            {
-                path: "profile",
-                name: "CompanyProfilePage",
-                component: CompanyProfilePage,
-            },
-            {
-                path: "profile/create",
-                name: "CompanyProfileForm",
-                component: CompanyProfileForm,
             },
         ],
     },
@@ -75,31 +59,6 @@ const routes = [
             },
         ],
     },
-    {
-        path: "/",
-        component: AuthLayout,
-        children: [
-            {
-                path: "login",
-                component: LoginPage,
-            },
-            {
-                path: "register",
-                component: RegisterPage,
-            },
-        ],
-    },
-    {
-        path: "/dashboard",
-        component: DashboardPage,
-        meta: {
-            requiresAuth: true,
-        },
-    },
-    {
-        path: "/company/profile",
-        component: CompanyProfilePage,
-    },
 ];
 
 const router = createRouter({
@@ -113,7 +72,6 @@ router.beforeEach((to) => {
     if (to.meta.requiresAuth && !token) {
         return "/login";
     }
-
     if ((to.path === "/login" || to.path === "/register") && token) {
         return "/dashboard";
     }

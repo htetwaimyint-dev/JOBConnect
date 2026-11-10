@@ -21,9 +21,24 @@ const handleLogin = async (data: LoginData) => {
 
     await authStore.login(data);
 
-    router.push("/dashboard");
+    const role = authStore.user?.role;
+
+    if (role === "job_seeker") {
+      router.push("/jobs");
+    } else if (role === "admin") {
+      router.push("/admin/dashboard");
+    } else if (role === "employer") {
+      router.push("/employer/dashboard");
+    } else {
+      errorMessage.value = "Invalid user role";
+    }
   } catch (error: any) {
-    errorMessage.value = error.response?.data?.message || "Login failed";
+    console.log("Login Error:", error);
+    console.log("Response Data:", error.response?.data);
+    console.log("Status Code:", error.response?.status);
+
+    errorMessage.value =
+      error.response?.data?.message || error.message || "Login failed";
   } finally {
     loading.value = false;
   }

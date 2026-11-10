@@ -2,10 +2,13 @@
 
 namespace App\Http\Controllers\Api\V1\Auth;
 
+use App\Enums\UserRole;
+use App\Enums\UserStatus;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Traits\HttpResopnseTrait;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 
@@ -20,6 +23,7 @@ class AuthController extends Controller
             'name'        => 'required|string|max:255',
             'email'       => 'required|email:rfc,dns|unique:users',
             'password'    => 'required|string|min:6',
+            'role'     => 'required|in:job_seeker,employer',
         ]);
 
         // 2. Check if validation failed
@@ -29,57 +33,92 @@ class AuthController extends Controller
         }
 
         $validatedData = $validator->validated();
-        // make new register
-        $user = User::create($validatedData);
+        // 4. Create new user with default role
+        $user = User::create([
+            'name'     => $validatedData['name'],
+            'email'    => $validatedData['email'],
+            'password' => $validatedData['password'],
+            'role'     => $validatedData['role'],
+            'status'   => 'active',
+        ]);
 
         // Generate token
-        $token = $user->createToken('auth_token')->plainTextToken;
+        // $token = $user->createToken('auth_token')->plainTextToken;
 
         // Your logic to save to database goes here...
-        return $this->successResponse('Register Successfully', $user, $token, 201);   
+        return $this->successResponse('Register Successfully', $user, null, 201);
     }
 
     // LOGIN
     public function login(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'email' => 'required|email:rfc',
+            'email' => 'required|email',
             'password' => 'required|string|min:6',
+            'remember' => 'sometimes|boolean',
         ]);
 
         if ($validator->fails()) {
             return $this->failResponse(
-                'Validation Failed',
+                'Validation Fail',
                 $validator->errors(),
                 422
             );
         }
 
-        // Get validated email and password
-        $credentials = $validator->validated();
+        // Get request data
+        $email = $request->email;
+        $password = $request->password;
 
-        // Check login credentials
-        if (!Auth::attempt($credentials)) {
+        // Find user from database
+        $user = User::where('email', $email)->first();
+
+        if (!$user) {
+            return $this->failResponse('User not found', null, 404);
+        }
+
+        // Check user status
+        if ($user->status !== UserStatus::ACTIVE) {
             return $this->failResponse(
-                'Invalid email or password',
+                'Your account is not active',
                 null,
-                401
+                403
             );
         }
 
-        /** @var User $user */
-        $user = Auth::user();
 
-        $token = $user->createToken('auth_token')->plainTextToken;
+        // Compare request password with database password
+        if (!Hash::check($password, $user->password)) {
+            return $this->failResponse('Invalid password', null, 401);
+        }
+
+        //  Remember Me
+        $remember = $request->boolean('remember');
+
+        $expiresAt = $remember
+            ? now()->addDays(7)
+            : now()->addDay();
+
+        //  Generate token
+        $token = $user->createToken(
+            'auth_token',
+            ['*'],
+            $expiresAt
+        )->plainTextToken;
+
+        // Generate API Token
+        //$token = $user->createToken('auth_token')->plainTextToken;
 
         return $this->successResponse(
             'Login Successfully',
             $user,
-            $token
+            $token,
+            200
         );
     }
 
-    // GET LOGGED-IN USER
+
+    //GET LOGGED-IN USER
     public function user(Request $request)
     {
         return response()->json([
@@ -87,15 +126,16 @@ class AuthController extends Controller
             'user' => $request->user(),
         ]);
     }
-    // LOGOUT
+
+    //LOGOUT
     public function logout(Request $request)
     {
-        // Delete only the current access token
-        $request->user()->currentAccessToken()?->delete();
-
+        //  $user = $request->user()->tokens->delete();
+        $user = $request->user()->currentAccessToken()->delete();
         return response()->json([
-            'success' => true,
             'message' => 'Logout Successfully',
-        ]);
+            'status'  => 'successes',
+            'user'    => $user,
+        ], 200);
     }
 }

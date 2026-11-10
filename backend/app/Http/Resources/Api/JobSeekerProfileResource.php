@@ -4,6 +4,7 @@ namespace App\Http\Resources\Api;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Storage;
 
 class JobSeekerProfileResource extends JsonResource
 {
@@ -11,7 +12,10 @@ class JobSeekerProfileResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'profile_photo' => $this->profile_photo,
+
+            'profile_photo' => $this->profile_photo
+                ? asset('storage/' . $this->profile_photo)
+                : null,
             'phone' => $this->phone,
             'date_of_birth' => $this->date_of_birth?->toDateString(),
             'gender' => $this->gender,
