@@ -62,7 +62,7 @@ const handleLogout = () => {
     <!-- Sidebar Header -->
     <div class="flex h-20 items-center border-b border-slate-200 px-6">
       <div>
-        <p class="mt-1 text-lg text-slate-500">Employer Information</p>
+        <p class="m-1 text-xl text-slate-600">JobConnect AI</p>
       </div>
     </div>
 

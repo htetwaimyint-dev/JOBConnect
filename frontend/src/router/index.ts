@@ -13,6 +13,7 @@ import Alert from "@/components/common/demo/Alert.vue";
 import PublicLayout from "@/layouts/PublicLayout.vue";
 import JobSeekerLayout from "@/layouts/JobSeekerLayout.vue";
 import EmployeeLayout from "@/layouts/EmployerLayout.vue";
+import AdminLayout from "@/layouts/AdminLayout.vue";
 
 const routes = [
     // Public Website Layout
@@ -35,6 +36,12 @@ const routes = [
                 component: () =>
                     import("@/features/job-seeker/pages/Dashboard.vue"),
             },
+            {
+                path: "settings",
+                name: "JobSeekerSettings",
+                component: () =>
+                    import("@/features/job-seeker/pages/JobSeekerSettingsPage.vue"),
+            },
         ],
     },
 
@@ -48,6 +55,18 @@ const routes = [
                 name: "EmployerDashboard",
                 component: () =>
                     import("@/features/employer/pages/Dashboard.vue"),
+            },
+        ],
+    },
+    {
+        path: "/admin",
+        component: AdminLayout,
+        children: [
+            {
+            path: "dashboard",
+            name: "AdminDashboard",
+            component: () =>
+                import("@/features/admin/pages/Dashboard.vue"),
             },
         ],
     },

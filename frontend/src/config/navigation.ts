@@ -1,4 +1,5 @@
 import type { Component } from "vue";
+import { Settings } from "lucide-vue-next";
 
 import {
   LayoutDashboard,
@@ -60,6 +61,11 @@ export const jobSeekerNavigation: NavigationItem[] = [
     label: "My Profile",
     to: "/job-seeker/profile",
     icon: UserRound,
+  },
+  {
+    label: "Settings",
+    to: "/jobseeker/settings",
+    icon: Settings,
   },
 ];
 
