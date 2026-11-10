@@ -1,16 +1,29 @@
-
 <?php
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\V1\JobSeeker\ProfileController;
 use App\Http\Controllers\Api\V1\JobSeeker\EducationController;
+use App\Http\Controllers\Api\V1\JobSeeker\ExperienceController;
+use App\Http\Controllers\Api\V1\JobSeeker\ResumeController;
 
-Route::middleware(['auth:sanctum', 'job-seeker'])->prefix('job-seeker')->group(function () {
+Route::middleware(['auth:sanctum', 'job-seeker'])
+    ->prefix('job-seeker')
+    ->group(function () {
 
-    // Job Seeker Profile
-    Route::get('/profile', [ProfileController::class, 'show']);
-    Route::put('/profile', [ProfileController::class, 'update']);
+        // Job Seeker Profile
+        Route::get('/profile', [ProfileController::class, 'show']);
+        Route::put('/profile', [ProfileController::class, 'update']);
 
-    // Job Seeker Education
-    Route::apiResource('/educations', EducationController::class);
-});
+        // Job Seeker Education
+        Route::apiResource('/educations', EducationController::class);
+
+        // Job Seeker Experience
+        Route::apiResource('/experiences', ExperienceController::class);
+
+        // Job Seeker Resume
+        Route::apiResource('/resumes', ResumeController::class);
+        Route::get(
+            '/resumes/{resume}/download',
+            [ResumeController::class, 'download']
+        );
+    });
