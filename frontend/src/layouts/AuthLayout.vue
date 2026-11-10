@@ -22,7 +22,7 @@ defineOptions({ inheritAttrs: false });
     >
       <!-- LEFT: Branding panel (hidden on mobile) -->
       <aside
-        class="relative hidden w-1/2 flex-col justify-between bg-gradient-to-br from-blue-50 via-blue-100 to-blue-200 p-10 lg:flex"
+        class="relative hidden w-1/2 flex-col justify-between from-blue-50 via-blue-100 to-blue-200 p-10 lg:flex"
       >
         <!-- Logo -->
         <div class="flex items-center gap-2">
