@@ -34,7 +34,7 @@ const handleRegister = async (data: RegisterData) => {
 
 <template>
   <div
-    class="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-white to-blue-50 px-4 py-10 sm:px-6 lg:px-8"
+    class="min-h-screen flex items-center justify-center from-slate-50 via-white to-blue-50 px-4 py-10 sm:px-6 lg:px-8"
   >
     <div class="w-full max-w-md">
       <!-- Brand / Header -->

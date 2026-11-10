@@ -26,7 +26,7 @@ const handleLogin = async (data: LoginData) => {
     const role = authStore.user?.role;
 
     if (role === "job_seeker") {
-      router.push("/jobs");
+      router.push("/jobseeker");
     } else if (role === "admin") {
       router.push("/admin/dashboard");
     } else if (role === "employer") {
@@ -49,7 +49,7 @@ const handleLogin = async (data: LoginData) => {
 
 <template>
   <div
-    class="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-white to-blue-50 px-4 py-10 sm:px-6 lg:px-8"
+    class="min-h-screen flex items-center justify-center from-slate-50 via-white to-blue-50 px-4 py-10 sm:px-6 lg:px-8"
   >
     <div class="w-full max-w-md">
       <!-- Brand / Header -->
