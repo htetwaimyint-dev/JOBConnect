@@ -68,6 +68,23 @@ const handleSubmit = () => {
       />
     </div>
 
+    <!-- Confirm Password -->
+    <div>
+      <label class="block mb-1 font-medium">Confirm Password</label>
+      <input
+        v-model="confirmPassword"
+        type="password"
+        placeholder="Confirm your password"
+        minlength="8"
+        required
+        class="w-full border rounded-lg px-4 py-2"
+      />
+
+      <p v-if="passwordError" class="text-red-500 text-sm mt-1">
+        {{ passwordError }}
+      </p>
+    </div>
+
     <!-- Role Selection -->
     <div>
       <label class="block mb-2 font-medium">Register As</label>
