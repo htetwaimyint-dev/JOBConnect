@@ -66,15 +66,6 @@ const routes: RouteRecordRaw[] = [
         name: "AdminDashboard",
         component: AdminDashboard,
       },
-<<<<<<< HEAD
-    //   {
-    //       path: "settings",
-    //       name: "JobSeekerSettings",
-    //       component: () =>
-    //           import("@/features/job-seeker/pages/JobSeekerSettingsPage.vue"),
-    //   },
-=======
->>>>>>> main
     ],
   },
 
@@ -94,10 +85,6 @@ const routes: RouteRecordRaw[] = [
       },
     ],
   },
-<<<<<<< HEAD
-
-=======
->>>>>>> main
 ];
 
 const router = createRouter({
