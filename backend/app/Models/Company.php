@@ -15,6 +15,11 @@ class Company extends Model
         'employer_id',
         'name',
         'logo',
+        'cover_image',
+        'tagline',
+        'founded_year',
+        'employee_count',
+        'gallery',
         'description',
         'industry',
         'website',
@@ -30,6 +35,8 @@ class Company extends Model
     {
         return [
             'verified_at' => 'datetime',
+            'founded_year' => 'integer',
+            'gallery' => 'array',
         ];
     }
 

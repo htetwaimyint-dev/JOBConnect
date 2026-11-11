@@ -1,4 +1,3 @@
-
 import {
   createRouter,
   createWebHistory,
@@ -12,6 +11,7 @@ import PublicLayout from "@/layouts/PublicLayout.vue";
 import JobSeekerLayout from "@/layouts/JobSeekerLayout.vue";
 import EmployerLayout from "@/layouts/EmployerLayout.vue";
 import AdminLayout from "@/layouts/AdminLayout.vue";
+import CompanyProfileForm from "@/features/employer/pages/CompanyProfileForm.vue";
 
 // Dashboard Pages
 import Dashboard from "@/features/job-seeker/pages/Dashboard.vue";
@@ -30,6 +30,7 @@ import SettingsPage from "@/features/job-seeker/pages/SettingsPage.vue";
 
 // Auth Routes
 import { authRoutes } from "./auth.routes";
+import CompanyProfilePage from "@/features/employer/pages/CompanyProfilePage.vue";
 
 const routes: RouteRecordRaw[] = [
   ...authRoutes,
@@ -90,11 +91,6 @@ const routes: RouteRecordRaw[] = [
         name: "JobSeekerSettings",
         component: SettingsPage,
       },
-      {
-        path: "settings",
-        name: "JobSeekerSettings",
-        component: JobSeekerSettingsPage,
-      },
     ],
   },
 
@@ -106,28 +102,25 @@ const routes: RouteRecordRaw[] = [
       requiresAuth: true,
       role: "admin",
     },
-    children: [
-      {
-        path: "dashboard",
-        name: "AdminDashboard",
-        component: AdminDashboard,
-      },
-    ],
   },
-
   // Employer Routes
   {
     path: "/employer",
-    component: EmployerLayout,
+    component: JobSeekerLayout,
     meta: {
       requiresAuth: true,
       role: "employer",
     },
     children: [
       {
-        path: "dashboard",
-        name: "EmployerDashboard",
-        component: EmployerDashboard,
+        path: "/employer/profile",
+        name: "company-profile",
+        component: CompanyProfilePage,
+      },
+      {
+        path: "/employer/profile/edit",
+        name: "employer.company-profile.edit",
+        component: CompanyProfileForm,
       },
     ],
   },

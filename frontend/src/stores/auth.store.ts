@@ -8,74 +8,72 @@ import type { LoginData, RegisterData } from "@/features/auth/types/auth.types";
 import type { User } from "@/types/user.types";
 
 export const useAuthStore = defineStore("auth", () => {
-  const user = ref<User | null>(null);
+    const user = ref<User | null>(null);
 
-  const token = ref<string | null>(localStorage.getItem("token"));
+    const token = ref<string | null>(localStorage.getItem("token"));
 
-  const isAuthenticated = computed(() => !!token.value);
-  const initialized = ref<boolean>(false);
+    const isAuthenticated = computed(() => !!token.value);
+    const initialized = ref<boolean>(false);
 
-  const initializeAuth = async () => {
-    if (initialized.value) return;
+    const initializeAuth = async () => {
+        if (initialized.value) return;
 
-    try {
-      if (token.value) {
-        const response = await authRepository.getCurrentUser();
+        try {
+            if (token.value) {
+                const response = await authRepository.getCurrentUser();
+                user.value = response.data.user;
+            }
+        } catch (error) {
+            authRepository.logout();
+        } finally {
+            initialized.value = true;
+        }
+    };
+
+    // Login
+    const login = async (data: LoginData) => {
+        const response = await authRepository.login(data);
+
         user.value = response.data.user;
-      }
-    } catch (error) {
-      authRepository.logout();
-    } finally {
-      initialized.value = true;
-    }
-  };
+        token.value = response.data.token;
 
-  // Login
-  const login = async (data: LoginData) => {
-    const response = await authRepository.login(data);
+        localStorage.setItem("token", token.value);
 
-    user.value = response.data.user;
-    token.value = response.data.token;
+        return response.data;
+    };
 
-    localStorage.setItem("token", token.value);
+    // Register
+    const register = async (data: RegisterData) => {
+        const response = await authRepository.register(data);
 
-    return response.data;
-  };
+        user.value = response.data.user;
+        token.value = response.data.token;
 
+        localStorage.setItem("token", response.data.token);
 
+        return response.data;
+    };
 
-  // Register
-  const register = async (data: RegisterData) => {
-    const response = await authRepository.register(data);
+    // Logout
+    const logout = async () => {
+        try {
+            await authRepository.logout();
+        } finally {
+            localStorage.removeItem("token");
 
-    user.value = response.data.user;
-    token.value = response.data.token;
+            token.value = null;
+            user.value = null;
+        }
+    };
 
-    localStorage.setItem("token", response.data.token);
-
-    return response.data;
-  };
-
-  // Logout
-  const logout = async () => {
-    try {
-      await authRepository.logout();
-    } finally {
-      localStorage.removeItem("token");
-
-      token.value = null;
-      user.value = null;
-    }
-  };
-
-  return {
-    user,
-    token,
-    isAuthenticated,
-    initialized,
-    login,
-    register,
-    logout,
-    initializeAuth,
-  };
+    return {
+        user,
+        token,
+        isAuthenticated,
+        initialized,
+        login,
+        register,
+        logout,
+        initializeAuth,
+    };
 });
