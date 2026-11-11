@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, watch } from "vue";
 import ManageProfileHeader from "../components/ManageProfileHeader.vue";
 import TipBanner from "../components/TipBanner.vue";
 import CompanyBasicInfoForm from "../components/CompanyBasicInfoForm.vue";
@@ -8,6 +8,7 @@ import CompanyBrandingForm from "../components/CompanyBrandingForm.vue";
 import CompanyGalleryForm from "../components/CompanyGalleryForm.vue";
 import { useCompanyProfile } from "@/composables/useUpdateCompanyProfile.ts";
 import { useCompanyProfileStore } from "@/stores/company-profile.store.ts";
+import { useRoute, useRouter } from "vue-router";
 
 const store = useCompanyProfileStore();
 const { isPending, mutation, submitForm } = useCompanyProfile();
@@ -15,6 +16,24 @@ const { isPending, mutation, submitForm } = useCompanyProfile();
 // Dynamic Tab Switching
 const activeTab = ref("Overview");
 const tabs = ["Overview", "Description", "Gallery"];
+
+const route = useRoute();
+
+watch(
+    () => route.query.tab,
+    (tab) => {
+        if (tab === "gallery") {
+            activeTab.value = "Gallery";
+        }
+    },
+    { immediate: true },
+);
+
+const router = useRouter();
+
+function goToProfile() {
+    router.push({ name: "company-profile" });
+}
 </script>
 
 <template>
@@ -30,6 +49,7 @@ const tabs = ["Overview", "Description", "Gallery"];
                 :is-edit-mode="store.isEditMode"
                 :is-submitting="mutation.isPending.value"
                 @reset="store.reset"
+                @viewProfile="goToProfile"
             />
 
             <!-- Main Layout Body -->

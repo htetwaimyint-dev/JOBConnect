@@ -105,11 +105,23 @@ const routes: RouteRecordRaw[] = [
     // Employer Routes
     {
         path: "/employer",
-        component: EmployerLayout,
+        component: JobSeekerLayout,
         meta: {
             requiresAuth: true,
             role: "employer",
         },
+        children: [
+            {
+                path: "/employer/profile",
+                name: "company-profile",
+                component: CompanyProfilePage,
+            },
+            {
+                path: "/employer/profile/edit",
+                name: "employer.company-profile.edit",
+                component: CompanyProfileForm,
+            },
+        ],
     },
 ];
 

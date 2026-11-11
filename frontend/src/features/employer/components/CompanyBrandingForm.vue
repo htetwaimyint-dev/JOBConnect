@@ -1,10 +1,17 @@
 <script setup lang="ts">
+import { ref } from "vue";
 import BaseButton from "@/components/common/BaseButton.vue";
 defineProps<{
     coverPreview: string | null;
     errors: Record<string, string[]>;
 }>();
 const emit = defineEmits<{ selectCover: [file: File] }>();
+
+const fileInput = ref<HTMLInputElement | null>(null);
+
+function openFilePicker() {
+    fileInput.value?.click();
+}
 
 function onCoverChange(e: Event) {
     const file = (e.target as HTMLInputElement).files?.[0];
@@ -31,14 +38,16 @@ function onCoverChange(e: Event) {
 
             <label class="absolute bottom-3 right-3 cursor-pointer">
                 <BaseButton
+                    type="button"
                     size="28"
                     variant="solid"
-                    color="neutral"
-                    class="bg-white text-slate-900 border border-slate-200 shadow-2xs hover:bg-slate-50"
+                    @click="openFilePicker"
                 >
-                    {{ coverPreview ? "Change Cover" : "Upload Cover" }}
+                    Upload Cover
                 </BaseButton>
+
                 <input
+                    ref="fileInput"
                     type="file"
                     accept="image/png,image/jpeg,image/webp"
                     class="hidden"

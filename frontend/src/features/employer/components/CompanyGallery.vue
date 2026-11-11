@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useRouter } from "vue-router";
 import type { GalleryImage } from "../types/company-form.types";
 import BaseButton from "@/components/common/BaseButton.vue";
 
@@ -18,6 +19,17 @@ function onImagesChange(event: Event) {
     if (input.files?.length) emit("addImages", input.files);
     input.value = "";
 }
+
+const router = useRouter();
+
+function goToAddImages() {
+    router.push({
+        name: "employer.company-profile.edit",
+        query: {
+            tab: "gallery",
+        },
+    });
+}
 </script>
 
 <template>
@@ -31,7 +43,12 @@ function onImagesChange(event: Event) {
             </div>
 
             <label class="shrink-0 cursor-pointer">
-                <BaseButton size="28" variant="outline" color="primary">
+                <BaseButton
+                    size="28"
+                    variant="outline"
+                    color="primary"
+                    @click="goToAddImages"
+                >
                     Add images
                 </BaseButton>
                 <input
@@ -58,13 +75,6 @@ function onImagesChange(event: Event) {
                     class="h-full w-full object-cover"
                     alt="Gallery image"
                 />
-                <button
-                    type="button"
-                    class="absolute right-1 top-1 rounded bg-white/90 px-2 py-1 text-xs text-red-600 opacity-100 shadow sm:opacity-0 sm:group-hover:opacity-100"
-                    @click="emit('removeExisting', index)"
-                >
-                    Remove
-                </button>
             </div>
 
             <div
@@ -77,13 +87,6 @@ function onImagesChange(event: Event) {
                     class="h-full w-full object-cover"
                     alt="New gallery image"
                 />
-                <button
-                    type="button"
-                    class="absolute right-1 top-1 rounded bg-white/90 px-2 py-1 text-xs text-red-600 opacity-100 shadow sm:opacity-0 sm:group-hover:opacity-100"
-                    @click="emit('removeNew', index)"
-                >
-                    Remove
-                </button>
             </div>
         </div>
 

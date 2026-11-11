@@ -12,6 +12,7 @@ import BaseButton from "@/components/common/BaseButton.vue";
 import { useCompanyStore } from "@/stores/company.store.ts";
 import { useCompanyProfile } from "@/composables/useUpdateCompanyProfile.ts";
 import type { CompanyTab } from "@/stores/company.store.ts";
+import { useRouter } from "vue-router";
 
 const companyStore = useCompanyStore();
 
@@ -68,9 +69,7 @@ function goToJobs() {}
 
             <!-- Company Profile -->
             <template v-else-if="company">
-                <div
-                    class="mt-8 grid grid-cols-1 items-start gap-8 lg:grid-cols-14"
-                >
+                <div class="grid grid-cols-1 items-start gap-8 lg:grid-cols-14">
                     <!-- Left Column -->
                     <section class="min-w-0 lg:col-span-10">
                         <!-- Banner -->
