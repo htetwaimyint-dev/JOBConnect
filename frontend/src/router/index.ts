@@ -13,6 +13,10 @@ import JobSeekerLayout from "@/layouts/JobSeekerLayout.vue";
 import EmployeeLayout from "@/layouts/EmployerLayout.vue";
 import AdminLayout from "@/layouts/AdminLayout.vue";
 
+import JobSeekerSettingsPage from "@/features/job-seeker/pages/JobSeekerSettingsPage.vue";
+import AdminSettingsPage from "@/features/admin/pages/AdminSettingsPage.vue";
+import EmployerSettingsPage from "@/features/employer/pages/EmployerSettingPage..vue";
+
 // Dashboard Components
 import JobSeekerDashboard from "@/features/job-seeker/pages/Dashboard.vue";
 import AdminDashboard from "@/features/admin/pages/Dashboard.vue";
@@ -49,6 +53,11 @@ const routes: RouteRecordRaw[] = [
         name: "JobSeekerDashboard",
         component: JobSeekerDashboard,
       },
+         {
+        path: "settings",
+        name: "JobSeekerSettings",
+        component: JobSeekerSettingsPage,
+      },
     ],
   },
 
@@ -66,6 +75,11 @@ const routes: RouteRecordRaw[] = [
         name: "AdminDashboard",
         component: AdminDashboard,
       },
+      {
+        path: "settings",
+        name: "AdminSettings",
+        component: AdminSettingsPage,
+      },
     ],
   },
 
@@ -82,6 +96,11 @@ const routes: RouteRecordRaw[] = [
         path: "dashboard",
         name: "EmployerDashboard",
         component: EmployerDashboard,
+      },
+      {
+        path: "settings",
+        name: "EmployerSettings",
+        component: EmployerSettingsPage,
       },
     ],
   },

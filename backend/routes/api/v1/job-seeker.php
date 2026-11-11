@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\V1\JobSeeker\ProfileController;
 use App\Http\Controllers\Api\V1\JobSeeker\EducationController;
 use App\Http\Controllers\Api\V1\JobSeeker\ExperienceController;
 use App\Http\Controllers\Api\V1\JobSeeker\ResumeController;
+use App\Http\Controllers\Api\V1\JobSeeker\AccountSettingsController;
 
 
 Route::middleware(['auth:sanctum', 'job-seeker'])
@@ -27,4 +28,15 @@ Route::middleware(['auth:sanctum', 'job-seeker'])
             '/resumes/{resume}/download',
             [ResumeController::class, 'download']
         );
+
+        // Account Settings
+        Route::put('/settings/account', [
+            AccountSettingsController::class,
+            'updateAccount'
+        ]);
+
+        Route::put('/settings/password', [
+            AccountSettingsController::class,
+            'changePassword'
+        ]);
     });

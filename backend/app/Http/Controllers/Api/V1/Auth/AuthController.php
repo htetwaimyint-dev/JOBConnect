@@ -24,8 +24,8 @@ class AuthController extends Controller
             'email'       => 'required|email:rfc,dns|unique:users',
             'password'    => 'required|string|min:6|confirmed',
             'role'     => 'required|in:job_seeker,employer',
-        ]);
 
+        ]);
         if ($validator->fails()) {
             return $this->failResponse(
                 'Validation Failed',

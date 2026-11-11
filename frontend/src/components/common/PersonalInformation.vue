@@ -12,7 +12,6 @@ import {
   X,
 } from "lucide-vue-next";
 
-// Props
 const props = defineProps<{
   name: string;
   email: string;
@@ -22,7 +21,6 @@ const props = defineProps<{
   photoLabel?: string;
 }>();
 
-// Emits
 const emit = defineEmits<{
   save: [
     data: {
@@ -30,6 +28,14 @@ const emit = defineEmits<{
       email: string;
       profileImage: File | null;
       removeProfileImage: boolean;
+    },
+  ];
+
+  changePassword: [
+    data: {
+      current_password: string;
+      new_password: string;
+      new_password_confirmation: string;
     },
   ];
 }>();
@@ -48,7 +54,7 @@ const photoRemoved = ref(false);
 const photoError = ref("");
 const fileInput = ref<HTMLInputElement | null>(null);
 
-// Change Password
+// Password
 const currentPassword = ref("");
 const newPassword = ref("");
 const confirmPassword = ref("");
@@ -126,6 +132,7 @@ const togglePasswordEditing = () => {
   if (isPasswordEditing.value) {
     cancelPasswordEditing();
   } else {
+    passwordError.value = "";
     isPasswordEditing.value = true;
   }
 };
@@ -153,6 +160,12 @@ const validatePassword = () => {
     return false;
   }
 
+  if (newPassword.value === currentPassword.value) {
+    passwordError.value =
+      "New password must be different from current password.";
+    return false;
+  }
+
   if (newPassword.value !== confirmPassword.value) {
     passwordError.value = "New password and confirmation do not match.";
     return false;
@@ -161,25 +174,35 @@ const validatePassword = () => {
   return true;
 };
 
-// Save changes
+// Save Changes
 const saveChanges = () => {
   if (!name.value.trim() || !email.value.trim()) {
     return;
   }
 
+  // Password Change
   if (isPasswordEditing.value) {
-    if (!validatePassword()) return;
+    if (!validatePassword()) {
+      return;
+    }
+
+    // Emit ONLY password information
+    emit("changePassword", {
+      current_password: currentPassword.value,
+      new_password: newPassword.value,
+      new_password_confirmation: confirmPassword.value,
+    });
+
+    return;
   }
 
+  // Account Information Update
   emit("save", {
     name: name.value.trim(),
     email: email.value.trim(),
     profileImage: selectedPhoto.value,
     removeProfileImage: photoRemoved.value,
   });
-
-  isNameEditing.value = false;
-  isEmailEditing.value = false;
 };
 
 // Cancel all changes
@@ -368,7 +391,6 @@ onBeforeUnmount(() => {
             "
           >
             <X v-if="isPasswordEditing" class="h-5 w-5" />
-
             <Pencil v-else class="h-5 w-5" />
           </button>
         </div>
