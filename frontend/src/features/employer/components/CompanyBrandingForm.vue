@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import BaseButton from "@/components/common/BaseButton.vue";
-defineProps<{ coverPreview: string | null }>();
+defineProps<{
+    coverPreview: string | null;
+    errors: Record<string, string[]>;
+}>();
 const emit = defineEmits<{ selectCover: [file: File] }>();
 
 function onCoverChange(e: Event) {

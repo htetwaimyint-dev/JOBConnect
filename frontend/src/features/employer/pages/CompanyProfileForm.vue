@@ -1,13 +1,12 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import PortalHeader from "../components/PortalHeader.vue";
 import ManageProfileHeader from "../components/ManageProfileHeader.vue";
 import TipBanner from "../components/TipBanner.vue";
 import CompanyBasicInfoForm from "../components/CompanyBasicInfoForm.vue";
 import CompanyOverviewForm from "../components/CompanyOverviewForm.vue";
 import CompanyBrandingForm from "../components/CompanyBrandingForm.vue";
 import CompanyGalleryForm from "../components/CompanyGalleryForm.vue";
-import { useCompanyProfile } from "@/composables/useCompany.ts";
+import { useCompanyProfile } from "@/composables/useUpdateCompanyProfile.ts";
 import { useCompanyProfileStore } from "@/stores/company-profile.store.ts";
 
 const store = useCompanyProfileStore();
@@ -93,6 +92,7 @@ const tabs = ["Overview", "Description", "Gallery"];
                         <div v-if="activeTab === 'Overview'" key="overview">
                             <CompanyBasicInfoForm
                                 v-model:form="store.form"
+                                :errors="store.errors"
                                 :logo-preview="store.logoPreview"
                                 @select-logo="store.selectImage($event, 'logo')"
                             />
@@ -103,7 +103,10 @@ const tabs = ["Overview", "Description", "Gallery"];
                             v-else-if="activeTab === 'Description'"
                             key="description"
                         >
-                            <CompanyOverviewForm v-model:form="store.form" />
+                            <CompanyOverviewForm
+                                v-model:form="store.form"
+                                :errors="store.errors"
+                            />
                         </div>
 
                         <!-- Tab 3: Gallery & Branding Components -->
@@ -114,6 +117,7 @@ const tabs = ["Overview", "Description", "Gallery"];
                         >
                             <CompanyBrandingForm
                                 :cover-preview="store.coverPreview"
+                                :errors="store.errors"
                                 @select-cover="
                                     store.selectImage($event, 'cover')
                                 "
@@ -122,6 +126,7 @@ const tabs = ["Overview", "Description", "Gallery"];
                             <CompanyGalleryForm
                                 :existing-images="store.existingGallery"
                                 :new-images="store.newGallery"
+                                :errors="store.errors"
                                 @add-images="store.addGallery"
                                 @remove-existing="store.removeGallery($event)"
                                 @remove-new="store.removeGallery($event, true)"

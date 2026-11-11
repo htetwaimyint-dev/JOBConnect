@@ -10,7 +10,7 @@ import CompanySidebar from "../components/CompanySidebar.vue";
 import type { Company, Job } from "../types/company.types.ts";
 import BaseButton from "@/components/common/BaseButton.vue";
 import { useCompanyStore } from "@/stores/company.store.ts";
-import { useCompanyProfile } from "@/composables/useCompany.ts";
+import { useCompanyProfile } from "@/composables/useUpdateCompanyProfile.ts";
 import type { CompanyTab } from "@/stores/company.store.ts";
 
 const companyStore = useCompanyStore();
@@ -100,12 +100,12 @@ function goToJobs() {}
                                 >
                                     {{ tab.label }}
 
-                                    <span
+                                    <!-- <span
                                         v-if="tab.value === 'jobs'"
                                         class="ml-1.5 rounded-full bg-violet-50 px-2 py-0.5 text-xs text-violet-700"
                                     >
                                         {{ company.openJobsCount }}
-                                    </span>
+                                    </span> -->
                                 </BaseButton>
                             </nav>
                         </div>

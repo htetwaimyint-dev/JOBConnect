@@ -23,7 +23,7 @@ const emit = defineEmits<{
         <div
             class="absolute inset-0 bg-cover bg-center"
             :style="{
-                backgroundImage: `url(${company.coverImage})`,
+                backgroundImage: `url(${company.cover_image})`,
             }"
         ></div>
 
@@ -77,7 +77,7 @@ const emit = defineEmits<{
 
                         <span class="flex items-center gap-1.5">
                             <span>♙</span>
-                            {{ company.employeeCount || 0 }} employees
+                            {{ company.employee_count || 0 }} employees
                         </span>
                     </div>
                 </div>

@@ -1,8 +1,16 @@
 export interface Company {
     id: number;
     employer_id: number;
+
     name: string;
+    tagline: string | null;
+
     logo: string | null;
+    cover_image: string | null;
+
+    founded_year: number;
+    employee_count: string | null;
+
     description: string | null;
     industry: string | null;
     website: string | null;
@@ -11,20 +19,13 @@ export interface Company {
     address: string | null;
     city: string | null;
 
+    gallery: string[];
+
     verification_status: "pending" | "verified" | "rejected";
     verified_at: string | null;
 
     created_at: string | null;
     updated_at: string | null;
-
-    // Future fields
-    coverImage?: string | null;
-    tagline?: string | null;
-    foundedYear?: number | null;
-    employeeCount?: string | null;
-    openJobsCount?: number;
-    benefits?: Benefit[];
-    gallery?: string[];
 }
 
 export interface Benefit {

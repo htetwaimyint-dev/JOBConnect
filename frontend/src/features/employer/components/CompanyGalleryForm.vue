@@ -1,7 +1,11 @@
 <script setup lang="ts">
 import type { GalleryImage } from "../types/company-form.types";
 
-defineProps<{ existingImages: string[]; newImages: GalleryImage[] }>();
+defineProps<{
+    existingImages: string[];
+    newImages: GalleryImage[];
+    errors: Record<string, string[]>;
+}>();
 const emit = defineEmits<{
     addImages: [files: File[]];
     removeExisting: [index: number];

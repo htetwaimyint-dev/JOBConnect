@@ -10,6 +10,9 @@ use App\Repositories\Eloquent\ResumeRepository;
 use App\Repositories\Contracts\JobSeekerProfileRepositoryInterface;
 use App\Repositories\Eloquent\JobSeekerProfileRepository;
 
+use App\Repositories\Contracts\CompanyRepositoryInterface;
+use App\Repositories\Eloquent\CompanyRepository;
+
 class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
@@ -22,6 +25,11 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(
             JobSeekerProfileRepositoryInterface::class,
             JobSeekerProfileRepository::class
+        );
+
+        $this->app->bind(
+            CompanyRepositoryInterface::class,
+            CompanyRepository::class
         );
     }
 

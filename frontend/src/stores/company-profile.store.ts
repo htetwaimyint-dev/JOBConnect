@@ -14,11 +14,11 @@ function emptyForm(): CompanyForm {
         website: "",
         company_email: "",
         phone: "",
-        description: "",
         address: "",
         city: "",
-        foundedYear: null,
+        foundedYear: 0,
         employeeCount: "",
+        sections: [],
     };
 }
 
@@ -39,12 +39,26 @@ export const useCompanyProfileStore = defineStore("company-profile", () => {
 
     const isEditMode = ref(false);
 
+    const errors = ref<Record<string, string[]>>({});
+
     const hasChanges = computed(
         () =>
             !!logoFile.value ||
             !!coverFile.value ||
             newGallery.value.length > 0,
     );
+
+    function getFieldError(field: string): string {
+        return errors.value[field]?.[0] ?? "";
+    }
+
+    function clearErrors() {
+        errors.value = {};
+    }
+
+    function setErrors(newErrors: Record<string, string[]>) {
+        errors.value = newErrors;
+    }
 
     function revokePreview(url: string | null) {
         if (url?.startsWith("blob:")) {
@@ -67,13 +81,24 @@ export const useCompanyProfileStore = defineStore("company-profile", () => {
     }
 
     function populate(company: Company | null) {
-        cleanupPreviews();
-
         if (!company) {
-            form.value = emptyForm();
-            isEditMode.value = false;
-            existingGallery.value = [];
+            reset();
             return;
+        }
+
+        let sections = [];
+
+        if (company.description) {
+            try {
+                const parsed = JSON.parse(company.description);
+
+                if (Array.isArray(parsed)) {
+                    sections = parsed;
+                }
+            } catch {
+                // Keep sections empty if description isn't valid JSON.
+                sections = [];
+            }
         }
 
         form.value = {
@@ -83,16 +108,26 @@ export const useCompanyProfileStore = defineStore("company-profile", () => {
             website: company.website ?? "",
             company_email: company.company_email ?? "",
             phone: company.phone ?? "",
-            description: company.description ?? "",
             address: company.address ?? "",
             city: company.city ?? "",
-            foundedYear: company.foundedYear ?? null,
-            employeeCount: company.employeeCount ?? "",
+
+            foundedYear: company.founded_year ?? null,
+            employeeCount: company.employee_count ?? "",
+
+            sections,
         };
 
         logoPreview.value = company.logo;
-        coverPreview.value = company.coverImage ?? null;
-        existingGallery.value = [...(company.gallery ?? [])];
+        coverPreview.value = company.cover_image;
+
+        existingGallery.value = (company.gallery ?? []).filter(
+            (image): image is string =>
+                typeof image === "string" && image.trim() !== "",
+        );
+        newGallery.value = [];
+
+        logoFile.value = null;
+        coverFile.value = null;
 
         isEditMode.value = true;
     }
@@ -164,44 +199,71 @@ export const useCompanyProfileStore = defineStore("company-profile", () => {
         }
     }
 
-    function buildFormData() {
-        const data = new FormData();
+    function buildFormData(): FormData {
+        const formData = new FormData();
 
-        Object.entries(form.value).forEach(([key, value]) => {
-            data.append(key, value == null ? "" : String(value).trim());
-        });
+        formData.append("name", form.value.name.trim());
+        formData.append("tagline", form.value.tagline.trim());
+        formData.append("industry", form.value.industry.trim());
+        formData.append("website", form.value.website.trim());
+        formData.append("company_email", form.value.company_email.trim());
+        formData.append("phone", form.value.phone.trim());
+        formData.append("address", form.value.address.trim());
+        formData.append("city", form.value.city.trim());
 
-        if (logoFile.value) {
-            data.append("logo", logoFile.value);
+        if (form.value.foundedYear) {
+            formData.append("founded_year", form.value.foundedYear.toString());
         }
 
-        if (coverFile.value) {
-            data.append("cover_image", coverFile.value);
+        formData.append("employee_count", form.value.employeeCount);
+
+        formData.append("description", JSON.stringify(form.value.sections));
+
+        // Company logo
+        if (logoFile.value instanceof File) {
+            formData.append("logo", logoFile.value);
         }
 
-        newGallery.value.forEach(({ file }) => {
-            data.append("gallery[]", file);
+        // Company cover
+        if (coverFile.value instanceof File) {
+            formData.append("cover_image", coverFile.value);
+        }
+
+        // Newly uploaded gallery images
+        newGallery.value.forEach((image) => {
+            if (image.file instanceof File) {
+                formData.append("gallery[]", image.file);
+            }
         });
 
+        // Existing gallery images
         existingGallery.value.forEach((image) => {
-            data.append("existing_gallery[]", image);
+            if (typeof image === "string" && image.trim() !== "") {
+                formData.append("existing_gallery[]", image.trim());
+            }
         });
 
-        return data;
+        return formData;
     }
 
     function reset() {
         cleanupPreviews();
 
         form.value = emptyForm();
+
         logoFile.value = null;
         coverFile.value = null;
+
         existingGallery.value = [];
+        newGallery.value = [];
+
         errorMessage.value = "";
         successMessage.value = "";
+
+        clearErrors();
+
         isEditMode.value = false;
     }
-
     onScopeDispose(cleanupPreviews);
 
     return {
@@ -216,6 +278,7 @@ export const useCompanyProfileStore = defineStore("company-profile", () => {
         successMessage,
         isEditMode,
         hasChanges,
+        errors,
         populate,
         selectImage,
         addGallery,
@@ -223,5 +286,8 @@ export const useCompanyProfileStore = defineStore("company-profile", () => {
         buildFormData,
         reset,
         cleanupPreviews,
+        getFieldError,
+        clearErrors,
+        setErrors,
     };
 });

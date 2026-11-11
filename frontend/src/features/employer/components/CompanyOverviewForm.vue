@@ -5,6 +5,7 @@ import CompanyOverviewCard from "./CompanyOverviewCard.vue";
 import CompanyOverviewPreview from "./CompanyOverviewPreview.vue";
 
 const form = defineModel<CompanyForm>("form", { required: true });
+defineProps<{ errors: Record<string, string[]> }>();
 
 // Ensure array exists with defaults
 if (!form.value.sections) {
@@ -165,13 +166,13 @@ function moveSection(index: number, direction: "up" | "down") {
             <button
                 type="button"
                 @click="addSection"
-                class="w-full rounded-xl border-2 border-dashed border-blue-300 bg-linear-to-r from-blue-50/50 via-indigo-50/30 to-blue-50/50 py-3.5 text-xs font-bold text-blue-700 hover:border-blue-500 hover:bg-blue-100/50 hover:text-blue-900 transition flex items-center justify-center gap-2 shadow-2xs group"
+                class="w-full rounded-xl border-2 border-dashed border-blue-300 bg-linear-to-r from-blue-50/50 via-indigo-50/30 to-blue-50/50 py-3.5 text-xs! font-bold text-blue-700 hover:border-blue-500 hover:bg-blue-100/50 hover:text-blue-900 transition flex items-center justify-center gap-2 shadow-2xs group"
             >
                 <span
                     class="flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-white text-xs font-black group-hover:scale-110 transition-transform"
                     >+</span
                 >
-                Add Story Section Card
+                Add Section
             </button>
         </div>
     </section>

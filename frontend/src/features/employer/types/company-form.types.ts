@@ -12,11 +12,11 @@ export interface CompanyForm {
     website: string;
     company_email: string;
     phone: string;
-    foundedYear: string | number;
-    employeeCount: string;
-    city: string;
     address: string;
-    // Replaced plain string description with structured sections array
+    city: string;
+    foundedYear: number;
+    employeeCount: string;
+    // Client-side dynamic sections array
     sections: CompanyOverviewSection[];
 }
 

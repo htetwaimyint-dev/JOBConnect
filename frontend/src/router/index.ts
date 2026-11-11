@@ -21,6 +21,7 @@ import EmployerDashboard from "@/features/employer/pages/Dashboard.vue";
 
 // Import Route Files
 import { authRoutes } from "./auth.routes";
+import CompanyProfilePage from "@/features/employer/pages/CompanyProfilePage.vue";
 
 // Combine All Routes
 const routes: RouteRecordRaw[] = [
@@ -73,7 +74,7 @@ const routes: RouteRecordRaw[] = [
     // Employee Layout
     {
         path: "/employer",
-        component: EmployeeLayout,
+        //component: EmployeeLayout,
         meta: {
             requiresAuth: true,
             role: "employer",
@@ -84,6 +85,16 @@ const routes: RouteRecordRaw[] = [
                 name: "EmployerDashboard",
                 component: EmployerDashboard,
             },
+            {
+                path: "profile/create",
+                name: "EmployerProfileForm",
+                component: CompanyProfileForm,
+            },
+            {
+                path: "profile",
+                name: "CompanyProfilePage",
+                component: CompanyProfilePage,
+            },
         ],
     },
 ];
@@ -93,9 +104,12 @@ const router = createRouter({
     routes,
 });
 
-router.beforeEach((to) => {
+router.beforeEach(async (to, from) => {
     const authStore = useAuthStore();
-    const token = localStorage.getItem("token");
+
+    if (!authStore.initialized) {
+        await authStore.initializeAuth();
+    }
 
     // Check Authentication
     if (to.meta.requiresAuth && !authStore.token) {
@@ -104,6 +118,11 @@ router.beforeEach((to) => {
 
     // Check Authorization
     if (to.meta.role && authStore.user?.role !== to.meta.role) {
+        return "/";
+    }
+
+    // Prevent authenticated users from accessing login
+    if (to.meta.guestOnly && authStore.token) {
         return "/";
     }
     return true;
