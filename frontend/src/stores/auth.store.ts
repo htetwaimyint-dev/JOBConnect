@@ -13,6 +13,22 @@ export const useAuthStore = defineStore("auth", () => {
   const token = ref<string | null>(localStorage.getItem("token"));
 
   const isAuthenticated = computed(() => !!token.value);
+  const initialized = ref<boolean>(false);
+
+  const initializeAuth = async () => {
+    if (initialized.value) return;
+
+    try {
+      if (token.value) {
+        const response = await authRepository.getCurrentUser();
+        user.value = response.data.user;
+      }
+    } catch (error) {
+      authRepository.logout();
+    } finally {
+      initialized.value = true;
+    }
+  };
 
   // Login
   const login = async (data: LoginData) => {
@@ -21,10 +37,12 @@ export const useAuthStore = defineStore("auth", () => {
     user.value = response.data.user;
     token.value = response.data.token;
 
-    localStorage.setItem("token", response.data.token);
+    localStorage.setItem("token", token.value);
 
     return response.data;
   };
+
+
 
   // Register
   const register = async (data: RegisterData) => {
@@ -54,8 +72,10 @@ export const useAuthStore = defineStore("auth", () => {
     user,
     token,
     isAuthenticated,
+    initialized,
     login,
     register,
     logout,
+    initializeAuth,
   };
 });
