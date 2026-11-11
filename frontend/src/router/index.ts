@@ -17,6 +17,7 @@ import AdminLayout from "@/layouts/AdminLayout.vue";
 import Dashboard from "@/features/job-seeker/pages/Dashboard.vue";
 import AdminDashboard from "@/features/admin/pages/Dashboard.vue";
 import EmployerDashboard from "@/features/employer/pages/Dashboard.vue";
+import JobSeekerSettingsPage from "@/features/job-seeker/pages/JobSeekerSettingsPage.vue";
 
 // Job Seeker Pages
 import ProfilePage from "@/features/job-seeker/pages/ProfilePage.vue";
@@ -88,6 +89,11 @@ const routes: RouteRecordRaw[] = [
         path: "settings",
         name: "JobSeekerSettings",
         component: SettingsPage,
+      },
+      {
+        path: "settings",
+        name: "JobSeekerSettings",
+        component: JobSeekerSettingsPage,
       },
     ],
   },

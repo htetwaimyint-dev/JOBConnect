@@ -58,6 +58,8 @@ const profilePhoto = computed(() => {
   return userStore.profilePhoto;
 });
 
+
+
 const toggleProfileMenu = () => {
   showProfileMenu.value = !showProfileMenu.value;
   showNotifications.value = false;
@@ -209,7 +211,6 @@ const handleLogout = async () => {
           <ChevronDown :size="17" class="hidden text-slate-400 transition-transform sm:block"
             :class="{ 'rotate-180': showProfileMenu }" />
         </button>
-
         <!-- Profile Dropdown -->
         <Transition name="dropdown">
           <div v-if="showProfileMenu" class="absolute right-0 top-14 z-50 w-60
