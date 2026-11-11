@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Api\JobSeeker;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UserSkillRequest extends FormRequest
 {
@@ -20,6 +21,17 @@ class UserSkillRequest extends FormRequest
                 'min:2',
                 'max:100',
             ],
+
+            'skill_level' => [
+                $this->isMethod('POST') ? 'required' : 'sometimes',
+                'string',
+                Rule::in([
+                    'Beginner',
+                    'Intermediate',
+                    'Advanced',
+                    'Expert',
+                ]),
+            ],
         ];
     }
 
@@ -30,6 +42,9 @@ class UserSkillRequest extends FormRequest
             'name.string' => 'Skill name must be text.',
             'name.min' => 'Skill name must be at least 2 characters.',
             'name.max' => 'Skill name cannot exceed 100 characters.',
+
+            'skill_level.required' => 'Skill level is required.',
+            'skill_level.in' => 'Please select a valid skill level.',
         ];
     }
 }

@@ -23,6 +23,7 @@ class SkillRepository implements SkillRepositoryInterface
             ->find($skillId);
     }
 
+
     public function create(
         int $jobSeekerId,
         array $data
@@ -30,8 +31,10 @@ class SkillRepository implements SkillRepositoryInterface
         return Skill::create([
             'job_seeker_id' => $jobSeekerId,
             'name' => $data['name'],
+            'skill_level' => $data['skill_level'],
         ]);
     }
+
 
     public function update(
         Skill $skill,

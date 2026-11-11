@@ -19,9 +19,9 @@ export const authRepository = {
     return api.post("/logout");
   },
 
-  // getCurrentUser() {
-  //   return api.get("/user");
-  // },
+  getCurrentUser() {
+    return api.get("/user");
+  },
 
   // getCsrfCookie() {
   //   return api.get("/sanctum/csrf-cookie");
