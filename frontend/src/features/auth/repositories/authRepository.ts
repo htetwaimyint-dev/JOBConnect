@@ -22,4 +22,8 @@ export const authRepository = {
     getCurrentUser() {
         return api.get("/user");
     },
+
+    // getCsrfCookie() {
+    //   return api.get("/sanctum/csrf-cookie");
+    // },
 };

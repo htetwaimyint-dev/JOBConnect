@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Api\V1\JobSeeker;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\JobSeeker\ResumeRequest;
-use App\Http\Resources\Api\ResumeResource;
+use App\Http\Resources\Api\JobSeeker\ResumeResource;
 use App\Models\User;
 use App\Services\JobSeeker\ResumeService;
 use Illuminate\Http\JsonResponse;

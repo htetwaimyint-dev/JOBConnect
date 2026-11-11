@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\V1\JobSeeker\ProfileController;
 use App\Http\Controllers\Api\V1\JobSeeker\EducationController;
 use App\Http\Controllers\Api\V1\JobSeeker\ExperienceController;
 use App\Http\Controllers\Api\V1\JobSeeker\ResumeController;
+use App\Http\Controllers\Api\V1\JobSeeker\UserSkillController;
 
 
 Route::middleware(['auth:sanctum', 'job-seeker'])
@@ -27,4 +28,8 @@ Route::middleware(['auth:sanctum', 'job-seeker'])
             '/resumes/{resume}/download',
             [ResumeController::class, 'download']
         );
+
+        // Job Seeker Skills
+        Route::apiResource('/skills', UserSkillController::class)
+            ->except(['show']);
     });

@@ -4,40 +4,44 @@ import {
     type RouteRecordRaw,
 } from "vue-router";
 
-// Demo Components
-import { useAuthStore } from "@/stores/auth.store.ts";
+import { useAuthStore } from "@/stores/auth.store";
 
 // Layouts
 import PublicLayout from "@/layouts/PublicLayout.vue";
 import JobSeekerLayout from "@/layouts/JobSeekerLayout.vue";
-import EmployeeLayout from "@/layouts/EmployerLayout.vue";
+import EmployerLayout from "@/layouts/EmployerLayout.vue";
 import AdminLayout from "@/layouts/AdminLayout.vue";
 import CompanyProfileForm from "@/features/employer/pages/CompanyProfileForm.vue";
 
-// Dashboard Components
-import JobSeekerDashboard from "@/features/job-seeker/pages/Dashboard.vue";
+// Dashboard Pages
+import Dashboard from "@/features/job-seeker/pages/Dashboard.vue";
 import AdminDashboard from "@/features/admin/pages/Dashboard.vue";
 import EmployerDashboard from "@/features/employer/pages/Dashboard.vue";
 
-// Import Route Files
+// Job Seeker Pages
+import ProfilePage from "@/features/job-seeker/pages/ProfilePage.vue";
+import JobsPage from "@/features/job-seeker/pages/JobsPage.vue";
+import SavedJobsPage from "@/features/job-seeker/pages/SavedJobsPage.vue";
+import ApplicationsPage from "@/features/job-seeker/pages/ApplicationsPage.vue";
+import InterviewsPage from "@/features/job-seeker/pages/InterviewsPage.vue";
+import OffersPage from "@/features/job-seeker/pages/OffersPage.vue";
+import SettingsPage from "@/features/job-seeker/pages/SettingsPage.vue";
+
+// Auth Routes
 import { authRoutes } from "./auth.routes";
 import CompanyProfilePage from "@/features/employer/pages/CompanyProfilePage.vue";
 
-// Combine All Routes
 const routes: RouteRecordRaw[] = [
-    //Auth Routes
     ...authRoutes,
 
-    // Public Website Layout
+    // Public Layout
     {
         path: "/",
         component: PublicLayout,
-        children: [
-            // Add your public website pages here later
-        ],
+        children: [],
     },
 
-    // Job Seeker Layout
+    // Job Seeker Routes
     {
         path: "/jobseeker",
         component: JobSeekerLayout,
@@ -49,12 +53,47 @@ const routes: RouteRecordRaw[] = [
             {
                 path: "dashboard",
                 name: "JobSeekerDashboard",
-                component: JobSeekerDashboard,
+                component: Dashboard,
+            },
+            {
+                path: "profile",
+                name: "JobSeekerProfile",
+                component: ProfilePage,
+            },
+            {
+                path: "jobs",
+                name: "JobSeekerJobs",
+                component: JobsPage,
+            },
+            {
+                path: "saved-jobs",
+                name: "JobSeekerSavedJobs",
+                component: SavedJobsPage,
+            },
+            {
+                path: "applications",
+                name: "JobSeekerApplications",
+                component: ApplicationsPage,
+            },
+            {
+                path: "interviews",
+                name: "JobSeekerInterviews",
+                component: InterviewsPage,
+            },
+            {
+                path: "offers",
+                name: "JobSeekerOffers",
+                component: OffersPage,
+            },
+            {
+                path: "settings",
+                name: "JobSeekerSettings",
+                component: SettingsPage,
             },
         ],
     },
 
-    //admin
+    // Admin Routes
     {
         path: "/admin",
         component: AdminLayout,
@@ -62,40 +101,15 @@ const routes: RouteRecordRaw[] = [
             requiresAuth: true,
             role: "admin",
         },
-        children: [
-            {
-                path: "dashboard",
-                name: "AdminDashboard",
-                component: AdminDashboard,
-            },
-        ],
     },
-
-    // Employee Layout
+    // Employer Routes
     {
         path: "/employer",
-        //component: EmployeeLayout,
+        component: EmployerLayout,
         meta: {
             requiresAuth: true,
             role: "employer",
         },
-        children: [
-            {
-                path: "dashboard",
-                name: "EmployerDashboard",
-                component: EmployerDashboard,
-            },
-            {
-                path: "profile/create",
-                name: "EmployerProfileForm",
-                component: CompanyProfileForm,
-            },
-            {
-                path: "profile",
-                name: "CompanyProfilePage",
-                component: CompanyProfilePage,
-            },
-        ],
     },
 ];
 
@@ -104,27 +118,23 @@ const router = createRouter({
     routes,
 });
 
-router.beforeEach(async (to, from) => {
+router.beforeEach(async (to) => {
     const authStore = useAuthStore();
 
     if (!authStore.initialized) {
         await authStore.initializeAuth();
     }
 
-    // Check Authentication
+    // Authentication check
     if (to.meta.requiresAuth && !authStore.token) {
         return "/login";
     }
 
-    // Check Authorization
+    // Role authorization check
     if (to.meta.role && authStore.user?.role !== to.meta.role) {
         return "/";
     }
 
-    // Prevent authenticated users from accessing login
-    if (to.meta.guestOnly && authStore.token) {
-        return "/";
-    }
     return true;
 });
 

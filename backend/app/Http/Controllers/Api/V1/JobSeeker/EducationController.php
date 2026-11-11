@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Api\V1\JobSeeker;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\JobSeeker\EducationRequest;
-use App\Http\Resources\Api\EducationResource;
+use App\Http\Resources\Api\JobSeeker\EducationResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
