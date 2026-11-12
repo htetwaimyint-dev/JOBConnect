@@ -2,16 +2,25 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Enums\UserRole;
+use App\Enums\UserStatus;
+use App\Models\User;
 use Illuminate\Database\Seeder;
 
 class AdminSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        //
+        User::updateOrCreate(
+            [
+                'email' => 'admin@jobconnect.test',
+            ],
+            [
+                'name' => 'JobConnect Admin',
+                'password' => 'admin@12345',
+                'role' => UserRole::ADMIN,
+                'status' => UserStatus::ACTIVE,
+            ]
+        );
     }
 }
