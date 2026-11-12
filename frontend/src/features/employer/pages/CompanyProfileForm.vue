@@ -6,7 +6,7 @@ import CompanyBasicInfoForm from "../components/CompanyBasicInfoForm.vue";
 import CompanyOverviewForm from "../components/CompanyOverviewForm.vue";
 import CompanyBrandingForm from "../components/CompanyBrandingForm.vue";
 import CompanyGalleryForm from "../components/CompanyGalleryForm.vue";
-import { useCompanyProfile } from "@/composables/useUpdateCompanyProfile.ts";
+import { useCompanyProfile } from "@/features/employer/composables/useUpdateCompanyProfile.ts";
 import { useCompanyProfileStore } from "@/stores/company-profile.store.ts";
 import { useRoute, useRouter } from "vue-router";
 
