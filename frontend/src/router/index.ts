@@ -21,11 +21,13 @@ import JobSeekerSettingsPage from "@/features/job-seeker/pages/JobSeekerSettings
 
 // Import Route Files
 import { authRoutes } from "./auth.routes";
+import { adminRoutes } from "./admin.routes";
 
 // Combine All Routes
 const routes: RouteRecordRaw[] = [
   //Auth Routes
   ...authRoutes,
+  ...adminRoutes,
 
   // Public Website Layout
   {
@@ -59,21 +61,21 @@ const routes: RouteRecordRaw[] = [
   },
 
   //admin
-  {
-    path: "/admin",
-    component: AdminLayout,
-    meta: {
-      requiresAuth: true,
-      role: "admin",
-    },
-    children: [
-      {
-        path: "dashboard",
-        name: "AdminDashboard",
-        component: AdminDashboard,
-      },
-    ],
-  },
+  // {
+  //   path: "/admin",
+  //   component: AdminLayout,
+  //   meta: {
+  //     requiresAuth: true,
+  //     role: "admin",
+  //   },
+  //   children: [
+  //     {
+  //       path: "dashboard",
+  //       name: "AdminDashboard",
+  //       component: AdminDashboard,
+  //     },
+  //   ],
+  // },
 
   // Employee Layout
   {
