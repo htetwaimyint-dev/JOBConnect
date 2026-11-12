@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Resources\Api;
+namespace App\Http\Resources\Api\Jobs;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -43,6 +43,8 @@ class JobResource extends JsonResource
             'workplace_type' => $this->workplace_type,
 
             'location' => $this->location,
+
+            'salary_type' => $this->salary_type,
 
             'salary_min' => $this->salary_min,
 

@@ -86,6 +86,8 @@ class UpdateJobRequest extends FormRequest
                 'required',
                 'in:draft,pending',
             ],
+
+            'salary_type' => 'required|in:fixed,negotiable',
         ];
     }
 

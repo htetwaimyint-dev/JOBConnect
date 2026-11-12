@@ -46,6 +46,11 @@ class JobService
     ): Job {
         $status = $data['submission_status'] ?? 'pending';
 
+        if (($data['salary_type'] ?? 'fixed') === 'negotiable') {
+            $data['salary_min'] = null;
+            $data['salary_max'] = null;
+        }
+
         unset($data['submission_status']);
 
         $data['status'] = $status;
@@ -70,7 +75,13 @@ class JobService
 
         $submissionStatus = $data['submission_status'] ?? null;
 
+        if (($data['salary_type'] ?? 'fixed') === 'negotiable') {
+            $data['salary_min'] = null;
+            $data['salary_max'] = null;
+        }
+
         unset(
+            $data['submission_status'],
             $data['company_id'],
             $data['status'],
             $data['approved_by'],
@@ -78,17 +89,20 @@ class JobService
             $data['rejection_reason']
         );
 
+
         if ($job->status === 'published') {
             $data['status'] = 'pending';
         } elseif ($job->status === 'rejected') {
             $data['status'] = $submissionStatus === 'draft'
                 ? 'draft'
                 : 'pending';
-        } elseif ($submissionStatus !== null) {
-            $data['status'] = $submissionStatus;
+        } elseif ($job->status === 'draft') {
+            $data['status'] = $submissionStatus ?? 'draft';
+        } elseif ($job->status === 'pending') {
+            $data['status'] = 'pending';
         }
 
-        if (($data['status'] ?? $job->status) === 'pending') {
+        if ($data['status'] === 'pending') {
             $data['approved_by'] = null;
             $data['approved_at'] = null;
             $data['rejection_reason'] = null;

@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\Api\V1\Jobs;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Api\Jobs\StoreCategoryRequest;
 use App\Http\Requests\Api\Jobs\StoreJobRequest;
-use App\Http\Resources\Api\JobResource;
+use App\Http\Requests\Api\Jobs\UpdateJobRequest;
+use App\Http\Resources\Api\Jobs\JobResource;
 use App\Services\Employer\CompanyService;
 use App\Services\Jobs\JobService;
 use Illuminate\Http\Request;
@@ -36,10 +36,9 @@ class JobController extends Controller
 
         $job = $this->jobService->getjobs($company, $perPage);
 
-        return response()->json([
+        return JobResource::collection($job)->additional([
             'success' => true,
             'message' => 'Jobs retrieved successfully.',
-            'data' => new JobResource($job),
         ]);
     }
 
@@ -48,30 +47,51 @@ class JobController extends Controller
         $company = $this->getEmployerCompany($request->user());
 
         $job = $this->jobService->createJob($company, $request->validated());
+        return response()->json([
+            'success' => true,
+            'message' => $job->status === 'draft'
+                ? 'Job saved as draft successfully.'
+                : 'Job submitted for admin approval successfully.',
+            'data' => new JobResource($job),
+        ], 201);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function show(Request $request, int $jobId)
     {
-        //
+        $company = $this->getEmployerCompany($request->user());
+
+        $job = $this->jobService->getJob($company, $jobId);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Job retrieved successfully.',
+            'data' => new JobResource($job),
+        ]);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
+    public function update(UpdateJobRequest $request, int $jobId)
     {
-        //
+        $company = $this->getEmployerCompany($request->user());
+
+        $job = $this->jobService->updateJob($company, $jobId, $request->validated);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Job updated successfully.',
+            'data' => new JobResource($job),
+        ]);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
+    public function destroy(Request $request, int $jobId)
     {
-        //
+        $company = $this->getEmployerCompany($request->user());
+
+        $this->jobService->deleteJob($company, $jobId);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Job deleted successfully.',
+        ]);
     }
 
     private function getEmployerCompany(User $user): Company
