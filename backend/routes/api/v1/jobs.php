@@ -1,19 +1,19 @@
 <?php
 
-use App\Http\Controllers\Api\V1\Jobs\JobController;
+use App\Http\Controllers\Api\V1\Employer\CompanyJobController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth:sanctum', 'employer'])
     ->prefix('/employer/jobs')
     ->group(function () {
 
-        Route::get('/', [JobController::class, 'index']);
+        Route::get('/', [CompanyJobController::class, 'index']);
 
-        Route::post('/', [JobController::class, 'store']);
+        Route::post('/', [CompanyJobController::class, 'store']);
 
-        Route::get('/{jobId}', [JobController::class, 'show']);
+        Route::get('/{jobId}', [CompanyJobController::class, 'show']);
 
-        Route::put('/{jobId}', [JobController::class, 'update']);
+        Route::put('/{jobId}', [CompanyJobController::class, 'update']);
 
-        Route::delete('/{jobId}', [JobController::class, 'destroy']);
+        Route::delete('/{jobId}', [CompanyJobController::class, 'destroy']);
     });
