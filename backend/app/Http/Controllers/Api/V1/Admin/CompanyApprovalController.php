@@ -8,7 +8,6 @@ use App\Http\Resources\Api\CompanyResource;
 use App\Models\Company;
 use Illuminate\Http\JsonResponse;
 
-
 class CompanyApprovalController extends Controller
 {
     /**
@@ -21,11 +20,12 @@ class CompanyApprovalController extends Controller
             ->latest()
             ->paginate(10);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Pending companies retrieved successfully.',
-            'data' => $companies,
-        ]);
+        return CompanyResource::collection($companies)
+            ->additional([
+                'success' => true,
+                'message' => 'Pending companies retrieved successfully.',
+            ])
+            ->response();
     }
 
     /**
@@ -37,6 +37,7 @@ class CompanyApprovalController extends Controller
 
         return response()->json([
             'success' => true,
+            'message' => 'Company details retrieved successfully.',
             'data' => new CompanyResource($company),
         ]);
     }
@@ -48,22 +49,26 @@ class CompanyApprovalController extends Controller
         CompanyApprovalRequest $request,
         Company $company
     ): JsonResponse {
-        $status = $request->validated()['verification_status'];
+        $validated = $request->validated();
+
+        $status = $validated['verification_status'];
 
         $company->update([
             'verification_status' => $status,
             'verified_at' => $status === 'verified' ? now() : null,
             'rejection_reason' => $status === 'rejected'
-                ? $request->validated()['rejection_reason']
+                ? $validated['rejection_reason']
                 : null,
         ]);
+
+        $company->refresh()->load('employer:id,name,email');
 
         return response()->json([
             'success' => true,
             'message' => $status === 'verified'
                 ? 'Company approved successfully.'
                 : 'Company rejected successfully.',
-            'data' => new CompanyResource($company->fresh()),
+            'data' => new CompanyResource($company),
         ]);
     }
 }
