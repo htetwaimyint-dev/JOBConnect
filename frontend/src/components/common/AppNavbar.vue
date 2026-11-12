@@ -85,12 +85,21 @@ const handleLogout = async () => {
         uiStore.closeSidebar();
         await router.replace("/login");
     }
+    try {
+        await authStore.logout();
+    } catch (error) {
+        console.error("Logout failed:", error);
+    } finally {
+        userStore.clearProfilePhoto();
+        uiStore.closeSidebar();
+        await router.replace("/login");
+    }
 };
 </script>
 
 <template>
     <header
-        class="sticky top-0 z-60 flex h-20 w-full items-center justify-between border-b border-slate-200 bg-white/95 px-4 shadow-sm backdrop-blur-md sm:px-6 lg:px-8"
+        class="sticky top-0 z-30 flex h-20 w-full items-center justify-between border-b border-slate-200 bg-white/95 px-4 shadow-sm backdrop-blur-md sm:px-6 lg:px-8"
     >
         <!-- Left Section -->
         <div class="flex min-w-0 items-center gap-3">
@@ -238,7 +247,6 @@ const handleLogout = async () => {
                         :class="{ 'rotate-180': showProfileMenu }"
                     />
                 </button>
-
                 <!-- Profile Dropdown -->
                 <Transition name="dropdown">
                     <div
