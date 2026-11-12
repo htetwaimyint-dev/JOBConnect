@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import BaseButton from "@/components/common/BaseButton.vue";
-import { useRouter } from "vue-router";
 
 defineProps<{
     activeTab: string;
@@ -15,14 +14,6 @@ const emit = defineEmits<{
     reset: [];
     viewProfile: [];
 }>();
-
-const router = useRouter();
-
-function goToProfile() {
-    router.push({
-        name: "company-profile",
-    });
-}
 </script>
 
 <template>
@@ -56,7 +47,7 @@ function goToProfile() {
                         size="32"
                         variant="outline"
                         color="neutral"
-                        @click="goToProfile"
+                        @click="emit('viewProfile')"
                         class="text-xs font-bold text-[#0052FF] border-[#0052FF] hover:bg-blue-50 tracking-wider"
                     >
                         VIEW PROFILE
