@@ -10,6 +10,8 @@ use App\Repositories\Eloquent\ResumeRepository;
 use App\Repositories\Contracts\JobSeekerProfileRepositoryInterface;
 use App\Repositories\Eloquent\JobSeekerProfileRepository;
 
+use App\Repositories\Contracts\CompanyRepositoryInterface;
+use App\Repositories\Eloquent\CompanyRepository;
 use App\Repositories\Contracts\SkillRepositoryInterface;
 use App\Repositories\Eloquent\SkillRepository;
 
@@ -27,6 +29,10 @@ class AppServiceProvider extends ServiceProvider
             JobSeekerProfileRepository::class
         );
 
+        $this->app->bind(
+            CompanyRepositoryInterface::class,
+            CompanyRepository::class
+        );
         $this->app->bind(
             SkillRepositoryInterface::class,
             SkillRepository::class

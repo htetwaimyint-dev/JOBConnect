@@ -12,7 +12,7 @@ class Category extends Model
 
     protected $fillable = [
         'name',
-        'description',
+        'logo',
     ];
 
     // Category → Jobs (1:M)

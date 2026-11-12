@@ -26,12 +26,9 @@ class AuthController extends Controller
             'role'     => 'required|in:job_seeker,employer',
 
         ]);
+        // 2. Check if validation failed
         if ($validator->fails()) {
-            return $this->failResponse(
-                'Validation Failed',
-                $validator->errors(),
-                422
-            );
+            return $this->failResponse('Validation Fail', $validator->messages(), 422);
         }
 
         $validatedData = $validator->validated();

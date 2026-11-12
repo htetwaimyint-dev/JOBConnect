@@ -7,11 +7,11 @@ import {
     FileText,
 } from "lucide-vue-next";
 
-import ProfileForm from "../components/ProfileForm.vue";
-import EducationForm from "../components/EducationForm.vue";
-import ExperienceForm from "../components/ExperienceForm.vue";
-import SkillForm from "../components/SkillForm.vue";
-import ResumeUpload from "../components/ResumeUpload.vue";
+import ProfileSection from "../components/ProfileSection.vue";
+import EducationSection from "../components/EducationSection.vue";
+import ExperienceSection from "../components/ExperienceSection.vue";
+import SkillSection from "../components/SkillSection.vue";
+import ResumeSection from "../components/ResumeSection.vue";
 
 const profileSections = [
     {
@@ -117,7 +117,7 @@ const profileSections = [
                 </div>
             </div>
 
-            <ProfileForm />
+            <ProfileSection />
         </section>
 
         <!-- Education -->
@@ -137,7 +137,7 @@ const profileSections = [
                 </div>
             </div>
 
-            <EducationForm />
+            <EducationSection />
         </section>
 
         <!-- Work Experience -->
@@ -157,7 +157,7 @@ const profileSections = [
                 </div>
             </div>
 
-            <ExperienceForm />
+            <ExperienceSection />
         </section>
 
         <!-- Skills -->
@@ -177,7 +177,7 @@ const profileSections = [
                 </div>
             </div>
 
-            <SkillForm />
+            <SkillSection />
         </section>
 
         <!-- Resume -->
@@ -197,7 +197,7 @@ const profileSections = [
                 </div>
             </div>
 
-            <ResumeUpload />
+            <ResumeSection />
         </section>
 
     </div>

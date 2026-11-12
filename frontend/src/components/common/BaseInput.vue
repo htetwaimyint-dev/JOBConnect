@@ -50,7 +50,7 @@ const attrs = useAttrs();
 const hasValue = computed(() => model.value !== "");
 
 const inputClasses = computed(() => [
-    "w-full min-w-0 rounded-lg border bg-white text-gray-900",
+    "w-full min-w-0 border bg-white text-gray-900",
     "placeholder:text-gray-400",
     "transition-colors duration-150",
     "focus:outline-none focus:ring-2 focus:ring-offset-0",

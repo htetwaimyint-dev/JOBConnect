@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { RouterView } from "vue-router";
 import { useUiStore } from "@/stores/ui.store";
+
 import AppNavbar from "@/components/common/AppNavbar.vue";
 import JobSeekerSidebar from "@/features/job-seeker/components/JobSeekerSidebar.vue";
 
@@ -8,7 +9,7 @@ const uiStore = useUiStore();
 </script>
 
 <template>
-  <div class="min-h-screen bg-slate-50">
+  <div class="min-h-screen w-full overflow-x-hidden bg-slate-50">
 
     <!-- Sidebar Overlay -->
     <Transition name="fade">
@@ -19,11 +20,13 @@ const uiStore = useUiStore();
     <JobSeekerSidebar />
 
     <!-- Main Content -->
-    <div class="min-h-screen w-full transition-all duration-300">
+    <div class="min-h-screen w-full min-w-0">
       <AppNavbar />
 
-      <main class="p-4 sm:p-6 lg:p-8">
-        <RouterView />
+      <main class="w-full min-w-0 p-4 sm:p-6 lg:p-8">
+        <div class="mx-auto w-full min-w-0 max-w-[1600px]">
+          <RouterView />
+        </div>
       </main>
     </div>
 

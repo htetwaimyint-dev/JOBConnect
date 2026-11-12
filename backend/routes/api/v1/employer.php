@@ -1,11 +1,27 @@
 <?php
 
+use App\Http\Controllers\Api\V1\Employer\CompanyProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\V1\Employer\AccountSettingsController;
 
 Route::middleware(['auth:sanctum', 'employer'])
     ->prefix('employer')
     ->group(function () {
+
+        Route::get('/profile', [
+            CompanyProfileController::class,
+            'show',
+        ]);
+
+        Route::post('/profile', [
+            CompanyProfileController::class,
+            'store',
+        ]);
+
+        Route::put('/profile', [
+            CompanyProfileController::class,
+            'update',
+        ]);
 
         Route::get(
             '/resumes/{resume}/download',
@@ -28,3 +44,4 @@ Route::middleware(['auth:sanctum', 'employer'])
             'changePassword',
         ]);
     });
+
