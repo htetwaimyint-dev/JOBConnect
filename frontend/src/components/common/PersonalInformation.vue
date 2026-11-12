@@ -12,14 +12,20 @@ import {
   X,
 } from "lucide-vue-next";
 
-const props = defineProps<{
-  name: string;
-  email: string;
-  profileImage?: string | null;
-  nameLabel?: string;
-  emailLabel?: string;
-  photoLabel?: string;
-}>();
+const props = withDefaults(
+  defineProps<{
+    name: string;
+    email: string;
+    profileImage?: string | null;
+    nameLabel?: string;
+    emailLabel?: string;
+    photoLabel?: string;
+    showProfilePhoto?: boolean;
+  }>(),
+  {
+    showProfilePhoto: true,
+  },
+);
 
 const emit = defineEmits<{
   save: [
@@ -249,7 +255,7 @@ onBeforeUnmount(() => {
       </div>
 
       <!-- Profile Photo -->
-      <div class="mb-5">
+      <div v-if="props.showProfilePhoto" class="mb-5">
         <label
           class="mb-3 block text-center text-sm font-medium text-slate-700"
         >

@@ -1,4 +1,3 @@
-
 import {
   createRouter,
   createWebHistory,
@@ -15,7 +14,7 @@ import AdminLayout from "@/layouts/AdminLayout.vue";
 
 import JobSeekerSettingsPage from "@/features/job-seeker/pages/JobSeekerSettingsPage.vue";
 import AdminSettingsPage from "@/features/admin/pages/AdminSettingsPage.vue";
-import EmployerSettingsPage from "@/features/employer/pages/EmployerSettingPage..vue";
+import EmployerSettingsPage from "@/features/employer/pages/Settings.vue";
 
 // Dashboard Pages
 import Dashboard from "@/features/job-seeker/pages/Dashboard.vue";
@@ -29,7 +28,6 @@ import SavedJobsPage from "@/features/job-seeker/pages/SavedJobsPage.vue";
 import ApplicationsPage from "@/features/job-seeker/pages/ApplicationsPage.vue";
 import InterviewsPage from "@/features/job-seeker/pages/InterviewsPage.vue";
 import OffersPage from "@/features/job-seeker/pages/OffersPage.vue";
-import SettingsPage from "@/features/job-seeker/pages/SettingsPage.vue";
 
 // Auth Routes
 import { authRoutes } from "./auth.routes";
@@ -87,11 +85,6 @@ const routes: RouteRecordRaw[] = [
         path: "offers",
         name: "JobSeekerOffers",
         component: OffersPage,
-      },
-      {
-        path: "settings",
-        name: "JobSeekerSettings",
-        component: SettingsPage,
       },
          {
         path: "settings",

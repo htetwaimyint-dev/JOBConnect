@@ -1,12 +1,9 @@
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
-import { useRouter } from "vue-router";
 import axios from "axios";
 
 import PersonalInformation from "@/components/common/PersonalInformation.vue";
 import accountSettingsRepository from "../repositories/accountSettingsRepository";
-
-const router = useRouter();
 
 const seeker = ref({
   name: "",
@@ -15,6 +12,9 @@ const seeker = ref({
 });
 
 const isLoading = ref(true);
+const isSaving = ref(false);
+const isChangingPassword = ref(false);
+
 const errorMessage = ref("");
 const successMessage = ref("");
 
@@ -25,12 +25,13 @@ const getProfile = async () => {
 
   try {
     const response = await accountSettingsRepository.getProfile();
-
     const profile = response.data.data;
 
-    seeker.value.name = profile.name ?? "";
-    seeker.value.email = profile.email ?? "";
-    seeker.value.profileImage = profile.profile_photo ?? null;
+    seeker.value = {
+      name: profile.name ?? "",
+      email: profile.email ?? "",
+      profileImage: profile.profile_photo ?? null,
+    };
   } catch (error) {
     console.error("Failed to load profile:", error);
 
@@ -54,10 +55,10 @@ const handleSave = async (data: {
 }) => {
   errorMessage.value = "";
   successMessage.value = "";
+  isSaving.value = true;
 
   const formData = new FormData();
 
-  formData.append("_method", "PUT");
   formData.append("name", data.name);
   formData.append("email", data.email);
 
@@ -70,40 +71,33 @@ const handleSave = async (data: {
   }
 
   try {
-    // Update account information
     const response = await accountSettingsRepository.updateAccount(formData);
 
     const profile = response.data.data;
 
-    seeker.value.name = profile.name ?? data.name;
-    seeker.value.email = profile.email ?? data.email;
-    seeker.value.profileImage = profile.profile_photo ?? null;
+    seeker.value = {
+      name: profile.name ?? data.name,
+      email: profile.email ?? data.email,
+      profileImage: profile.profile_photo ?? null,
+    };
 
-    // Show success message
-    successMessage.value = "Account information updated successfully.";
-
-    // Wait for 2 seconds before navigating
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-
-    // Navigate only after successful update
-    await router.push("/jobseeker/dashboard");
+    successMessage.value =
+      response.data.message ?? "Account information updated successfully.";
   } catch (error) {
     console.error("Failed to update account:", error);
 
-    // Stay on Settings Page when an error occurs
     if (axios.isAxiosError(error)) {
       const validationErrors = error.response?.data?.errors;
 
-      if (validationErrors) {
-        errorMessage.value = Object.values(validationErrors).flat().join("\n");
-      } else {
-        errorMessage.value =
-          error.response?.data?.message ??
-          "Failed to update account information.";
-      }
+      errorMessage.value = validationErrors
+        ? Object.values(validationErrors).flat().join("\n")
+        : (error.response?.data?.message ??
+          "Failed to update account information.");
     } else {
       errorMessage.value = "Something went wrong.";
     }
+  } finally {
+    isSaving.value = false;
   }
 };
 
@@ -115,6 +109,7 @@ const handleChangePassword = async (data: {
 }) => {
   errorMessage.value = "";
   successMessage.value = "";
+  isChangingPassword.value = true;
 
   try {
     const response = await accountSettingsRepository.changePassword(data);
@@ -133,6 +128,8 @@ const handleChangePassword = async (data: {
     } else {
       errorMessage.value = "Something went wrong.";
     }
+  } finally {
+    isChangingPassword.value = false;
   }
 };
 
@@ -144,15 +141,6 @@ onMounted(() => {
 
 <template>
   <div class="space-y-6">
-    <!-- Page Heading -->
-    <div>
-      <h1 class="text-2xl font-bold text-slate-800">Account Settings</h1>
-
-      <p class="mt-1 text-sm text-slate-500">
-        Manage your profile and account security.
-      </p>
-    </div>
-
     <!-- Loading -->
     <div
       v-if="isLoading"

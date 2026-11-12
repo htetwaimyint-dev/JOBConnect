@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Api\V1\JobSeeker;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\JobSeeker\ChangePasswordRequest;
 use App\Http\Requests\Api\JobSeeker\UpdateAccountInformationRequest;
-use App\Http\Resources\Api\JobSeekerProfileResource;
+use App\Http\Resources\Api\JobSeeker\JobSeekerProfileResource;
 use App\Services\JobSeeker\AccountSettingsService;
 use Illuminate\Http\JsonResponse;
 

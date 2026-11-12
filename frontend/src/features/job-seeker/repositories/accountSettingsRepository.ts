@@ -8,10 +8,11 @@ const accountSettingsRepository = {
 
   // Update name, email and profile photo
   updateAccount(formData: FormData) {
+
+    formData.append("_method", "PUT");
+    
     return api.post("/job-seeker/settings/account", formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
+    
     });
   },
 

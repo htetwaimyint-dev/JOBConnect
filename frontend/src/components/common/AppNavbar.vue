@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from "vue";
-import { useRouter, RouterLink } from "vue-router";
+import { useRouter, RouterLink, useRoute } from "vue-router";
 
 import { useAuthStore } from "@/stores/auth.store";
 import { useUserStore } from "@/stores/user.store";
@@ -14,9 +14,11 @@ import {
   Menu,
   X,
   Sparkles,
+  Settings,
 } from "lucide-vue-next";
 
 const router = useRouter();
+const route = useRoute();
 
 const authStore = useAuthStore();
 const userStore = useUserStore();
@@ -295,8 +297,18 @@ const handleLogout = async () => {
               My Profile
             </RouterLink>
 
+            <!-- Settings -->
+            <RouterLink
+              :to="settingsPath"
+              class="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium text-slate-600 no-underline transition-all hover:bg-blue-50 hover:text-blue-600"
+              @click="closeMenus"
+            >
+              <Settings :size="18" />
+              Settings
+            </RouterLink>
+
             <!-- Divider -->
-            <div class="my-1 border-t border-slate-100" />
+            <div class="my-1 border-t border-slate-100"></div>
 
             <!-- Logout -->
             <button

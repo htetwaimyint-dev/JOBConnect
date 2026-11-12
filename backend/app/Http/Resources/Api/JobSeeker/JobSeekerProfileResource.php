@@ -5,6 +5,7 @@ namespace App\Http\Resources\Api\JobSeeker;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+
 class JobSeekerProfileResource extends JsonResource
 {
     public function toArray(Request $request): array
