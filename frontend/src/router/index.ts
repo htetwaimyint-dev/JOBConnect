@@ -31,6 +31,7 @@ import SettingsPage from "@/features/job-seeker/pages/SettingsPage.vue";
 // Auth Routes
 import { authRoutes } from "./auth.routes";
 import CompanyProfilePage from "@/features/employer/pages/CompanyProfilePage.vue";
+import CreateJobPage from "@/features/jobs/pages/CreateJobPage.vue";
 
 const routes: RouteRecordRaw[] = [
     ...authRoutes,
@@ -121,6 +122,11 @@ const routes: RouteRecordRaw[] = [
                 path: "/employer/profile/edit",
                 name: "employer.company-profile.edit",
                 component: CompanyProfileForm,
+            },
+            {
+                path: "/employer/jobs",
+                name: "employer-job-create",
+                component: CreateJobPage,
             },
         ],
     },

@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/vue-query";
 import { companyRepository } from "@/features/employer/repositories/companyRepository";
-import { useCompanyProfileStore } from "../stores/company-profile.store";
+import { useCompanyProfileStore } from "../../../stores/company-profile.store";
 import { watch } from "vue";
 
 export function useCompanyProfile() {

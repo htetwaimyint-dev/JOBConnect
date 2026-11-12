@@ -9,6 +9,18 @@ export interface JobCategory {
     name: string;
 }
 
+export type EmploymentType =
+    | "full_time"
+    | "part_time"
+    | "contract"
+    | "internship";
+
+export type WorkplaceType = "onsite" | "remote" | "hybrid";
+
+export type SalaryType = "fixed" | "negotiable";
+
+export type SubmissionStatus = "draft" | "pending";
+
 export interface Job {
     id: number;
     company_id: number;
@@ -19,29 +31,17 @@ export interface Job {
     requirements: string;
     responsibilities: string | null;
 
-    employment_type:
-    | 'full_time'
-    | 'part_time'
-    | 'contract'
-    | 'internship';
+    employment_type: EmploymentType;
 
-    workplace_type:
-    | 'onsite'
-    | 'remote'
-    | 'hybrid';
-
+    workplace_type: WorkplaceType;
     location: string | null;
+    salary_type: SalaryType;
     salary_min: number | null;
     salary_max: number | null;
     vacancies: number;
     deadline: string | null;
 
-    status:
-    | 'draft'
-    | 'pending'
-    | 'published'
-    | 'rejected'
-    | 'closed';
+    status: "draft" | "pending" | "published" | "rejected" | "closed";
 
     company?: JobCompany;
     category?: JobCategory;
@@ -50,12 +50,29 @@ export interface Job {
     updated_at: string;
 }
 
+export interface JobFormData {
+    title: string;
+    category_id: number | null;
+    description: string;
+    requirements: string;
+    responsibilities: string;
+    employment_type: EmploymentType;
+    workplace_type: WorkplaceType;
+    location: string;
+    salary_type: SalaryType;
+    salary_min: number | null;
+    salary_max: number | null;
+    vacancies: number;
+    deadline: string;
+    submission_status: SubmissionStatus;
+}
+
 export interface JobListParams {
     page?: number;
     search?: string;
     category_id?: number;
-    employment_type?: Job['employment_type'];
-    workplace_type?: Job['workplace_type'];
+    employment_type?: Job["employment_type"];
+    workplace_type?: Job["workplace_type"];
     location?: string;
 }
 
