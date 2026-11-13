@@ -1,10 +1,18 @@
 <script setup lang="ts">
+<<<<<<< Updated upstream
 import { ref } from "vue";
 import { RouterLink } from "vue-router";
+=======
+import { computed } from "vue";
+import { useRoute } from "vue-router";
 
-const isMenuOpen = ref(false);
-const searchQuery = ref("");
+import PublicHeader from "./PublicHeader.vue";
+import DashboardHeader from "./DashboardHeader.vue";
+>>>>>>> Stashed changes
 
+const route = useRoute();
+
+<<<<<<< Updated upstream
 const closeMenu = () => {
   isMenuOpen.value = false;
 };
@@ -291,3 +299,18 @@ const closeMenu = () => {
   background: #1d4ed8;
 }
 </style>
+=======
+const isDashboard = computed(() => {
+  return (
+    route.path.startsWith("/jobseeker") ||
+    route.path.startsWith("/employer") ||
+    route.path.startsWith("/admin")
+  );
+});
+</script>
+
+<template>
+  <DashboardHeader v-if="isDashboard" />
+  <PublicHeader v-else />
+</template>
+>>>>>>> Stashed changes
