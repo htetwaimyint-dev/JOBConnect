@@ -496,6 +496,11 @@ onBeforeUnmount(() => {
               <th class="py-3 px-4 font-medium">No.</th>
               <th class="py-3 px-4 font-medium">Logo</th>
               <th class="py-3 px-4 font-medium">Name</th>
+              <th
+                class="px-6 py-3 text-left text-sm font-semibold text-gray-600"
+              >
+                Jobs Count
+              </th>
               <th class="py-3 px-4 font-medium">Option</th>
             </tr>
           </thead>
@@ -542,7 +547,16 @@ onBeforeUnmount(() => {
               <td class="py-4 px-4 font-medium text-gray-800">
                 {{ category.name }}
               </td>
-
+              <!-- Jobs Count only frontend/need backend -->
+              <td class="py-4 px-4 font-medium text-gray-800">
+                <span
+                  v-if="category.jobs_count > 0"
+                  class="text-xs text-gray-500"
+                >
+                  {{ category.jobs_count }} jobs
+                </span>
+                <span v-else class="text-xs text-gray-400">No jobs</span>
+              </td>
               <!-- Options -->
               <td class="py-4 px-4">
                 <div class="flex space-x-3 text-lg">
