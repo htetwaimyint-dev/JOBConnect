@@ -2,13 +2,41 @@
 
 namespace App\Repositories\Eloquent;
 
-class CategoryRepository
+use App\Repositories\Contracts\CategoryRepositoryInterface;
+use Illuminate\Database\Eloquent\Collection;
+use App\Models\Category;
+
+class CategoryRepository implements CategoryRepositoryInterface
 {
-    /**
-     * Create a new class instance.
-     */
-    public function __construct()
+    public function all(?string $search = null): Collection
     {
-        //
+        return Category::query()
+            ->when($search, function ($query, $search) {
+                $query->where('name', 'like', "%{$search}%");
+            })
+            ->get();
+    }
+
+    public function findById(int $id): ?Category
+    {
+        return Category::find($id);
+    }
+
+    public function createOrUpdate(?Category $category, array $data): Category
+    {
+        if ($category) {
+            $category->update($data);
+            return $category;
+        } else {
+            return Category::create($data);
+        }
+    }
+
+    public function delete(Category $category): void
+    {
+        if ($category->jobs()->exists()) {
+            $category->jobs()->delete();
+        }
+        $category->delete();
     }
 }

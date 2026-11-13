@@ -27,7 +27,7 @@ class CompanyRepository implements CompanyRepositoryInterface
 
             if (!$company->exists) {
                 $company->verification_status = 'pending';
-            }
+            }   
 
             $company->save();
 

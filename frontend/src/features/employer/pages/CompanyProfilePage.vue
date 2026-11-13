@@ -10,7 +10,7 @@ import CompanySidebar from "../components/CompanySidebar.vue";
 import type { Company, Job } from "../types/company.types.ts";
 import BaseButton from "@/components/common/BaseButton.vue";
 import { useCompanyStore } from "@/stores/company.store.ts";
-import { useCompanyProfile } from "@/composables/useUpdateCompanyProfile.ts";
+import { useCompanyProfile } from "@/features/employer/composables/useUpdateCompanyProfile.ts";
 import type { CompanyTab } from "@/stores/company.store.ts";
 import { useRouter } from "vue-router";
 

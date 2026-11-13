@@ -41,7 +41,7 @@ class CompanyService
         // Normalize gallery input.
         $requestedGallery = array_filter(
             $requestedGallery,
-            fn ($url) => is_string($url) && trim($url) !== ''
+            fn($url) => is_string($url) && trim($url) !== ''
         );
 
         unset(
@@ -106,6 +106,7 @@ class CompanyService
             $retainedGallery = [];
 
             foreach ($oldGallery as $path) {
+
                 $url = Storage::disk('public')->url($path);
 
                 if (in_array($url, $requestedGallery, true)) {
@@ -156,7 +157,6 @@ class CompanyService
             }
 
             return $savedCompany;
-
         } catch (Throwable $exception) {
             /*
              * Clean up newly uploaded files if saving fails.

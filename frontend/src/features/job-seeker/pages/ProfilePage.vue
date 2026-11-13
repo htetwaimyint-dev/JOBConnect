@@ -113,11 +113,8 @@ const profileSections = [
         </p>
       </a>
     </nav>
-
-<<<<<<< Updated upstream
             <ProfileForm />
         </section>
-=======
     <!-- Profile Sections -->
     <section
       v-for="section in profileSections"
@@ -145,8 +142,6 @@ const profileSections = [
           </p>
         </div>
       </div>
-
-<<<<<<< Updated upstream
             <EducationForm />
         </section>
 
@@ -211,7 +206,6 @@ const profileSections = [
         </section>
 
     </div>
-=======
       <!-- Dynamic Section Component -->
       <component :is="section.component" />
     </section>

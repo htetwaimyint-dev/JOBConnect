@@ -1,9 +1,10 @@
+
 export interface Education {
     id: number;
     institution: string;
-    degree: string;
+    degree: string | null;
     field_of_study: string | null;
-    start_date: string;
+    start_date: string | null;
     end_date: string | null;
     description: string | null;
     created_at: string | null;
@@ -12,9 +13,9 @@ export interface Education {
 
 export interface CreateEducationData {
     institution: string;
-    degree: string;
+    degree?: string | null;
     field_of_study?: string | null;
-    start_date: string;
+    start_date?: string | null;
     end_date?: string | null;
     description?: string | null;
 }

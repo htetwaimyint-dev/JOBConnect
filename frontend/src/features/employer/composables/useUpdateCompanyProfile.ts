@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/vue-query";
-import { companyService } from "@/services/company.service";
-import { useCompanyProfileStore } from "../stores/company-profile.store";
+import { companyRepository } from "@/features/employer/repositories/companyRepository";
+import { useCompanyProfileStore } from "../../../stores/company-profile.store";
 import { watch } from "vue";
 
 export function useCompanyProfile() {
@@ -9,7 +9,7 @@ export function useCompanyProfile() {
 
     const { data, isPending, isError, error, refetch } = useQuery({
         queryKey: ["company", "profile"],
-        queryFn: () => companyService.getCompanyProfileForForm(),
+        queryFn: () => companyRepository.getCompanyProfileForForm(),
         retry: 1,
     });
 
@@ -27,8 +27,8 @@ export function useCompanyProfile() {
     const mutation = useMutation({
         mutationFn: (formData: FormData) => {
             return store.isEditMode
-                ? companyService.updateCompanyProfile(formData)
-                : companyService.createCompanyProfile(formData);
+                ? companyRepository.updateCompanyProfile(formData)
+                : companyRepository.createCompanyProfile(formData);
         },
 
         onSuccess: async (company) => {

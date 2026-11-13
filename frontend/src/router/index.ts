@@ -3,52 +3,36 @@ import {
     createWebHistory,
     type RouteRecordRaw,
 } from "vue-router";
-
 import { useAuthStore } from "@/stores/auth.store";
-
-// Layouts
 import PublicLayout from "@/layouts/PublicLayout.vue";
 import JobSeekerLayout from "@/layouts/JobSeekerLayout.vue";
 import EmployerLayout from "@/layouts/EmployerLayout.vue";
 import AdminLayout from "@/layouts/AdminLayout.vue";
+import CompanyProfileForm from "@/features/employer/pages/CompanyProfileForm.vue";
 
-<<<<<<< Updated upstream
 // Dashboard Pages
 import Dashboard from "@/features/job-seeker/pages/Dashboard.vue";
 import AdminDashboard from "@/features/admin/pages/Dashboard.vue";
 import EmployerDashboard from "@/features/employer/pages/Dashboard.vue";
-=======
-// Auth Routes
-import { authRoutes } from "./auth.routes";
->>>>>>> Stashed changes
 
 // Job Seeker Pages
-import Dashboard from "@/features/job-seeker/pages/Dashboard.vue";
 import ProfilePage from "@/features/job-seeker/pages/ProfilePage.vue";
 import JobsPage from "@/features/job-seeker/pages/JobsPage.vue";
 import SavedJobsPage from "@/features/job-seeker/pages/SavedJobsPage.vue";
 import ApplicationsPage from "@/features/job-seeker/pages/ApplicationsPage.vue";
 import InterviewsPage from "@/features/job-seeker/pages/InterviewsPage.vue";
 import OffersPage from "@/features/job-seeker/pages/OffersPage.vue";
-<<<<<<< Updated upstream
 import SettingsPage from "@/features/job-seeker/pages/SettingsPage.vue";
-=======
-import JobSeekerSettingsPage from "@/features/job-seeker/pages/JobSeekerSettingsPage.vue";
->>>>>>> Stashed changes
 
-// Employer Pages
-import EmployerDashboard from "@/features/employer/pages/Dashboard.vue";
+// Auth Routes
+import { authRoutes } from "./auth.routes";
 import CompanyProfilePage from "@/features/employer/pages/CompanyProfilePage.vue";
-import CompanyProfileForm from "@/features/employer/pages/CompanyProfileForm.vue";
-import EmployerSettingsPage from "@/features/employer/pages/Settings.vue";
-
-// Admin Pages
-import AdminDashboard from "@/features/admin/pages/Dashboard.vue";
-import AdminSettingsPage from "@/features/admin/pages/AdminSettingsPage.vue";
 
 const routes: RouteRecordRaw[] = [
     ...authRoutes,
-
+    ...adminRoutes,
+    ...employerRoutes,
+    ...jobseekerRoutes,
     // Public Layout
     {
         path: "/",
@@ -107,96 +91,6 @@ const routes: RouteRecordRaw[] = [
             },
         ],
     },
-<<<<<<< Updated upstream
-=======
-    children: [
-      {
-        path: "dashboard",
-        name: "JobSeekerDashboard",
-        component: Dashboard,
-        meta: { title: "Job Seeker Dashboard" },
-      },
-      {
-        path: "profile",
-        name: "JobSeekerProfile",
-        component: ProfilePage,
-        meta: { title: "My Profile" },
-      },
-      {
-        path: "jobs",
-        name: "JobSeekerJobs",
-        component: JobsPage,
-        meta: { title: "Find Jobs" },
-      },
-      {
-        path: "saved-jobs",
-        name: "JobSeekerSavedJobs",
-        component: SavedJobsPage,
-        meta: { title: "Saved Jobs" },
-      },
-      {
-        path: "applications",
-        name: "JobSeekerApplications",
-        component: ApplicationsPage,
-        meta: { title: "My Applications" },
-      },
-      {
-        path: "interviews",
-        name: "JobSeekerInterviews",
-        component: InterviewsPage,
-        meta: { title: "Interviews" },
-      },
-      {
-        path: "offers",
-        name: "JobSeekerOffers",
-        component: OffersPage,
-        meta: { title: "Job Offers" },
-      },
-      {
-        path: "settings",
-        name: "JobSeekerSettings",
-        component: JobSeekerSettingsPage,
-        meta: { title: "Settings" },
-      },
-    ],
-  },
-
-  // Employer Routes
-  {
-    path: "/employer",
-    component: EmployerLayout,
-    meta: {
-      requiresAuth: true,
-      role: "employer",
-    },
-    children: [
-      {
-        path: "dashboard",
-        name: "EmployerDashboard",
-        component: EmployerDashboard,
-        meta: { title: "Employer Dashboard" },
-      },
-      {
-        path: "profile",
-        name: "EmployerProfile",
-        component: CompanyProfilePage,
-        meta: { title: "Company Profile" },
-      },
-      {
-        path: "profile/edit",
-        name: "EmployerProfileEdit",
-        component: CompanyProfileForm,
-        meta: { title: "Edit Company Profile" },
-      },
-      {
-        path: "settings",
-        name: "EmployerSettings",
-        component: EmployerSettingsPage,
-        meta: { title: "Settings" },
-      },
-    ],
-  },
->>>>>>> Stashed changes
 
     // Admin Routes
     {
@@ -207,7 +101,6 @@ const routes: RouteRecordRaw[] = [
             role: "admin",
         },
     },
-<<<<<<< Updated upstream
     // Employer Routes
     {
         path: "/employer",
@@ -229,23 +122,6 @@ const routes: RouteRecordRaw[] = [
             },
         ],
     },
-=======
-    children: [
-      {
-        path: "dashboard",
-        name: "AdminDashboard",
-        component: AdminDashboard,
-        meta: { title: "Admin Dashboard" },
-      },
-      {
-        path: "settings",
-        name: "AdminSettings",
-        component: AdminSettingsPage,
-        meta: { title: "Settings" },
-      },
-    ],
-  },
->>>>>>> Stashed changes
 ];
 
 const router = createRouter({
@@ -279,13 +155,15 @@ router.beforeEach(async (to) => {
         await authStore.initializeAuth();
     }
 
-    // Authentication check
     if (to.meta.requiresAuth && !authStore.token) {
         return "/login";
     }
 
-    // Role authorization check
     if (to.meta.role && authStore.user?.role !== to.meta.role) {
+        return "/";
+    }
+
+    if (to.path === "/login" && authStore.token) {
         return "/";
     }
 =======
