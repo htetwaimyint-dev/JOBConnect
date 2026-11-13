@@ -32,12 +32,12 @@ class StoreJobRequest extends FormRequest
             ],
 
             'requirements' => [
-                'nullable',
+                'required',
                 'string',
             ],
 
             'responsibilities' => [
-                'nullable',
+                'required',
                 'string',
             ],
 
@@ -51,20 +51,17 @@ class StoreJobRequest extends FormRequest
                 'in:onsite,remote,hybrid',
             ],
 
-            'location' => [
-                'nullable',
-                'string',
-                'max:255',
-            ],
+            'country' => ['nullable', 'string', 'max:255'],
+            'city' => ['nullable', 'string', 'max:255'],
 
             'salary_min' => [
-                'nullable',
+                'required_if:salary_type,fixed',
                 'numeric',
                 'min:0',
             ],
 
             'salary_max' => [
-                'nullable',
+                'required_if:salary_type,fixed',
                 'numeric',
                 'min:0',
                 'gte:salary_min',
@@ -78,7 +75,7 @@ class StoreJobRequest extends FormRequest
             ],
 
             'deadline' => [
-                'nullable',
+                'required',
                 'date',
                 'after_or_equal:today',
             ],

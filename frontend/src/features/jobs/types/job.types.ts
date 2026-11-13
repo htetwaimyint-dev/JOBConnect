@@ -50,22 +50,41 @@ export interface Job {
     updated_at: string;
 }
 
+// export interface JobFormData {
+//     title: string;
+//     category_id: number | null;
+//     description: string;
+//     requirements: string;
+//     responsibilities: string;
+//     employment_type: EmploymentType;
+//     workplace_type: WorkplaceType;
+//     location: string;
+//     salary_type: SalaryType;
+//     salary_min: number | null;
+//     salary_max: number | null;
+//     vacancies: number;
+//     deadline: string;
+//     submission_status: SubmissionStatus;
+// }
 export interface JobFormData {
     title: string;
     category_id: number | null;
+    deadline: string;
+    employment_type: EmploymentType;
+    vacancies: number;
+    workplace_type: WorkplaceType;
+    country: string;
+    city: string;
+    salary_type: SalaryType;
+    salary_min: number | undefined;
+    salary_max: number | undefined;
     description: string;
     requirements: string;
     responsibilities: string;
-    employment_type: EmploymentType;
-    workplace_type: WorkplaceType;
-    location: string;
-    salary_type: SalaryType;
-    salary_min: number | null;
-    salary_max: number | null;
-    vacancies: number;
-    deadline: string;
     submission_status: SubmissionStatus;
 }
+
+export type JobFormField = keyof JobFormData;
 
 export interface JobListParams {
     page?: number;

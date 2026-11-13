@@ -74,11 +74,7 @@ class CompanyJobController extends Controller
     {
         $company = $this->getEmployerCompany($request->user());
 
-        $job = $this->jobService->updateJob(
-            $company,
-            $jobId,
-            $request->validated()
-        );
+        $job = $this->jobService->updateJob($company, $jobId, $request->validated());
 
         return response()->json([
             'success' => true,
