@@ -66,7 +66,7 @@ const handleLogout = () => {
 
 <template>
   <header
-    class="sticky top-0 z-[60] flex h-20 w-full items-center justify-between border-b border-slate-200 bg-white px-6 shadow-sm"
+    class="sticky top-0 flex h-20 w-full items-center justify-between border-b border-slate-200 bg-white px-6 shadow-sm"
   >
     <!-- Page Title -->
     <div class="flex items-center">
