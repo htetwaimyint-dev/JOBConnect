@@ -60,23 +60,6 @@ const routes: RouteRecordRaw[] = [
     ],
   },
 
-  //admin
-  // {
-  //   path: "/admin",
-  //   component: AdminLayout,
-  //   meta: {
-  //     requiresAuth: true,
-  //     role: "admin",
-  //   },
-  //   children: [
-  //     {
-  //       path: "dashboard",
-  //       name: "AdminDashboard",
-  //       component: AdminDashboard,
-  //     },
-  //   ],
-  // },
-
   // Employee Layout
   {
     path: "/employer",

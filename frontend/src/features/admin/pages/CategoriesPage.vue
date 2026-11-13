@@ -1,11 +1,20 @@
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted, onBeforeUnmount } from "vue";
 import categoryRepository from "../repositories/categoryRepository";
-import { Upload, Trash2, Folder } from "lucide-vue-next";
+import {
+  Upload,
+  Trash2,
+  Folder,
+  Search,
+  Plus,
+  SquarePen,
+  X,
+  ChevronLeft,
+  ChevronRight,
+  LoaderCircle,
+} from "lucide-vue-next";
 
-// ==============================
 // Category Data
-// ==============================
 
 const categories = ref<any[]>([]);
 const isLoading = ref(false);
@@ -13,6 +22,22 @@ const isDeleting = ref(false);
 
 const searchQuery = ref("");
 const perPage = ref(10);
+
+let searchTimeout: ReturnType<typeof setTimeout> | null = null;
+
+// Search with debounce
+const handleSearch = () => {
+  // Clear previous timer
+  if (searchTimeout) {
+    clearTimeout(searchTimeout);
+  }
+
+  // Wait 400ms before sending API request
+  searchTimeout = setTimeout(() => {
+    clearSelection();
+    getCategories(1);
+  }, 400);
+};
 
 // Pagination data from Laravel
 const pagination = reactive({
@@ -23,9 +48,7 @@ const pagination = reactive({
   to: 0,
 });
 
-// ==============================
-// Bulk Selection (Updated)
-// ==============================
+// Bulk Selection
 
 // Store selected IDs from ALL pages
 const selectedIds = ref<number[]>([]);
@@ -89,9 +112,8 @@ const toggleSelect = (id: number, checked: boolean) => {
 const clearSelection = () => {
   selectedIds.value = [];
 };
-// ==============================
+
 // Pagination
-// ==============================
 
 const getCategories = async (page = 1) => {
   isLoading.value = true;
@@ -143,9 +165,7 @@ const getTargetPage = (deletedCount: number) => {
   return Math.min(pagination.current_page, newLastPage);
 };
 
-// ==============================
 // Individual Delete
-// ==============================
 
 const handleDelete = async (id: number) => {
   if (!confirm("Are you sure you want to delete this category?")) {
@@ -172,9 +192,7 @@ const handleDelete = async (id: number) => {
   }
 };
 
-// ==============================
 // Bulk Delete
-// ==============================
 
 const handleBulkDelete = async () => {
   if (selectedIds.value.length === 0) {
@@ -220,9 +238,7 @@ const handleBulkDelete = async () => {
   }
 };
 
-// ==============================
 // Add / Edit Modal
-// ==============================
 
 const isFormModalOpen = ref(false);
 const isEditMode = ref(false);
@@ -339,9 +355,7 @@ const closeFormModal = () => {
   }
 };
 
-// ==============================
 // Save Category
-// ==============================
 
 const saveCategory = async () => {
   if (!formData.name.trim()) {
@@ -384,18 +398,14 @@ const saveCategory = async () => {
   }
 };
 
-// ==============================
 // View Modal
-// ==============================
 
 const closeViewModal = () => {
   isViewModalOpen.value = false;
   selectedCategory.value = null;
 };
 
-// ==============================
 // Lifecycle
-// ==============================
 
 onMounted(() => {
   getCategories();
@@ -431,19 +441,7 @@ onBeforeUnmount(() => {
       <div class="flex justify-between items-center">
         <div class="relative w-full max-w-md">
           <span class="absolute inset-y-0 left-0 flex items-center pl-3">
-            <svg
-              class="w-5 h-5 text-gray-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-              />
-            </svg>
+            <Search class="w-5 h-5 text-gray-400" />
           </span>
 
           <input
@@ -459,19 +457,7 @@ onBeforeUnmount(() => {
           @click="openFormModal('add')"
           class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg flex items-center transition-colors"
         >
-          <svg
-            class="w-4 h-4 mr-2"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M12 4v16m8-8H4"
-            />
-          </svg>
+          <Plus class="w-4 h-4 mr-2" />
           Add Category
         </button>
       </div>
@@ -486,8 +472,9 @@ onBeforeUnmount(() => {
       <button
         @click="handleBulkDelete"
         :disabled="selectedCount === 0 || isDeleting"
-        class="text-red-500 bg-red-50 hover:bg-red-100 font-medium py-1.5 px-3 rounded-md text-sm transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+        class="flex items-center gap-2 text-red-500 bg-red-50 hover:bg-red-100 font-medium py-1.5 px-3 rounded-md text-sm transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
       >
+        <Trash2 class="w-4 h-4" />
         {{ isDeleting ? "Deleting..." : "Delete Selected" }}
       </button>
     </div>
@@ -505,17 +492,7 @@ onBeforeUnmount(() => {
             <tr
               class="bg-gray-50 border-b border-gray-200 text-gray-700 text-sm"
             >
-              <th class="py-3 px-4">
-                <!-- <input
-                  type="checkbox"
-                  :checked="isAllSelected"
-                  @change="
-                    toggleSelectAll(($event.target as HTMLInputElement).checked)
-                  "
-                  class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                /> -->
-              </th>
-
+              <th class="py-3 px-4"></th>
               <th class="py-3 px-4 font-medium">No.</th>
               <th class="py-3 px-4 font-medium">Logo</th>
               <th class="py-3 px-4 font-medium">Name</th>
@@ -571,10 +548,10 @@ onBeforeUnmount(() => {
                 <div class="flex space-x-3 text-lg">
                   <button
                     @click="openFormModal('edit', category)"
-                    class="text-orange-400 hover:text-orange-600"
+                    class="text-blue-500 hover:text-blue-700"
                     title="Edit"
                   >
-                    ✏️
+                    <SquarePen class="w-5 h-5" />
                   </button>
 
                   <button
@@ -582,7 +559,7 @@ onBeforeUnmount(() => {
                     class="text-red-500 hover:text-red-700"
                     title="Delete"
                   >
-                    🗑️
+                    <Trash2 class="w-5 h-5" />
                   </button>
                 </div>
               </td>
@@ -637,8 +614,9 @@ onBeforeUnmount(() => {
           <button
             @click="changePage(pagination.current_page - 1)"
             :disabled="pagination.current_page === 1"
-            class="px-3 py-1 text-sm border border-gray-300 rounded-md bg-white text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            class="px-3 py-1 text-sm border border-gray-300 rounded-md bg-white text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
           >
+            <ChevronLeft class="w-4 h-4" />
             Previous
           </button>
 
@@ -658,9 +636,10 @@ onBeforeUnmount(() => {
           <button
             @click="changePage(pagination.current_page + 1)"
             :disabled="pagination.current_page === pagination.last_page"
-            class="px-3 py-1 text-sm border border-gray-300 rounded-md bg-white text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            class="px-3 py-1 text-sm border border-gray-300 rounded-md bg-white text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
           >
             Next
+            <ChevronRight class="w-4 h-4" />
           </button>
         </div>
       </div>
@@ -757,8 +736,9 @@ onBeforeUnmount(() => {
           <button
             @click="closeFormModal"
             class="text-gray-400 hover:text-gray-600 transition-colors"
+            title="Close"
           >
-            ✕
+            <X class="w-5 h-5" />
           </button>
         </div>
 
