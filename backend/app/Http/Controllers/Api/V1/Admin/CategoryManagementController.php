@@ -10,6 +10,7 @@ use App\Services\Admin\CategoryService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class CategoryManagementController extends Controller
 {
@@ -20,14 +21,6 @@ class CategoryManagementController extends Controller
     /**
      * Display all categories.
      */
-    // public function index(): JsonResponse
-    // {
-    //     $categories = $this->categoryService->all();
-
-    //     return response()->json([
-    //         'data' => CategoryResource::collection($categories)
-    //     ], 200);
-    // }
     public function index(Request $request)
     {
         $query = Category::query();
@@ -79,20 +72,6 @@ class CategoryManagementController extends Controller
     /**
      * Update an existing category.
      */
-    // public function update(
-    //     StoreCategoryRequest $request,
-    //     Category $category
-    // ): JsonResponse {
-    //     $updatedCategory = $this->categoryService->createOrUpdate(
-    //         $category,
-    //         $request->validated()
-    //     );
-
-    //     return response()->json([
-    //         'message' => 'Category updated successfully',
-    //         'data' => new CategoryResource($updatedCategory)
-    //     ], 200);
-    // }
     public function update(Request $request, Category $category)
 {
     $request->validate([
@@ -151,4 +130,107 @@ class CategoryManagementController extends Controller
             'message' => 'Category deleted successfully.'
         ], 200);
     }
+
+
+    
+  
+    // Bulk Delete Selected
+
+
+    public function bulkDestroy(Request $request)
+    {
+        $validated = $request->validate([
+            'ids' => ['required', 'array', 'min:1'],
+            'ids.*' => [
+                'required',
+                'integer',
+                'distinct',
+                'exists:categories,id',
+            ],
+        ]);
+
+        $categories = Category::whereIn('id', $validated['ids'])
+            ->withCount('jobs')
+            ->get();
+
+        // Categories without jobs can be deleted
+        $deletable = $categories->where('jobs_count', 0);
+
+        // Categories with jobs cannot be deleted
+        $protected = $categories->where('jobs_count', '>', 0);
+
+        $deletedIds = $deletable->pluck('id')->all();
+
+        $skippedCategories = $protected->map(function ($category) {
+            return [
+                'id' => $category->id,
+                'name' => $category->name,
+                'reason' => 'This category has related jobs.',
+            ];
+        })->values();
+
+        $logoPaths = $deletable->pluck('logo')
+            ->filter()
+            ->all();
+
+        DB::transaction(function () use ($deletedIds) {
+            if (!empty($deletedIds)) {
+                Category::whereIn('id', $deletedIds)->delete();
+            }
+        });
+
+        foreach ($logoPaths as $path) {
+            Storage::disk('public')->delete($path);
+        }
+
+        return response()->json([
+            'message' => 'Bulk delete completed.',
+            'deleted_count' => count($deletedIds),
+            'skipped_count' => $skippedCategories->count(),
+            'skipped_categories' => $skippedCategories,
+        ]);
+    }
+
+
+
+    // Delete All Unused Categories
+    public function deleteAllUnused()
+    {
+        $categories = Category::withCount('jobs')->get();
+
+        $deletable = $categories->where('jobs_count', 0);
+
+        $protected = $categories->where('jobs_count', '>', 0);
+
+        $deletedIds = $deletable->pluck('id')->all();
+
+        $logoPaths = $deletable->pluck('logo')
+            ->filter()
+            ->all();
+
+        DB::transaction(function () use ($deletedIds) {
+            if (!empty($deletedIds)) {
+                Category::whereIn('id', $deletedIds)->delete();
+            }
+        });
+
+        foreach ($logoPaths as $path) {
+            Storage::disk('public')->delete($path);
+        }
+
+        return response()->json([
+            'message' => 'Delete all unused categories completed.',
+            'deleted_count' => count($deletedIds),
+            'skipped_count' => $protected->count(),
+            'skipped_categories' => $protected->map(function ($category) {
+                return [
+                    'id' => $category->id,
+                    'name' => $category->name,
+                    'reason' => 'This category has related jobs.',
+                ];
+            })->values(),
+        ]);
+    }
+
+
 }

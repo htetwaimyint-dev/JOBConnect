@@ -1,12 +1,20 @@
 <script setup lang="ts">
-import { ref, reactive, onMounted } from "vue";
+import { ref, reactive, computed, onMounted, onBeforeUnmount } from "vue";
 import categoryRepository from "../repositories/categoryRepository";
 import { Upload, Trash2, Folder } from "lucide-vue-next";
 
+// ==============================
+// Category Data
+// ==============================
+
 const categories = ref<any[]>([]);
 const isLoading = ref(false);
+const isDeleting = ref(false);
 
 const searchQuery = ref("");
+const perPage = ref(10);
+
+// Pagination data from Laravel
 const pagination = reactive({
   current_page: 1,
   last_page: 1,
@@ -15,14 +23,207 @@ const pagination = reactive({
   to: 0,
 });
 
-let searchTimeout: ReturnType<typeof setTimeout> | null = null;
+// ==============================
+// Bulk Selection (Updated)
+// ==============================
 
-//these state variables at the top of <script setup>
-const isViewModalOpen = ref(false);
-const selectedCategory = ref<any | null>(null);
-const isLogoRemoved = ref(false);
+// Store selected IDs from ALL pages
+const selectedIds = ref<number[]>([]);
 
-// Modal & Form State Variables ---
+// Only categories without jobs can be selected
+const selectableCategories = computed(() => {
+  return categories.value.filter(
+    (category) => Number(category.jobs_count ?? 0) === 0,
+  );
+});
+
+// Total selected categories across all pages
+const selectedCount = computed(() => selectedIds.value.length);
+
+// Check whether all deletable categories on CURRENT page are selected
+const isAllSelected = computed(() => {
+  return (
+    selectableCategories.value.length > 0 &&
+    selectableCategories.value.every((category) =>
+      selectedIds.value.includes(category.id),
+    )
+  );
+});
+
+// Select / deselect all deletable categories on current page
+const toggleSelectAll = (checked: boolean) => {
+  const currentPageIds = selectableCategories.value.map(
+    (category) => category.id,
+  );
+
+  if (checked) {
+    selectedIds.value = [...new Set([...selectedIds.value, ...currentPageIds])];
+  } else {
+    selectedIds.value = selectedIds.value.filter(
+      (id) => !currentPageIds.includes(id),
+    );
+  }
+};
+
+// Select / deselect one category
+const toggleSelect = (id: number, checked: boolean) => {
+  const category = categories.value.find((item) => item.id === id);
+
+  // Cannot select a category that has jobs
+  if (!category || Number(category.jobs_count ?? 0) > 0) {
+    return;
+  }
+
+  if (checked) {
+    if (!selectedIds.value.includes(id)) {
+      selectedIds.value.push(id);
+    }
+  } else {
+    selectedIds.value = selectedIds.value.filter(
+      (selectedId) => selectedId !== id,
+    );
+  }
+};
+
+// Clear all selected IDs
+const clearSelection = () => {
+  selectedIds.value = [];
+};
+// ==============================
+// Pagination
+// ==============================
+
+const getCategories = async (page = 1) => {
+  isLoading.value = true;
+
+  try {
+    const result = await categoryRepository.getCategories({
+      page,
+      search: searchQuery.value.trim() || undefined,
+      per_page: perPage.value,
+    });
+
+    categories.value = result.data;
+
+    pagination.current_page = result.current_page;
+    pagination.last_page = result.last_page;
+    pagination.total = result.total;
+    pagination.from = result.from || 0;
+    pagination.to = result.to || 0;
+  } catch (error) {
+    console.error("API Error:", error);
+    alert("Failed to load categories.");
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+// Change number of entries
+const handlePerPageChange = () => {
+  getCategories(1);
+};
+
+// Change page
+const changePage = (page: number) => {
+  if (
+    page >= 1 &&
+    page <= pagination.last_page &&
+    page !== pagination.current_page
+  ) {
+    getCategories(page);
+  }
+};
+
+// Calculate the correct page after deleting categories
+const getTargetPage = (deletedCount: number) => {
+  const remainingTotal = Math.max(0, pagination.total - deletedCount);
+
+  const newLastPage = Math.max(1, Math.ceil(remainingTotal / perPage.value));
+
+  return Math.min(pagination.current_page, newLastPage);
+};
+
+// ==============================
+// Individual Delete
+// ==============================
+
+const handleDelete = async (id: number) => {
+  if (!confirm("Are you sure you want to delete this category?")) {
+    return;
+  }
+
+  try {
+    const targetPage = getTargetPage(1);
+
+    await categoryRepository.deleteCategory(id);
+
+    // Remove ID from selected list
+    clearSelection();
+
+    // Refresh correct page
+    await getCategories(targetPage);
+  } catch (error: any) {
+    console.error("Delete Error:", error.response || error);
+
+    const message =
+      error.response?.data?.message || "Failed to delete category.";
+
+    alert(message);
+  }
+};
+
+// ==============================
+// Bulk Delete
+// ==============================
+
+const handleBulkDelete = async () => {
+  if (selectedIds.value.length === 0) {
+    alert("Please select at least one category.");
+    return;
+  }
+
+  const idsToDelete = [...selectedIds.value];
+
+  const confirmed = confirm(
+    `Are you sure you want to delete ${idsToDelete.length} selected categories?`,
+  );
+
+  if (!confirmed) {
+    return;
+  }
+
+  isDeleting.value = true;
+
+  try {
+    // Calculate page before deleting
+    const targetPage = getTargetPage(idsToDelete.length);
+
+    // Send all selected IDs to Laravel
+    await categoryRepository.bulkDeleteCategories(idsToDelete);
+
+    // Clear selection after successful deletion
+    clearSelection();
+
+    // Refresh category list
+    await getCategories(targetPage);
+
+    alert(`${idsToDelete.length} categories deleted successfully.`);
+  } catch (error: any) {
+    console.error("Bulk Delete Error:", error.response || error);
+
+    const message =
+      error.response?.data?.message || "Failed to delete selected categories.";
+
+    alert(message);
+  } finally {
+    isDeleting.value = false;
+  }
+};
+
+// ==============================
+// Add / Edit Modal
+// ==============================
+
 const isFormModalOpen = ref(false);
 const isEditMode = ref(false);
 const currentEditId = ref<number | null>(null);
@@ -32,44 +233,46 @@ const formData = reactive({
   logo: null as File | string | null,
 });
 
-// File input reference
 const logoInput = ref<HTMLInputElement | null>(null);
-
-// Preview URL
 const previewLogo = ref<string | null>(null);
+const isLogoRemoved = ref(false);
 
-// Open file picker
+const isViewModalOpen = ref(false);
+const selectedCategory = ref<any | null>(null);
+
 const openLogoPicker = () => {
   logoInput.value?.click();
 };
 
-// Handle selected logo
 const handleLogoChange = (event: Event) => {
   const target = event.target as HTMLInputElement;
   const file = target.files?.[0];
 
   if (!file) return;
 
-  // Check file size (2 MB)
   if (file.size > 2 * 1024 * 1024) {
     alert("Image size must not exceed 2 MB.");
     target.value = "";
     return;
   }
 
-  // Save selected file
-  formData.logo = file;
-  isLogoRemoved.value = false;
-
-  // Show preview
   if (previewLogo.value) {
     URL.revokeObjectURL(previewLogo.value);
   }
 
+  formData.logo = file;
+  isLogoRemoved.value = false;
   previewLogo.value = URL.createObjectURL(file);
 };
 
-// Display selected or existing logo
+const getImageUrl = (path: string) => {
+  if (path.startsWith("http://") || path.startsWith("https://")) {
+    return path;
+  }
+
+  return `http://localhost:8000/storage/${path.replace(/^\/+/, "")}`;
+};
+
 const displayedLogo = () => {
   if (previewLogo.value) {
     return previewLogo.value;
@@ -82,7 +285,6 @@ const displayedLogo = () => {
   return null;
 };
 
-// Remove logo
 const removeLogo = () => {
   formData.logo = null;
   previewLogo.value = null;
@@ -93,92 +295,16 @@ const removeLogo = () => {
   }
 };
 
-const getImageUrl = (path: string) => {
-  if (path.startsWith("http://") || path.startsWith("https://")) {
-    return path;
-  }
-  return `http://localhost:8000/storage/${path}`;
-};
-
-const perPage = ref(10);
-const getCategories = async (page = 1) => {
-  isLoading.value = true;
-  try {
-    const result = await categoryRepository.getCategories({
-      page: page,
-      search: searchQuery.value.trim() || undefined,
-      per_page: perPage.value,
-    });
-
-    // const result = response.data;
-
-    categories.value = result.data;
-    pagination.current_page = result.current_page;
-    pagination.last_page = result.last_page;
-    pagination.total = result.total;
-    pagination.from = result.from || 0;
-    pagination.to = result.to || 0;
-  } catch (error) {
-    console.error("API Error:", error);
-  } finally {
-    isLoading.value = false;
-  }
-};
-
-const handlePerPageChange = () => {
-  getCategories(1);
-};
-
-// Debounce Search
-const handleSearch = () => {
-  if (searchTimeout) clearTimeout(searchTimeout);
-
-  searchTimeout = setTimeout(() => {
-    getCategories(1);
-  }, 400);
-};
-
-const changePage = (page: number) => {
-  if (
-    page >= 1 &&
-    page <= pagination.last_page &&
-    page !== pagination.current_page
-  ) {
-    getCategories(page);
-  }
-};
-
-//this function to open the modal and fetch details
-// const handleView = async (id: number) => {
-//   isViewModalOpen.value = true;
-//   isLoadingDetails.value = true;
-//   selectedCategory.value = null;
-
-//   try {
-//     const response = await categoryRepository.getCategoryById(id);
-//     // Your Laravel show() returns { data: { ... } }
-//     selectedCategory.value = response.data;
-//   } catch (error) {
-//     console.error("Failed to fetch category details:", error);
-//     alert("Could not load category details.");
-//     isViewModalOpen.value = false;
-//   } finally {
-//     isLoadingDetails.value = false;
-//   }
-// };
-
-const closeViewModal = () => {
-  isViewModalOpen.value = false;
-  selectedCategory.value = null;
-};
-
-// --- NEW: Open Modal for Add or Edit ---
 const openFormModal = (mode: "add" | "edit", category: any = null) => {
   isFormModalOpen.value = true;
-  previewLogo.value = null;
   isLogoRemoved.value = false;
 
+  if (previewLogo.value) {
+    URL.revokeObjectURL(previewLogo.value);
+  }
+
   previewLogo.value = null;
+
   if (logoInput.value) {
     logoInput.value.value = "";
   }
@@ -198,15 +324,25 @@ const openFormModal = (mode: "add" | "edit", category: any = null) => {
 
 const closeFormModal = () => {
   isFormModalOpen.value = false;
+
+  if (previewLogo.value) {
+    URL.revokeObjectURL(previewLogo.value);
+  }
+
   previewLogo.value = null;
   formData.name = "";
   formData.logo = null;
+  isLogoRemoved.value = false;
+
   if (logoInput.value) {
     logoInput.value.value = "";
   }
 };
 
-//  Save Category logic
+// ==============================
+// Save Category
+// ==============================
+
 const saveCategory = async () => {
   if (!formData.name.trim()) {
     alert("Category Name is required.");
@@ -216,24 +352,28 @@ const saveCategory = async () => {
   try {
     const data = new FormData();
 
-    data.append("name", formData.name);
+    data.append("name", formData.name.trim());
 
     if (formData.logo instanceof File) {
       data.append("logo", formData.logo);
     } else if (isLogoRemoved.value) {
-      // Tell Laravel to delete the existing logo
       data.append("remove_logo", "1");
     }
 
-    if (isEditMode.value && currentEditId.value) {
+    if (isEditMode.value && currentEditId.value !== null) {
       data.append("_method", "PUT");
 
       await categoryRepository.updateCategory(currentEditId.value, data);
+
+      await getCategories(pagination.current_page);
     } else {
       await categoryRepository.createCategory(data);
+
+      // Return to first page after creating a category
+      await getCategories(1);
     }
 
-    await getCategories();
+    clearSelection();
     closeFormModal();
   } catch (error: any) {
     console.error("Save Error:", error.response || error);
@@ -244,33 +384,35 @@ const saveCategory = async () => {
   }
 };
 
-const handleDelete = async (id: number) => {
-  if (!confirm("Are you sure you want to delete this category?")) {
-    return;
-  }
+// ==============================
+// View Modal
+// ==============================
 
-  try {
-    await categoryRepository.deleteCategory(id);
-    categories.value = categories.value.filter(
-      (category) => category.id !== id,
-    );
-  } catch (error: any) {
-    console.error("Full Delete Error:", error.response || error);
-    // Show the real message from Laravel (422, 404, 401, or 500)
-    const message =
-      error.response?.data?.message || "Failed to delete category.";
-    alert(message);
-  }
+const closeViewModal = () => {
+  isViewModalOpen.value = false;
+  selectedCategory.value = null;
 };
+
+// ==============================
+// Lifecycle
+// ==============================
 
 onMounted(() => {
   getCategories();
 });
+
+onBeforeUnmount(() => {
+  if (searchTimeout) {
+    clearTimeout(searchTimeout);
+  }
+
+  if (previewLogo.value) {
+    URL.revokeObjectURL(previewLogo.value);
+  }
+});
 </script>
 
 <template>
-  <!-- <div class="min-h-screen bg-gray-50 p-8 font-sans"> -->
-  <!-- Main Card -->
   <div
     class="max-w-5xl mx-auto bg-white rounded-xl shadow-sm border border-gray-200"
   >
@@ -287,7 +429,6 @@ onMounted(() => {
     <!-- Toolbar -->
     <div class="p-6 pb-2">
       <div class="flex justify-between items-center">
-        <!-- Search Bar -->
         <div class="relative w-full max-w-md">
           <span class="absolute inset-y-0 left-0 flex items-center pl-3">
             <svg
@@ -301,9 +442,10 @@ onMounted(() => {
                 stroke-linejoin="round"
                 stroke-width="2"
                 d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-              ></path>
+              />
             </svg>
           </span>
+
           <input
             v-model="searchQuery"
             @input="handleSearch"
@@ -313,7 +455,6 @@ onMounted(() => {
           />
         </div>
 
-        <!-- Add Button -->
         <button
           @click="openFormModal('add')"
           class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg flex items-center transition-colors"
@@ -329,80 +470,117 @@ onMounted(() => {
               stroke-linejoin="round"
               stroke-width="2"
               d="M12 4v16m8-8H4"
-            ></path>
+            />
           </svg>
           Add Category
         </button>
       </div>
     </div>
 
-    <!-- Selection Status & Delete Action -->
+    <!-- Selection Status & Bulk Delete -->
     <div class="px-6 py-2 flex justify-between items-center">
-      <span class="text-sm text-gray-500">3 categories selected</span>
+      <span class="text-sm text-gray-500">
+        {{ selectedCount }} categories selected
+      </span>
+
       <button
-        class="text-red-500 bg-red-50 hover:bg-red-100 font-medium py-1.5 px-3 rounded-md text-sm transition-colors"
+        @click="handleBulkDelete"
+        :disabled="selectedCount === 0 || isDeleting"
+        class="text-red-500 bg-red-50 hover:bg-red-100 font-medium py-1.5 px-3 rounded-md text-sm transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
       >
-        Delete Selected
+        {{ isDeleting ? "Deleting..." : "Delete Selected" }}
       </button>
     </div>
 
-    <!-- Table -->
-    <div class="px-6 pb-6 mt-2">
-      <div class="overflow-x-auto border border-gray-200 rounded-lg">
+    <!-- Loading -->
+    <div v-if="isLoading" class="py-16 text-center text-sm text-gray-500">
+      Loading categories...
+    </div>
+
+    <!-- Category Table -->
+    <div v-else-if="categories.length > 0">
+      <div class="overflow-x-auto">
         <table class="w-full text-left border-collapse">
           <thead>
             <tr
               class="bg-gray-50 border-b border-gray-200 text-gray-700 text-sm"
             >
-              <th></th>
+              <th class="py-3 px-4">
+                <!-- <input
+                  type="checkbox"
+                  :checked="isAllSelected"
+                  @change="
+                    toggleSelectAll(($event.target as HTMLInputElement).checked)
+                  "
+                  class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                /> -->
+              </th>
+
               <th class="py-3 px-4 font-medium">No.</th>
               <th class="py-3 px-4 font-medium">Logo</th>
               <th class="py-3 px-4 font-medium">Name</th>
               <th class="py-3 px-4 font-medium">Option</th>
             </tr>
           </thead>
+
           <tbody>
             <tr
               v-for="(category, index) in categories"
               :key="category.id"
               class="border-b border-gray-100 hover:bg-gray-50 transition-colors"
             >
+              <!-- Checkbox -->
               <td class="py-4 px-4">
                 <input
                   type="checkbox"
+                  :checked="selectedIds.includes(category.id)"
+                  @change="
+                    toggleSelect(
+                      category.id,
+                      ($event.target as HTMLInputElement).checked,
+                    )
+                  "
                   class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                 />
               </td>
-              <td class="py-4 px-4 text-gray-600">{{ index + 1 }}</td>
-              <th class="py-3 px-4 font-medium text-center">
+
+              <!-- Correct Serial Number -->
+              <td class="py-4 px-4 text-gray-600">
+                {{ pagination.from + index }}
+              </td>
+
+              <!-- Logo -->
+              <td class="py-3 px-4 font-medium text-center">
                 <img
                   v-if="category.logo"
                   :src="getImageUrl(category.logo)"
                   :alt="category.name"
                   class="w-10 h-10 object-cover rounded-lg border border-gray-200"
                 />
-                <!-- <span v-else class="text-xl">📁</span> -->
-              </th>
+
+                <Folder v-else class="w-6 h-6 text-gray-400" />
+              </td>
+
+              <!-- Name -->
               <td class="py-4 px-4 font-medium text-gray-800">
                 {{ category.name }}
               </td>
+
+              <!-- Options -->
               <td class="py-4 px-4">
                 <div class="flex space-x-3 text-lg">
-                  <!-- <button
-                    @click="handleView(category.id)"
-                    class="text-blue-500 hover:text-blue-700"
-                  >
-                    👁️
-                  </button> -->
                   <button
                     @click="openFormModal('edit', category)"
                     class="text-orange-400 hover:text-orange-600"
+                    title="Edit"
                   >
                     ✏️
                   </button>
+
                   <button
                     @click="handleDelete(category.id)"
                     class="text-red-500 hover:text-red-700"
+                    title="Delete"
                   >
                     🗑️
                   </button>
@@ -412,65 +590,138 @@ onMounted(() => {
           </tbody>
         </table>
       </div>
-    </div>
 
-    <!-- Pagination Footer -->
-    <div
-      class="px-6 py-4 border-t border-gray-200 flex justify-between items-center bg-gray-50 rounded-b-xl"
-    >
-      <span class="text-sm text-gray-500"
-        >Showing {{ pagination.from }}–{{ pagination.to }} of
-        {{ pagination.total }}</span
+      <!-- Pagination Footer -->
+      <div
+        class="px-6 py-4 border-t border-gray-200 flex flex-col sm:flex-row justify-between items-center gap-4 bg-gray-50 rounded-b-xl"
       >
+        <!-- Showing Info + Entries Selector -->
+        <div class="flex items-center space-x-3 text-sm text-gray-500">
+          <span>
+            Showing
+            <span class="font-medium text-gray-700">
+              {{ pagination.from }}
+            </span>
+            –
+            <span class="font-medium text-gray-700">
+              {{ pagination.to }}
+            </span>
+            of
+            <span class="font-medium text-gray-700">
+              {{ pagination.total }}
+            </span>
+          </span>
 
-      <div class="flex items-center space-x-2">
-        <button
-          @click="changePage(pagination.current_page - 1)"
-          :disabled="pagination.current_page === 1"
-          class="px-3 py-1 text-sm border border-gray-300 rounded-md bg-white text-gray-600 hover:bg-gray-50 disabled:opacity-50"
-        >
-          Previous
-        </button>
-        <button
-          v-for="page in pagination.last_page"
-          :key="page"
-          @click="changePage(page)"
-          :class="
-            page === pagination.current_page
-              ? 'px-3 py-1 text-sm border border-blue-500 rounded-md bg-blue-50 text-blue-600 font-medium'
-              : 'px-3 py-1 text-sm border border-gray-300 rounded-md bg-white text-gray-600 hover:bg-gray-50'
-          "
-        >
-          {{ page }}
-        </button>
+          <span class="text-gray-300">|</span>
 
-        <button
-          @click="changePage(pagination.current_page + 1)"
-          :disabled="pagination.current_page === pagination.last_page"
-          class="px-3 py-1 text-sm border border-gray-300 rounded-md bg-white text-gray-600 hover:bg-gray-50"
-        >
-          Next
-        </button>
+          <div class="flex items-center space-x-1.5">
+            <span>Show</span>
 
-        <!-- <div class="flex items-center space-x-2">
-          <span class="text-sm text-gray-500">Show</span>
-          <select
-            v-model="perPage"
-            @change="handlePerPageChange"
-            class="px-2 py-1 text-sm border border-gray-300 rounded-md bg-white text-gray-700 outline-none focus:border-blue-500"
+            <select
+              v-model.number="perPage"
+              @change="handlePerPageChange"
+              class="px-2.5 py-1 text-sm border border-gray-300 rounded-md bg-white text-gray-700 font-medium hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all cursor-pointer"
+            >
+              <option :value="5">5</option>
+              <option :value="10">10</option>
+              <option :value="25">25</option>
+              <option :value="50">50</option>
+            </select>
+
+            <span>entries</span>
+          </div>
+        </div>
+
+        <!-- Pagination Controls -->
+        <div class="flex items-center space-x-2">
+          <button
+            @click="changePage(pagination.current_page - 1)"
+            :disabled="pagination.current_page === 1"
+            class="px-3 py-1 text-sm border border-gray-300 rounded-md bg-white text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            <option :value="5">5</option>
-            <option :value="10">10</option>
-            <option :value="25">25</option>
-            <option :value="50">50</option>
-          </select>
-          <span class="text-sm text-gray-500">entries</span>
-        </div> -->
+            Previous
+          </button>
+
+          <button
+            v-for="page in pagination.last_page"
+            :key="page"
+            @click="changePage(page)"
+            :class="
+              page === pagination.current_page
+                ? 'px-3 py-1 text-sm border border-blue-500 rounded-md bg-blue-50 text-blue-600 font-medium'
+                : 'px-3 py-1 text-sm border border-gray-300 rounded-md bg-white text-gray-600 hover:bg-gray-50 transition-colors'
+            "
+          >
+            {{ page }}
+          </button>
+
+          <button
+            @click="changePage(pagination.current_page + 1)"
+            :disabled="pagination.current_page === pagination.last_page"
+            class="px-3 py-1 text-sm border border-gray-300 rounded-md bg-white text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            Next
+          </button>
+        </div>
       </div>
     </div>
 
-    <!-- ADD / EDIT MODAL BOX -->
+    <!-- Empty State -->
+    <div
+      v-else
+      class="py-16 px-6 text-center bg-white rounded-b-xl border-t border-gray-100"
+    >
+      <div v-if="searchQuery.trim()">
+        <div
+          class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-gray-100 text-gray-400"
+        >
+          <Folder class="h-6 w-6" />
+        </div>
 
+        <h3 class="text-base font-semibold text-gray-800">
+          No matching categories
+        </h3>
+
+        <p class="mt-1 text-sm text-gray-500">
+          No categories matched "{{ searchQuery }}". Try another search term.
+        </p>
+
+        <button
+          @click="
+            searchQuery = '';
+            clearSelection();
+            getCategories(1);
+          "
+          class="mt-4 inline-flex items-center px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
+        >
+          Clear Search
+        </button>
+      </div>
+
+      <div v-else>
+        <div
+          class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-indigo-50 text-indigo-600"
+        >
+          <Folder class="h-6 w-6" />
+        </div>
+
+        <h3 class="text-base font-semibold text-gray-800">No categories yet</h3>
+
+        <p class="mt-1 text-sm text-gray-500 max-w-sm mx-auto">
+          Your category list is currently empty. Add your first category to
+          start organizing your items.
+        </p>
+
+        <button
+          @click="openFormModal('add')"
+          class="mt-5 inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 shadow-sm transition-colors"
+        >
+          + Add Category
+        </button>
+      </div>
+    </div>
+
+    <!-- ADD / EDIT MODAL -->
     <div
       v-if="isFormModalOpen"
       class="fixed inset-0 z-50 flex items-center justify-center p-4"
@@ -485,7 +736,7 @@ onMounted(() => {
       <div
         class="relative bg-white rounded-xl shadow-xl max-h-[95vh] w-full max-w-lg overflow-hidden transform transition-all"
       >
-        <!-- Modal Header -->
+        <!-- Header -->
         <div
           class="px-6 py-2 border-b border-gray-100 flex justify-between items-start"
         >
@@ -493,6 +744,7 @@ onMounted(() => {
             <h3 class="text-xl font-bold text-gray-900 mt-2">
               {{ isEditMode ? "Edit Category" : "Add Category" }}
             </h3>
+
             <p class="text-gray-500 text-sm mt-1">
               {{
                 isEditMode
@@ -501,34 +753,23 @@ onMounted(() => {
               }}
             </p>
           </div>
+
           <button
             @click="closeFormModal"
             class="text-gray-400 hover:text-gray-600 transition-colors"
           >
-            <svg
-              class="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M6 18L18 6M6 6l12 12"
-              ></path>
-            </svg>
+            ✕
           </button>
         </div>
 
         <!-- Modal Body -->
-
-        <div class="px-6 py-2 overflow-y-auto">
+        <div class="px-6 py-2 max-h-[70vh] overflow-y-auto">
           <form @submit.prevent="saveCategory">
             <!-- Category Name -->
             <div class="mb-5">
               <label class="mb-2 block text-sm font-medium text-slate-700">
-                Category Name <span class="text-red-500">*</span>
+                Category Name
+                <span class="text-red-500">*</span>
               </label>
 
               <input
@@ -561,16 +802,16 @@ onMounted(() => {
                   <Folder v-else class="h-10 w-10 text-slate-400" />
                 </div>
 
-                <!-- Hidden File Input -->
+                <!-- File Input -->
                 <input
                   ref="logoInput"
                   type="file"
-                  accept="image/png, image/jpeg, image/jpg, image/gif"
+                  accept="image/png,image/jpeg,image/jpg,image/gif"
                   class="hidden"
                   @change="handleLogoChange"
                 />
 
-                <!-- Upload and Remove Buttons -->
+                <!-- Buttons -->
                 <div class="flex flex-wrap justify-center gap-2">
                   <button
                     type="button"
@@ -611,6 +852,7 @@ onMounted(() => {
           >
             Cancel
           </button>
+
           <button
             @click="saveCategory"
             type="button"
@@ -622,5 +864,4 @@ onMounted(() => {
       </div>
     </div>
   </div>
-  <!-- </div> -->
 </template>
