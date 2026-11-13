@@ -33,7 +33,6 @@ class CategoryRepository implements CategoryRepositoryInterface
         if ($category->jobs()->exists()) {
             $category->jobs()->delete();
         }
-
         $category->delete();
     }
 }

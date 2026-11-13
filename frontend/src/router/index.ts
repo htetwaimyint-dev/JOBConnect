@@ -32,9 +32,12 @@ import SettingsPage from "@/features/job-seeker/pages/SettingsPage.vue";
 import { authRoutes } from "./auth.routes";
 import CompanyProfilePage from "@/features/employer/pages/CompanyProfilePage.vue";
 import CreateJobPage from "@/features/jobs/pages/CreateJobPage.vue";
+import { adminRoutes } from "./admin.routes";
 
 const routes: RouteRecordRaw[] = [
+    //Auth Routes
     ...authRoutes,
+    ...adminRoutes,
 
     // Public Layout
     {
@@ -94,6 +97,22 @@ const routes: RouteRecordRaw[] = [
             },
         ],
     },
+    //admin
+    // {
+    //   path: "/admin",
+    //   component: AdminLayout,
+    //   meta: {
+    //     requiresAuth: true,
+    //     role: "admin",
+    //   },
+    //   children: [
+    //     {
+    //       path: "dashboard",
+    //       name: "AdminDashboard",
+    //       component: AdminDashboard,
+    //     },
+    //   ],
+    // },
 
     // Admin Routes
     {
