@@ -243,7 +243,7 @@ onBeforeUnmount(() => {
     class="mx-auto w-full max-w-3xl rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6"
   >
     <form @submit.prevent="saveChanges">
-      <!-- Heading -->
+      Heading
       <div class="mb-5">
         <h2 class="text-xl font-semibold text-slate-800">
           Personal Information
