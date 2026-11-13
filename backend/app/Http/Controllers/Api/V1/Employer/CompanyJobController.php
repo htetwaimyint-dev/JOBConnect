@@ -69,6 +69,7 @@ class CompanyJobController extends Controller
         ]);
     }
 
+
     public function update(UpdateJobRequest $request, int $jobId)
     {
         $company = $this->getEmployerCompany($request->user());
@@ -81,6 +82,7 @@ class CompanyJobController extends Controller
             'data' => new JobResource($job),
         ]);
     }
+
 
     public function destroy(Request $request, int $jobId)
     {

@@ -5,25 +5,24 @@ import Dashboard from "@/features/admin/pages/Dashboard.vue";
 import CategoriesPage from "@/features/admin/pages/CategoriesPage.vue";
 
 export const adminRoutes: RouteRecordRaw[] = [
-  {
-    path: "/admin",
-    component: AdminLayout,
-    meta: {
-      requiresAuth: true,
-      role: "admin",
+    {
+        path: "/admin",
+        component: AdminLayout,
+        meta: {
+            requiresAuth: true,
+            role: "admin",
+        },
+        children: [
+            {
+                path: "dashboard",
+                name: "AdminDashboard",
+                component: Dashboard,
+            },
+            {
+                path: "categories",
+                name: "AdminCategories",
+                component: CategoriesPage,
+            },
+        ],
     },
-    children: [
-      {
-        path: "dashboard",
-        name: "AdminDashboard",
-        component: Dashboard,
-      },
-
-      {
-        path: "categories",
-        name: "AdminCategories",
-        component: CategoriesPage,
-      },
-    ],
-  },
 ];

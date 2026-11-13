@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1\Jobs;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\CategoryResource;
 use App\Services\Jobs\CategoryService;
+use Illuminate\Http\Request;
 
 class CategoryController extends Controller
 {
@@ -16,9 +17,11 @@ class CategoryController extends Controller
         $this->categoryService = $categoryService;
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $categories = $this->categoryService->all();
+        $search = $request->query('search');
+
+        $categories = $this->categoryService->all($search);
 
         return CategoryResource::collection($categories)->additional([
             'success' => true,
