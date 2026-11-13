@@ -42,7 +42,8 @@ class JobResource extends JsonResource
 
             'workplace_type' => $this->workplace_type,
 
-            'location' => $this->location,
+            'country' => $this->country,
+            'city' => $this->city,
 
             'salary_type' => $this->salary_type,
 

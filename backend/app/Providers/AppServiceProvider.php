@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Repositories\Contracts\CategoryRepositoryInterface;
 use Illuminate\Support\ServiceProvider;
 
 use App\Repositories\Contracts\ResumeRepositoryInterface;
@@ -17,6 +18,7 @@ use App\Repositories\Contracts\SkillRepositoryInterface;
 use App\Repositories\Eloquent\SkillRepository;
 
 use App\Repositories\Contracts\JobRepositoryInterface;
+use App\Repositories\Eloquent\CategoryRepository;
 use App\Repositories\Eloquent\JobRepository;
 
 class AppServiceProvider extends ServiceProvider
@@ -44,6 +46,10 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(
             JobRepositoryInterface::class,
             JobRepository::class
+        );
+        $this->app->bind(
+            CategoryRepositoryInterface::class,
+            CategoryRepository::class
         );
     }
 

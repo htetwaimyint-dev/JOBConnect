@@ -51,11 +51,8 @@ class UpdateJobRequest extends FormRequest
                 'in:onsite,remote,hybrid',
             ],
 
-            'location' => [
-                'nullable',
-                'string',
-                'max:255',
-            ],
+            'country' => ['nullable', 'string', 'max:255'],
+            'city' => ['nullable', 'string', 'max:255'],
 
             'salary_min' => [
                 'nullable',
