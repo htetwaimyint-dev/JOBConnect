@@ -4,21 +4,24 @@ import {
     createWebHistory,
     type RouteRecordRaw,
 } from "vue-router";
-
 import { useAuthStore } from "@/stores/auth.store";
-
+import PublicLayout from "@/layouts/PublicLayout.vue";
 import { authRoutes } from "./auth.routes";
-import { publicRoutes } from "./public.routes";
-import { jobSeekerRoutes } from "./job-seeker.routes";
-import { employerRoutes } from "./employer.routes";
 import { adminRoutes } from "./admin.routes";
+import { employerRoutes } from "./employer.routes";
+import { jobseekerRoutes } from "./jobseeker.routes";
 
 const routes: RouteRecordRaw[] = [
     ...authRoutes,
-    ...publicRoutes,
-    ...jobSeekerRoutes,
-    ...employerRoutes,
     ...adminRoutes,
+    ...employerRoutes,
+    ...jobseekerRoutes,
+    // Public Layout
+    {
+        path: "/",
+        component: PublicLayout,
+        children: [],
+    },
 ];
 
 const router = createRouter({
@@ -33,13 +36,15 @@ router.beforeEach(async (to) => {
         await authStore.initializeAuth();
     }
 
-    // Authentication check
     if (to.meta.requiresAuth && !authStore.token) {
         return "/login";
     }
 
-    // Role authorization check
     if (to.meta.role && authStore.user?.role !== to.meta.role) {
+        return "/";
+    }
+
+    if (to.path === "/login" && authStore.token) {
         return "/";
     }
 
