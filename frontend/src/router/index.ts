@@ -3,151 +3,23 @@ import {
     createWebHistory,
     type RouteRecordRaw,
 } from "vue-router";
-
 import { useAuthStore } from "@/stores/auth.store";
-
-// Layouts
 import PublicLayout from "@/layouts/PublicLayout.vue";
-import JobSeekerLayout from "@/layouts/JobSeekerLayout.vue";
-import EmployerLayout from "@/layouts/EmployerLayout.vue";
-import AdminLayout from "@/layouts/AdminLayout.vue";
-import CompanyProfileForm from "@/features/employer/pages/CompanyProfileForm.vue";
-
-// Dashboard Pages
-import Dashboard from "@/features/job-seeker/pages/Dashboard.vue";
-import AdminDashboard from "@/features/admin/pages/Dashboard.vue";
-import EmployerDashboard from "@/features/employer/pages/Dashboard.vue";
-import JobSeekerSettingsPage from "@/features/job-seeker/pages/JobSeekerSettingsPage.vue";
-
-// Job Seeker Pages
-import ProfilePage from "@/features/job-seeker/pages/ProfilePage.vue";
-import JobsPage from "@/features/job-seeker/pages/JobsPage.vue";
-import SavedJobsPage from "@/features/job-seeker/pages/SavedJobsPage.vue";
-import ApplicationsPage from "@/features/job-seeker/pages/ApplicationsPage.vue";
-import InterviewsPage from "@/features/job-seeker/pages/InterviewsPage.vue";
-import OffersPage from "@/features/job-seeker/pages/OffersPage.vue";
-import SettingsPage from "@/features/job-seeker/pages/SettingsPage.vue";
-
-// Auth Routes
 import { authRoutes } from "./auth.routes";
-import CompanyProfilePage from "@/features/employer/pages/CompanyProfilePage.vue";
-import CreateJobPage from "@/features/jobs/pages/CreateJobPage.vue";
 import { adminRoutes } from "./admin.routes";
+import { employerRoutes } from "./employer.routes";
+import { jobseekerRoutes } from "./jobseeker.routes";
 
 const routes: RouteRecordRaw[] = [
-    //Auth Routes
     ...authRoutes,
     ...adminRoutes,
-
+    ...employerRoutes,
+    ...jobseekerRoutes,
     // Public Layout
     {
         path: "/",
         component: PublicLayout,
         children: [],
-    },
-
-    // Job Seeker Routes
-    {
-        path: "/jobseeker",
-        component: JobSeekerLayout,
-        meta: {
-            requiresAuth: true,
-            role: "job_seeker",
-        },
-        children: [
-            {
-                path: "dashboard",
-                name: "JobSeekerDashboard",
-                component: Dashboard,
-            },
-            {
-                path: "profile",
-                name: "JobSeekerProfile",
-                component: ProfilePage,
-            },
-            {
-                path: "jobs",
-                name: "JobSeekerJobs",
-                component: JobsPage,
-            },
-            {
-                path: "saved-jobs",
-                name: "JobSeekerSavedJobs",
-                component: SavedJobsPage,
-            },
-            {
-                path: "applications",
-                name: "JobSeekerApplications",
-                component: ApplicationsPage,
-            },
-            {
-                path: "interviews",
-                name: "JobSeekerInterviews",
-                component: InterviewsPage,
-            },
-            {
-                path: "offers",
-                name: "JobSeekerOffers",
-                component: OffersPage,
-            },
-            {
-                path: "settings",
-                name: "JobSeekerSettings",
-                component: SettingsPage,
-            },
-        ],
-    },
-    //admin
-    // {
-    //   path: "/admin",
-    //   component: AdminLayout,
-    //   meta: {
-    //     requiresAuth: true,
-    //     role: "admin",
-    //   },
-    //   children: [
-    //     {
-    //       path: "dashboard",
-    //       name: "AdminDashboard",
-    //       component: AdminDashboard,
-    //     },
-    //   ],
-    // },
-
-    // Admin Routes
-    {
-        path: "/admin",
-        component: AdminLayout,
-        meta: {
-            requiresAuth: true,
-            role: "admin",
-        },
-    },
-    // Employer Routes
-    {
-        path: "/employer",
-        component: JobSeekerLayout,
-        meta: {
-            requiresAuth: true,
-            role: "employer",
-        },
-        children: [
-            {
-                path: "/employer/profile",
-                name: "company-profile",
-                component: CompanyProfilePage,
-            },
-            {
-                path: "/employer/profile/edit",
-                name: "employer.company-profile.edit",
-                component: CompanyProfileForm,
-            },
-            {
-                path: "/employer/jobs",
-                name: "employer-job-create",
-                component: CreateJobPage,
-            },
-        ],
     },
 ];
 
@@ -163,13 +35,15 @@ router.beforeEach(async (to) => {
         await authStore.initializeAuth();
     }
 
-    // Authentication check
     if (to.meta.requiresAuth && !authStore.token) {
         return "/login";
     }
 
-    // Role authorization check
     if (to.meta.role && authStore.user?.role !== to.meta.role) {
+        return "/";
+    }
+
+    if (to.path === "/login" && authStore.token) {
         return "/";
     }
 
