@@ -8,9 +8,13 @@ use App\Models\Category;
 
 class CategoryRepository implements CategoryRepositoryInterface
 {
-    public function all(): Collection
+    public function all(?string $search = null): Collection
     {
-        return Category::all();
+        return Category::query()
+            ->when($search, function ($query, $search) {
+                $query->where('name', 'like', "%{$search}%");
+            })
+            ->get();
     }
 
     public function findById(int $id): ?Category
