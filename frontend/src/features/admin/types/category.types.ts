@@ -1,3 +1,4 @@
+
 export interface Category {
   id: number;
   name: string;
@@ -22,13 +23,7 @@ export interface CategoryListParams {
   per_page?: number;
 }
 
-export interface CategoryListResponse {
-  data: Category[];
-  current_page: number;
-  last_page: number;
-  per_page: number;
-  total: number;
-}
+export interface CategoryListResponse extends PaginatedResponse<Category> { }
 
 export interface CategoryResponse {
   data: Category;
