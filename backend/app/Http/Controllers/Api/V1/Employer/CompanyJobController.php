@@ -69,11 +69,16 @@ class CompanyJobController extends Controller
         ]);
     }
 
+
     public function update(UpdateJobRequest $request, int $jobId)
     {
         $company = $this->getEmployerCompany($request->user());
 
-        $job = $this->jobService->updateJob($company, $jobId, $request->validated);
+        $job = $this->jobService->updateJob(
+            $company,
+            $jobId,
+            $request->validated()
+        );
 
         return response()->json([
             'success' => true,
@@ -81,6 +86,7 @@ class CompanyJobController extends Controller
             'data' => new JobResource($job),
         ]);
     }
+
 
     public function destroy(Request $request, int $jobId)
     {

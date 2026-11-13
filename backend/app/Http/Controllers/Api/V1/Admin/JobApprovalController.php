@@ -4,47 +4,46 @@ namespace App\Http\Controllers\Api\V1\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Admin\JobApprovalRequest;
+use App\Http\Resources\Api\Jobs\JobResource;
 use App\Models\Job;
+use App\Services\Jobs\JobService;
 use Illuminate\Http\JsonResponse;
-
+use Illuminate\Http\Request;
 
 class JobApprovalController extends Controller
 {
+    protected JobService $jobService;
+
+    public function __construct(JobService $jobService)
+    {
+        $this->jobService = $jobService;
+    }
+
     /**
      * Display pending jobs.
      */
     public function index(): JsonResponse
     {
-        $jobs = Job::with([
-            'company:id,name,logo,city',
-            'category:id,name',
-        ])
-            ->where('status', 'pending')
-            ->latest()
-            ->paginate(10);
+        $jobs = $this->jobService->getPendingJobsForAdmin(10);
 
         return response()->json([
             'success' => true,
             'message' => 'Pending jobs retrieved successfully.',
-            'data' => $jobs,
+            'data' => JobResource::collection($jobs),
         ]);
     }
 
     /**
      * Display a specific job.
      */
-    public function show(Job $job): JsonResponse
+    public function show(int $jobId): JsonResponse
     {
-        $job->load([
-            'company:id,name,logo,city',
-            'category:id,name',
-            'approvedBy:id,name,email',
-        ]);
+        $job = $this->jobService->getJobForAdmin($jobId);
 
         return response()->json([
             'success' => true,
             'message' => 'Job details retrieved successfully.',
-            'data' => $job,
+            'data' => new JobResource($job),
         ]);
     }
 
@@ -53,37 +52,22 @@ class JobApprovalController extends Controller
      */
     public function update(
         JobApprovalRequest $request,
-        Job $job
+        int $jobId
     ): JsonResponse {
-        $validated = $request->validated();
+        $job = $this->jobService->getJobForAdmin($jobId);
 
-        $status = $validated['status'];
-
-        $job->update([
-            'status' => $status,
-            'approved_by' => $status === 'published'
-                ? $request->user()->id
-                : null,
-            'approved_at' => $status === 'published'
-                ? now()
-                : null,
-            'rejection_reason' => $status === 'rejected'
-                ? $validated['rejection_reason']
-                : null,
-        ]);
-
-        $job->refresh()->load([
-            'company:id,name,logo,city',
-            'category:id,name',
-            'approvedBy:id,name,email',
-        ]);
+        $updatedJob = $this->jobService->updateJobApproval(
+            $job,
+            $request->user(),
+            $request->validated()
+        );
 
         return response()->json([
             'success' => true,
-            'message' => $status === 'published'
+            'message' => $updatedJob->status === 'published'
                 ? 'Job approved successfully.'
                 : 'Job rejected successfully.',
-            'data' => $job,
+            'data' => new JobResource($updatedJob),
         ]);
     }
 }
