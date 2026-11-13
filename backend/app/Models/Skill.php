@@ -13,6 +13,7 @@ class Skill extends Model
     protected $fillable = [
         'job_seeker_id',
         'name',
+        'skill_level',
     ];
 
     public function jobSeeker(): BelongsTo

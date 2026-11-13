@@ -3,47 +3,41 @@
 namespace App\Http\Controllers\Api\V1\Jobs;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Http\Requests\Api\Jobs\PublicJobIndexRequest;
+use App\Http\Resources\Api\Jobs\JobResource;
+use App\Services\Jobs\JobService;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class JobController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    protected JobService $jobService;
+
+    public function __construct(JobService $jobService)
     {
-        //
+        $this->jobService = $jobService;
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Display published jobs for public visitors.
      */
-    public function store(Request $request)
-    {
-        //
+    public function index(
+        PublicJobIndexRequest $request
+    ): AnonymousResourceCollection {
+        $jobs = $this->jobService->getPublishedJobs(
+            $request->validated(),
+            10
+        );
+
+        return JobResource::collection($jobs);
     }
 
     /**
-     * Display the specified resource.
+     * Display a single published job.
      */
-    public function show(string $id)
+    public function show(string $id): JobResource
     {
-        //
-    }
+        $job = $this->jobService->getPublishedJob((int) $id);
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+        return new JobResource($job);
     }
 }

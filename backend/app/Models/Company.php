@@ -15,6 +15,11 @@ class Company extends Model
         'employer_id',
         'name',
         'logo',
+        'cover_image',
+        'tagline',
+        'founded_year',
+        'employee_count',
+        'gallery',
         'description',
         'industry',
         'website',
@@ -24,12 +29,15 @@ class Company extends Model
         'city',
         'verification_status',
         'verified_at',
+        'rejection_reason',
     ];
 
     protected function casts(): array
     {
         return [
             'verified_at' => 'datetime',
+            'founded_year' => 'integer',
+            'gallery' => 'array',
         ];
     }
 
@@ -58,4 +66,3 @@ class Company extends Model
         return $this->hasMany(JobOffer::class, 'company_id');
     }
 }
-

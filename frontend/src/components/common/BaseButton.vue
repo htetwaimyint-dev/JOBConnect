@@ -291,7 +291,7 @@ const classes = computed(() => {
 
     return [
         "relative inline-flex items-center justify-center",
-        "rounded font-medium whitespace-nowrap",
+        "rounded-none font-medium whitespace-nowrap",
         "transition-colors duration-150",
         "focus-visible:outline-none",
         "focus-visible:ring-2 focus-visible:ring-blue-500",

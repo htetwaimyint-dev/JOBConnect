@@ -3,47 +3,40 @@
 namespace App\Http\Controllers\Api\V1\Jobs;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\Api\CategoryResource;
+use App\Services\Jobs\CategoryService;
 use Illuminate\Http\Request;
 
 class CategoryController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
-    {
-        //
+    protected CategoryService $categoryService;
+
+    public function __construct(
+        CategoryService $categoryService
+    ) {
+        $this->categoryService = $categoryService;
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    public function index(Request $request)
     {
-        //
+        $search = $request->query('search');
+
+        $categories = $this->categoryService->all($search);
+
+        return CategoryResource::collection($categories)->additional([
+            'success' => true,
+            'message' => 'Categories retrieved successfully.',
+        ]);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function show(int $id)
     {
-        //
-    }
+        $category = $this->categoryService->findById($id);
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+        return response()->json([
+            'success' => 'true',
+            'message' => 'Category retrieved successfully.',
+            'data' => new CategoryResource($category),
+        ]);
     }
 }

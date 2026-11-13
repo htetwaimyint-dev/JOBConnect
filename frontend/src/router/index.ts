@@ -3,78 +3,23 @@ import {
   createWebHistory,
   type RouteRecordRaw,
 } from "vue-router";
-
-// Demo Components
-import { useAuthStore } from "@/stores/auth.store.ts";
-
-// Layouts
+import { useAuthStore } from "@/stores/auth.store";
 import PublicLayout from "@/layouts/PublicLayout.vue";
-import JobSeekerLayout from "@/layouts/JobSeekerLayout.vue";
-import EmployeeLayout from "@/layouts/EmployerLayout.vue";
-import AdminLayout from "@/layouts/AdminLayout.vue";
-
-// Dashboard Components
-import JobSeekerDashboard from "@/features/job-seeker/pages/Dashboard.vue";
-import AdminDashboard from "@/features/admin/pages/Dashboard.vue";
-import EmployerDashboard from "@/features/employer/pages/Dashboard.vue";
-import JobSeekerSettingsPage from "@/features/job-seeker/pages/JobSeekerSettingsPage.vue";
-
-// Import Route Files
 import { authRoutes } from "./auth.routes";
 import { adminRoutes } from "./admin.routes";
+import { employerRoutes } from "./employer.routes";
+import { jobseekerRoutes } from "./jobseeker.routes";
 
-// Combine All Routes
 const routes: RouteRecordRaw[] = [
-  //Auth Routes
   ...authRoutes,
   ...adminRoutes,
-
-  // Public Website Layout
+  ...employerRoutes,
+  ...jobseekerRoutes,
+  // Public Layout
   {
     path: "/",
     component: PublicLayout,
-    children: [
-      // Add your public website pages here later
-    ],
-  },
-
-  // Job Seeker Layout
-  {
-    path: "/jobseeker",
-    component: JobSeekerLayout,
-    meta: {
-      requiresAuth: true,
-      role: "job_seeker",
-    },
-    children: [
-      {
-        path: "dashboard",
-        name: "JobSeekerDashboard",
-        component: JobSeekerDashboard,
-      },
-      {
-        path: "settings",
-        name: "JobSeekerSettings",
-        component: JobSeekerSettingsPage,
-      },
-    ],
-  },
-
-  // Employee Layout
-  {
-    path: "/employer",
-    component: EmployeeLayout,
-    meta: {
-      requiresAuth: true,
-      role: "employer",
-    },
-    children: [
-      {
-        path: "dashboard",
-        name: "EmployerDashboard",
-        component: EmployerDashboard,
-      },
-    ],
+    children: [],
   },
 ];
 
@@ -83,19 +28,25 @@ const router = createRouter({
   routes,
 });
 
-router.beforeEach((to) => {
+router.beforeEach(async (to) => {
   const authStore = useAuthStore();
-  const token = localStorage.getItem("token");
 
-  // Check Authentication
+  if (!authStore.initialized) {
+    await authStore.initializeAuth();
+  }
+
   if (to.meta.requiresAuth && !authStore.token) {
     return "/login";
   }
 
-  // Check Authorization
   if (to.meta.role && authStore.user?.role !== to.meta.role) {
     return "/";
   }
+
+  if (to.path === "/login" && authStore.token) {
+    return "/";
+  }
+
   return true;
 });
 

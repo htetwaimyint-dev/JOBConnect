@@ -8,54 +8,72 @@ import type { LoginData, RegisterData } from "@/features/auth/types/auth.types";
 import type { User } from "@/types/user.types";
 
 export const useAuthStore = defineStore("auth", () => {
-  const user = ref<User | null>(null);
+    const user = ref<User | null>(null);
 
-  const token = ref<string | null>(localStorage.getItem("token"));
+    const token = ref<string | null>(localStorage.getItem("token"));
 
-  const isAuthenticated = computed(() => !!token.value);
+    const isAuthenticated = computed(() => !!token.value);
+    const initialized = ref<boolean>(false);
 
-  // Login
-  const login = async (data: LoginData) => {
-    const response = await authRepository.login(data);
+    const initializeAuth = async () => {
+        if (initialized.value) return;
 
-    user.value = response.data.user;
-    token.value = response.data.token;
+        try {
+            if (token.value) {
+                const response = await authRepository.getCurrentUser();
+                user.value = response.data.user;
+            }
+        } catch (error) {
+            authRepository.logout();
+        } finally {
+            initialized.value = true;
+        }
+    };
 
-    localStorage.setItem("token", response.data.token);
+    // Login
+    const login = async (data: LoginData) => {
+        const response = await authRepository.login(data);
 
-    return response.data;
-  };
+        user.value = response.data.user;
+        token.value = response.data.token;
 
-  // Register
-  const register = async (data: RegisterData) => {
-    const response = await authRepository.register(data);
+        localStorage.setItem("token", token.value);
 
-    user.value = response.data.user;
-    token.value = response.data.token;
+        return response.data;
+    };
 
-    localStorage.setItem("token", response.data.token);
+    // Register
+    const register = async (data: RegisterData) => {
+        const response = await authRepository.register(data);
 
-    return response.data;
-  };
+        user.value = response.data.user;
+        token.value = response.data.token;
 
-  // Logout
-  const logout = async () => {
-    try {
-      await authRepository.logout();
-    } finally {
-      localStorage.removeItem("token");
+        localStorage.setItem("token", response.data.token);
 
-      token.value = null;
-      user.value = null;
-    }
-  };
+        return response.data;
+    };
 
-  return {
-    user,
-    token,
-    isAuthenticated,
-    login,
-    register,
-    logout,
-  };
+    // Logout
+    const logout = async () => {
+        try {
+            await authRepository.logout();
+        } finally {
+            localStorage.removeItem("token");
+
+            token.value = null;
+            user.value = null;
+        }
+    };
+
+    return {
+        user,
+        token,
+        isAuthenticated,
+        initialized,
+        login,
+        register,
+        logout,
+        initializeAuth,
+    };
 });

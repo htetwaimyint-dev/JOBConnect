@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Api\V1\JobSeeker;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\JobSeeker\ExperienceRequest;
-use App\Http\Resources\Api\ExperienceResource;
+use App\Http\Resources\Api\JobSeeker\ExperienceResource;
 use Illuminate\Http\Request;
 
 class ExperienceController extends Controller

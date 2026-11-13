@@ -1,21 +1,28 @@
 <?php
+
 namespace App\Repositories\Eloquent;
+
 use App\Repositories\Contracts\CategoryRepositoryInterface;
 use Illuminate\Database\Eloquent\Collection;
 use App\Models\Category;
+
 class CategoryRepository implements CategoryRepositoryInterface
 {
-    public function all(): Collection
+    public function all(?string $search = null): Collection
     {
-        return Category::all();
+        return Category::query()
+            ->when($search, function ($query, $search) {
+                $query->where('name', 'like', "%{$search}%");
+            })
+            ->get();
     }
 
-    public function findById(int $id): ? Category
+    public function findById(int $id): ?Category
     {
         return Category::find($id);
     }
 
-    public function createOrUpdate(? Category $category, array $data): Category
+    public function createOrUpdate(?Category $category, array $data): Category
     {
         if ($category) {
             $category->update($data);
@@ -30,7 +37,6 @@ class CategoryRepository implements CategoryRepositoryInterface
         if ($category->jobs()->exists()) {
             $category->jobs()->delete();
         }
-        
         $category->delete();
     }
 }

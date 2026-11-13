@@ -44,7 +44,8 @@ const model = defineModel<string | number | null>({
 const attrs = useAttrs();
 
 const selectClasses = computed(() => [
-    "w-full appearance-none rounded-lg border bg-white text-gray-900",
+    "w-full appearance-none border bg-white",
+    !model.value && model.value !== 0 ? "text-gray-400" : "text-gray-900",
     "transition-colors duration-150",
     "focus:outline-none focus:ring-2 focus:ring-offset-0",
     "disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-500",
@@ -94,7 +95,7 @@ const hasOption = computed(() =>
                 "
                 :class="selectClasses"
             >
-                <option v-if="placeholder" :value="null" disabled hidden>
+                <option v-if="placeholder" value="" disabled hidden>
                     {{ placeholder }}
                 </option>
 
