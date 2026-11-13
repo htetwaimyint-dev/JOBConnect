@@ -20,7 +20,7 @@ Route::middleware(['auth:sanctum', 'employer'])
     });
 
 Route::middleware(['auth:sanctum', 'employer'])
-    ->prefix('/employer/categories')
+    ->prefix('/employer/job-categories')
     ->group(function () {
 
         Route::get('/', [CategoryController::class, 'index']);
