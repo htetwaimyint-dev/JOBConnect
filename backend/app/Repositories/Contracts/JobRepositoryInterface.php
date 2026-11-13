@@ -6,10 +6,12 @@ use App\Models\Company;
 use App\Models\Job;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
-interface JobRepositoryInterface 
+interface JobRepositoryInterface
 {
+    // Employer Job Management
+
     public function getByCompany(
-        Company $company, 
+        Company $company,
         int $perPage = 10
     ): LengthAwarePaginator;
 
@@ -29,5 +31,27 @@ interface JobRepositoryInterface
     ): Job;
 
     public function delete(Job $job): bool;
-}
 
+
+    // Admin Job Approval
+
+    public function getPendingForAdmin(
+        int $perPage = 10
+    ): LengthAwarePaginator;
+
+    public function findForAdmin(
+        int $jobId
+    ): ?Job;
+
+
+    // Public Job Listing
+
+    public function getPublishedJobs(
+        array $filters,
+        int $perPage = 10
+    ): LengthAwarePaginator;
+
+    public function findPublishedJob(
+        int $jobId
+    ): ?Job;
+}

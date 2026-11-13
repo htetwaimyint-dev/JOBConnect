@@ -57,6 +57,19 @@ class JobResource extends JsonResource
 
             'status' => $this->status,
 
+            'approved_by' => $this->approved_by,
+
+            'approved_admin' => $this->whenLoaded(
+                'approvedBy',
+                fn() => $this->approvedBy
+                    ? [
+                        'id' => $this->approvedBy->id,
+                        'name' => $this->approvedBy->name,
+                        'email' => $this->approvedBy->email,
+                    ]
+                    : null
+            ),
+
             'approved_at' => $this->approved_at,
 
             'rejection_reason' => $this->rejection_reason,

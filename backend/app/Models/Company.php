@@ -29,6 +29,7 @@ class Company extends Model
         'city',
         'verification_status',
         'verified_at',
+        'rejection_reason',
     ];
 
     protected function casts(): array
@@ -65,4 +66,3 @@ class Company extends Model
         return $this->hasMany(JobOffer::class, 'company_id');
     }
 }
-
