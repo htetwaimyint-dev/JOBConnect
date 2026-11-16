@@ -60,6 +60,7 @@ export interface JobFormData {
     deadline: string;
     employment_type: EmploymentType;
     vacancies: number;
+    gender: "any" | "male" | "female";
     workplace_type: WorkplaceType;
     country: string;
     city: string;

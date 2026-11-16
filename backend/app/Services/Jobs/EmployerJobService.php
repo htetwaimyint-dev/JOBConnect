@@ -54,6 +54,10 @@ class EmployerJobService
 
         $data['status'] = $status;
 
+        $data['description_plain_text'] = $this->extractPlainText(
+            $data['description'] ?? ''
+        );
+
         return $this->jobRepository->create($company, $data);
     }
 
@@ -104,6 +108,12 @@ class EmployerJobService
             $data['rejection_reason'] = null;
         }
 
+        if (array_key_exists('description', $data)) {
+            $data['description_plain_text'] = $this->extractPlainText(
+                $data['description']
+            );
+        }
+
         return $this->jobRepository->update($job, $data);
     }
 
@@ -120,5 +130,34 @@ class EmployerJobService
         }
 
         return $this->jobRepository->delete($job);
+    }
+
+    private function extractPlainText(?string $html): string
+    {
+        if (empty($html)) {
+            return '';
+        }
+
+        // Replace closing block tags and line breaks with spaces.
+        $html = preg_replace(
+            '/<\/(p|div|li|h[1-6]|blockquote)>|<br\s*\/?>/i',
+            ' ',
+            $html
+        );
+
+        // Remove HTML tags.
+        $text = strip_tags($html);
+
+        // Decode HTML entities.
+        $text = html_entity_decode(
+            $text,
+            ENT_QUOTES | ENT_HTML5,
+            'UTF-8'
+        );
+
+        // Normalize whitespace.
+        $text = preg_replace('/\s+/u', ' ', $text);
+
+        return trim($text);
     }
 }

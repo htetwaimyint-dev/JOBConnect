@@ -51,6 +51,11 @@ class StoreJobRequest extends FormRequest
                 'in:onsite,remote,hybrid',
             ],
 
+            'gender' => [
+                'required',
+                'in:any,male,female',
+            ],
+
             'country' => ['nullable', 'string', 'max:255'],
             'city' => ['nullable', 'string', 'max:255'],
 

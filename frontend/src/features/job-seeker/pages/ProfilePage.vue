@@ -54,17 +54,22 @@ const profileSections = [
 
 <template>
     <div class="mx-auto max-w-5xl space-y-8 pb-10">
-
         <!-- Page Header -->
-        <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div
+            class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
+        >
             <div>
                 <div class="flex items-center gap-3">
-                    <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
+                    <div
+                        class="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-600"
+                    >
                         <UserRound :size="25" />
                     </div>
 
                     <div>
-                        <h1 class="text-2xl font-bold tracking-tight text-slate-800">
+                        <h1
+                            class="text-2xl font-bold tracking-tight text-slate-800"
+                        >
                             My Profile
                         </h1>
 
@@ -83,10 +88,15 @@ const profileSections = [
 
         <!-- Profile Sections Overview -->
         <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-            <div v-for="section in profileSections" :key="section.title"
-                class="rounded-xl border border-slate-200 bg-white p-4 transition hover:-translate-y-0.5 hover:shadow-sm">
-                <div class="mb-3 flex h-10 w-10 items-center justify-center rounded-xl"
-                    :class="[section.bg, section.color]">
+            <div
+                v-for="section in profileSections"
+                :key="section.title"
+                class="rounded-xl border border-slate-200 bg-white p-4 transition hover:-translate-y-0.5 hover:shadow-sm"
+            >
+                <div
+                    class="mb-3 flex h-10 w-10 items-center justify-center rounded-xl"
+                    :class="[section.bg, section.color]"
+                >
                     <component :is="section.icon" :size="20" />
                 </div>
 
@@ -103,7 +113,9 @@ const profileSections = [
         <!-- Personal Information -->
         <section class="space-y-3">
             <div class="flex items-center gap-3 border-b border-slate-200 pb-3">
-                <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
+                <div
+                    class="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-50 text-blue-600"
+                >
                     <UserRound :size="19" />
                 </div>
 
@@ -123,14 +135,14 @@ const profileSections = [
         <!-- Education -->
         <section class="space-y-3">
             <div class="flex items-center gap-3 border-b border-slate-200 pb-3">
-                <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-violet-50 text-violet-600">
+                <div
+                    class="flex h-9 w-9 items-center justify-center rounded-lg bg-violet-50 text-violet-600"
+                >
                     <GraduationCap :size="19" />
                 </div>
 
                 <div>
-                    <h2 class="font-semibold text-slate-800">
-                        Education
-                    </h2>
+                    <h2 class="font-semibold text-slate-800">Education</h2>
                     <p class="text-xs text-slate-500">
                         Your academic background and qualifications
                     </p>
@@ -143,7 +155,9 @@ const profileSections = [
         <!-- Work Experience -->
         <section class="space-y-3">
             <div class="flex items-center gap-3 border-b border-slate-200 pb-3">
-                <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-orange-50 text-orange-600">
+                <div
+                    class="flex h-9 w-9 items-center justify-center rounded-lg bg-orange-50 text-orange-600"
+                >
                     <BriefcaseBusiness :size="19" />
                 </div>
 
@@ -163,14 +177,14 @@ const profileSections = [
         <!-- Skills -->
         <section class="space-y-3">
             <div class="flex items-center gap-3 border-b border-slate-200 pb-3">
-                <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
+                <div
+                    class="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600"
+                >
                     <Lightbulb :size="19" />
                 </div>
 
                 <div>
-                    <h2 class="font-semibold text-slate-800">
-                        Skills
-                    </h2>
+                    <h2 class="font-semibold text-slate-800">Skills</h2>
                     <p class="text-xs text-slate-500">
                         Your professional and technical skills
                     </p>
@@ -183,7 +197,9 @@ const profileSections = [
         <!-- Resume -->
         <section class="space-y-3">
             <div class="flex items-center gap-3 border-b border-slate-200 pb-3">
-                <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-rose-50 text-rose-600">
+                <div
+                    class="flex h-9 w-9 items-center justify-center rounded-lg bg-rose-50 text-rose-600"
+                >
                     <FileText :size="19" />
                 </div>
 
@@ -199,6 +215,5 @@ const profileSections = [
 
             <ResumeSection />
         </section>
-
     </div>
 </template>

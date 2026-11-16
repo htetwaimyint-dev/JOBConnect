@@ -1,4 +1,3 @@
-
 import type { JobListParams } from "../types/job.types";
 
 export const jobKeys = {
@@ -6,11 +5,10 @@ export const jobKeys = {
 
     lists: () => [...jobKeys.all, "list"] as const,
 
-    list: (params: JobListParams) =>
+    list: (params: JobListParams | undefined) =>
         [...jobKeys.lists(), params] as const,
 
     details: () => [...jobKeys.all, "detail"] as const,
 
-    detail: (id: number) =>
-        [...jobKeys.details(), id] as const,
+    detail: (id: number) => [...jobKeys.details(), id] as const,
 };

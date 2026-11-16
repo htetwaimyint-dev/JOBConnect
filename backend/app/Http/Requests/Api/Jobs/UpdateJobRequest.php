@@ -66,6 +66,11 @@ class UpdateJobRequest extends FormRequest
                 'min:0',
             ],
 
+            'gender' => [
+                'required',
+                'in:any,male,female',
+            ],
+
             'vacancies' => [
                 'required',
                 'integer',
