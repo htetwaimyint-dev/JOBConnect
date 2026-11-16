@@ -142,7 +142,8 @@ class JobRepository implements JobRepositoryInterface
                 $query->where(function ($q) use ($search) {
                     $q->where('title', 'like', "%{$search}%")
                         ->orWhere('description', 'like', "%{$search}%")
-                        ->orWhere('location', 'like', "%{$search}%")
+                        ->orWhere('city', 'like', "%{$search}%")
+                        ->orWhere('country', 'like', "%{$search}%")
                         ->orWhereHas('company', function ($companyQuery) use ($search) {
                             $companyQuery->where(
                                 'name',
@@ -170,11 +171,18 @@ class JobRepository implements JobRepositoryInterface
                     $filters['workplace_type']
                 );
             })
-            ->when(!empty($filters['location']), function ($query) use ($filters) {
+            ->when(!empty($filters['city']), function ($query) use ($filters) {
                 $query->where(
-                    'location',
+                    'city',
                     'like',
-                    '%' . $filters['location'] . '%'
+                    "%{$filters['city']}%"
+                );
+            })
+            ->when(!empty($filters['country']), function ($query) use ($filters) {
+                $query->where(
+                    'country',
+                    'like',
+                    "%{$filters['country']}%"
                 );
             })
             ->latest()

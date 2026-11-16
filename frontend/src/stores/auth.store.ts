@@ -15,6 +15,7 @@ export const useAuthStore = defineStore("auth", () => {
     const isAuthenticated = computed(() => !!token.value);
     const initialized = ref<boolean>(false);
 
+
     const initializeAuth = async () => {
         if (initialized.value) return;
 
@@ -24,11 +25,14 @@ export const useAuthStore = defineStore("auth", () => {
                 user.value = response.data.user;
             }
         } catch (error) {
-            authRepository.logout();
+            localStorage.removeItem("token");
+            token.value = null;
+            user.value = null;
         } finally {
             initialized.value = true;
         }
     };
+
 
     // Login
     const login = async (data: LoginData) => {

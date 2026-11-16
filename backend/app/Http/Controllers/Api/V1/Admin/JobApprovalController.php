@@ -6,15 +6,15 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Admin\JobApprovalRequest;
 use App\Http\Resources\Api\Jobs\JobResource;
 use App\Models\Job;
-use App\Services\Jobs\JobService;
+use App\Services\Jobs\AdminJobService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class JobApprovalController extends Controller
 {
-    protected JobService $jobService;
+    protected AdminJobService $jobService;
 
-    public function __construct(JobService $jobService)
+    public function __construct(AdminJobService $jobService)
     {
         $this->jobService = $jobService;
     }

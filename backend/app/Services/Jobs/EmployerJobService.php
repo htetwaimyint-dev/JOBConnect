@@ -4,13 +4,12 @@ namespace App\Services\Jobs;
 
 use App\Models\Company;
 use App\Models\Job;
-use App\Models\User;
 use App\Repositories\Contracts\JobRepositoryInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Validation\ValidationException;
 
-class JobService
+class EmployerJobService
 {
     protected JobRepositoryInterface $jobRepository;
 
@@ -18,12 +17,6 @@ class JobService
     {
         $this->jobRepository = $jobRepository;
     }
-
-    /*
-    |--------------------------------------------------------------------------
-    | Employer Job Management
-    |--------------------------------------------------------------------------
-    */
 
     public function getJobs(
         Company $company,
@@ -77,9 +70,7 @@ class JobService
 
         if ($job->status === 'closed') {
             throw ValidationException::withMessages([
-                'job' => [
-                    'Closed jobs cannot be edited.'
-                ],
+                'job' => ['Closed jobs cannot be edited.'],
             ]);
         }
 
@@ -134,9 +125,7 @@ class JobService
 
         if ($job->status === 'published') {
             throw ValidationException::withMessages([
-                'job' => [
-                    'Published jobs cannot be deleted.'
-                ],
+                'job' => ['Published jobs cannot be deleted.'],
             ]);
         }
 

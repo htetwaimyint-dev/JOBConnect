@@ -1,11 +1,16 @@
+
+import type { JobListParams } from "../types/job.types";
+
 export const jobKeys = {
-    all: ["employer-jobs"] as const,
+    all: ["jobs"] as const,
 
     lists: () => [...jobKeys.all, "list"] as const,
 
-    list: (page: number) => [...jobKeys.lists(), page] as const,
+    list: (params: JobListParams) =>
+        [...jobKeys.lists(), params] as const,
 
     details: () => [...jobKeys.all, "detail"] as const,
 
-    detail: (id: number) => [...jobKeys.details(), id] as const,
+    detail: (id: number) =>
+        [...jobKeys.details(), id] as const,
 };

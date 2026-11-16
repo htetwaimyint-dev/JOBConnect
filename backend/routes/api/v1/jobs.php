@@ -3,13 +3,13 @@
 use App\Http\Controllers\Api\V1\Employer\CompanyJobController;
 use App\Http\Controllers\Api\V1\Jobs\CategoryController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Api\V1\Jobs\JobController;
+use App\Http\Controllers\Api\V1\Jobs\PublicJobController;
 use App\Http\Controllers\Api\V1\Jobs\PublicCategoryController;
 
 
 // Public job routes
-Route::get('/jobs', [JobController::class, 'index']);
-Route::get('/jobs/{id}', [JobController::class, 'show']);
+Route::get('/jobs', [PublicJobController::class, 'index']);
+Route::get('/jobs/{id}', [PublicJobController::class, 'show']);
 
 // Public category route
 Route::get('/public/categories', [PublicCategoryController::class, 'index']);
