@@ -731,8 +731,7 @@ onBeforeUnmount(() => {
       >
         <!-- Header -->
         <div
-          v-if="isFormModalOpen"
-          class="fixed inset-0 z-50 flex items-center justify-center p-4"
+          class="px-6 py-2 border-b border-gray-100 flex justify-between items-start"
         >
           <div>
             <h3 class="text-xl font-bold text-gray-900 mt-2">
@@ -785,38 +784,16 @@ onBeforeUnmount(() => {
               <div class="flex flex-col items-center gap-3">
                 <!-- Logo Preview -->
                 <div
-                  class="px-6 py-2 border-b border-gray-100 flex justify-between items-start"
+                  class="flex h-20 w-20 items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-slate-100"
                 >
-                  <div>
-                    <h3 class="text-xl font-bold text-gray-900 mt-2">
-                      {{ isEditMode ? "Edit Category" : "Add Category" }}
-                    </h3>
-                    <p class="text-gray-500 text-sm mt-1">
-                      {{
-                        isEditMode
-                          ? "Update existing category details."
-                          : "Add a new category to your list."
-                      }}
-                    </p>
-                  </div>
-                  <button
-                    @click="closeFormModal"
-                    class="text-gray-400 hover:text-gray-600 transition-colors"
-                  >
-                    <svg
-                      class="w-6 h-6"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M6 18L18 6M6 6l12 12"
-                      ></path>
-                    </svg>
-                  </button>
+                  <img
+                    v-if="displayedLogo()"
+                    :src="displayedLogo()!"
+                    alt="Category logo"
+                    class="h-full w-full object-cover"
+                  />
+
+                  <Folder v-else class="h-10 w-10 text-slate-400" />
                 </div>
 
                 <!-- File Input -->
@@ -839,73 +816,21 @@ onBeforeUnmount(() => {
                     Upload Logo
                   </button>
 
-                  <input
-                    v-model="formData.name"
-                    type="text"
-                    required
-                    placeholder="Enter category name"
-                    class="w-full rounded-xl border border-slate-300 bg-white px-2 py-2 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                  />
-                </div>
-
-                <!-- Category Logo -->
-                <div class="mb-2">
-                  <label class="mb-2 block text-sm font-medium text-slate-700">
-                    Category Logo
-                  </label>
-
-                  <div class="flex flex-col items-center gap-3">
-                    <!-- Logo Preview -->
-                    <div
-                      class="flex h-20 w-20 items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-slate-100"
-                    >
-                      <img
-                        v-if="displayedLogo()"
-                        :src="displayedLogo()!"
-                        alt="Category logo"
-                        class="h-full w-full object-cover"
-                      />
-
-                      <Folder v-else class="h-10 w-10 text-slate-400" />
-                    </div>
-
-                    <!-- Hidden File Input -->
-                    <input
-                      ref="logoInput"
-                      type="file"
-                      accept="image/png, image/jpeg, image/jpg, image/gif"
-                      class="hidden"
-                      @change="handleLogoChange"
-                    />
-
-                    <!-- Upload and Remove Buttons -->
-                    <div class="flex flex-wrap justify-center gap-2">
-                      <button
-                        type="button"
-                        @click="openLogoPicker"
-                        class="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
-                      >
-                        <Upload class="h-4 w-4" />
-                        Upload Logo
-                      </button>
-
-                      <button
-                        v-if="displayedLogo()"
-                        type="button"
-                        @click="removeLogo"
-                        class="inline-flex items-center gap-2 rounded-xl border border-red-200 px-4 py-2 text-sm font-medium text-red-600 transition hover:bg-red-50"
-                      >
-                        <Trash2 class="h-4 w-4" />
-                        Remove
-                      </button>
-                    </div>
-                  </div>
-
-                  <p class="mt-2 text-center text-xs text-slate-400">
-                    JPG, PNG or GIF. Maximum size 2 MB.
-                  </p>
+                  <button
+                    v-if="displayedLogo()"
+                    type="button"
+                    @click="removeLogo"
+                    class="inline-flex items-center gap-2 rounded-xl border border-red-200 px-4 py-2 text-sm font-medium text-red-600 transition hover:bg-red-50"
+                  >
+                    <Trash2 class="h-4 w-4" />
+                    Remove
+                  </button>
                 </div>
               </div>
+
+              <p class="mt-2 text-center text-xs text-slate-400">
+                JPG, PNG or GIF. Maximum size 2 MB.
+              </p>
             </div>
           </form>
         </div>
@@ -921,6 +846,7 @@ onBeforeUnmount(() => {
           >
             Cancel
           </button>
+
           <button
             @click="saveCategory"
             type="button"
@@ -930,27 +856,6 @@ onBeforeUnmount(() => {
           </button>
         </div>
       </div>
-    </div>
-
-    <!-- Modal Footer -->
-    <div
-      class="px-6 py-4 border-t border-gray-100 flex justify-end space-x-3 bg-gray-50"
-    >
-      <button
-        @click="closeFormModal"
-        type="button"
-        class="px-5 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-      >
-        Cancel
-      </button>
-
-      <button
-        @click="saveCategory"
-        type="button"
-        class="px-5 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors shadow-sm"
-      >
-        {{ isEditMode ? "Save Changes" : "Save Category" }}
-      </button>
     </div>
   </div>
 </template>
