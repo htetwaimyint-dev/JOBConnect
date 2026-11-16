@@ -2,13 +2,14 @@ import CompanyProfileForm from "@/features/employer/pages/CompanyProfileForm.vue
 import CompanyProfilePage from "@/features/employer/pages/CompanyProfilePage.vue";
 import EmployerDashboard from "@/features/employer/pages/EmployerDashboard.vue";
 import CreateJobPage from "@/features/jobs/pages/CreateJobPage.vue";
+import EmployerLayout from "@/layouts/EmployerLayout.vue";
 import JobSeekerLayout from "@/layouts/JobSeekerLayout.vue";
 import type { RouteRecordRaw } from "vue-router";
 
 export const employerRoutes: RouteRecordRaw[] = [
     {
         path: "/employer",
-        component: JobSeekerLayout,
+        component: EmployerLayout,
         meta: {
             requiresAuth: true,
             role: "employer",
