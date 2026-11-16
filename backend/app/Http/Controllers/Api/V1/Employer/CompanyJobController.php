@@ -47,8 +47,18 @@ class CompanyJobController extends Controller
     public function store(StoreJobRequest $request)
     {
         $company = $this->getEmployerCompany($request->user());
+        //admin verify to job post
+        abort_unless(
+            $company->verification_status === 'verified',
+            403,
+            'Your company must be approved before posting jobs.'
+        );
 
-        $job = $this->jobService->createJob($company, $request->validated());
+        $job = $this->jobService->createJob(
+            $company,
+            $request->validated()
+        );
+
         return response()->json([
             'success' => true,
             'message' => $job->status === 'draft'

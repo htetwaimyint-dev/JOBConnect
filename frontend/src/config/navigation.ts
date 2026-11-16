@@ -73,32 +73,32 @@ export const jobSeekerNavigation: NavigationItem[] = [
 export const employeeNavigation: NavigationItem[] = [
   {
     label: "Dashboard",
-    to: "/employee/dashboard",
+    to: "/employer/dashboard",
     icon: LayoutDashboard,
   },
   {
     label: "Manage Jobs",
-    to: "/employee/jobs",
+    to: "/employer/jobs",
     icon: BriefcaseBusiness,
   },
   {
     label: "Applications",
-    to: "/employee/applications",
+    to: "/employer/applications",
     icon: FileText,
   },
   {
     label: "Interviews",
-    to: "/employee/interviews",
+    to: "/employer/interviews",
     icon: CalendarDays,
   },
   {
     label: "Candidates",
-    to: "/employee/candidates",
+    to: "/employer/candidates",
     icon: Users,
   },
   {
     label: "My Profile",
-    to: "/employee/profile",
+    to: "/employer/profile",
     icon: UserRound,
   },
 ];
