@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import { RouterLink } from "vue-router";
+
 import {
   LayoutDashboard,
   Search,
@@ -12,8 +13,13 @@ import {
   Settings,
   BriefcaseBusiness,
   Building2,
-  Users,
   X,
+  Users,
+  ClipboardCheck,
+  Tags,
+  ChartBar,
+  UserSearch,
+  Send,
 } from "lucide-vue-next";
 
 import { useAuthStore } from "@/stores/auth.store";
@@ -25,7 +31,7 @@ const uiStore = useUiStore();
 const navigationItems = computed(() => {
   const role = authStore.user?.role;
 
-  // Job Seeker
+  // Job Seeker Navigation
   if (role === "job_seeker") {
     return [
       {
@@ -33,23 +39,35 @@ const navigationItems = computed(() => {
         path: "/jobseeker/dashboard",
         icon: LayoutDashboard,
       },
-      { title: "Find Jobs", path: "/jobseeker/jobs", icon: Search },
+      {
+        title: "Find Jobs",
+        path: "/jobseeker/jobs",
+        icon: Search,
+      },
       {
         title: "My Applications",
         path: "/jobseeker/applications",
         icon: FileText,
       },
-      { title: "Saved Jobs", path: "/jobseeker/saved-jobs", icon: Bookmark },
+      {
+        title: "Saved Jobs",
+        path: "/jobseeker/saved-jobs",
+        icon: Bookmark,
+      },
       {
         title: "Interviews",
         path: "/jobseeker/interviews",
         icon: CalendarDays,
       },
-      { title: "Job Offers", path: "/jobseeker/offers", icon: Gift },
+      {
+        title: "Job Offers",
+        path: "/jobseeker/offers",
+        icon: Gift,
+      },
     ];
   }
 
-  // Employer
+  // Employer Navigation
   if (role === "employer") {
     return [
       {
@@ -57,34 +75,89 @@ const navigationItems = computed(() => {
         path: "/employer/dashboard",
         icon: LayoutDashboard,
       },
-      { title: "Company Profile", path: "/employer/profile", icon: Building2 },
       {
-        title: "Edit Company Profile",
-        path: "/employer/profile/edit",
-        icon: UserRound,
+        title: "Job Create Post",
+        path: "/employer/jobs",
+        icon: BriefcaseBusiness,
       },
-      { title: "Settings", path: "/employer/settings", icon: Settings },
+      {
+        title: "Applicants",
+        path: "/employer/applicants",
+        icon: Users,
+      },
+      {
+        title: "My Account",
+        path: "/employer/settings",
+        icon: Settings,
+      },
+      {
+        title: "Job Seeker Profile",
+        path: "/employer/job-seekers",
+        icon: UserSearch,
+      },
+      {
+        title: "Direct Offer",
+        path: "/employer/direct-offers",
+        icon: Send,
+      },
     ];
   }
 
-  // Admin
+  // Admin Navigation
   if (role === "admin") {
     return [
-      { title: "Dashboard", path: "/admin/dashboard", icon: LayoutDashboard },
-      { title: "Settings", path: "/admin/settings", icon: Settings },
+      {
+        title: "Dashboard",
+        path: "/admin/dashboard",
+        icon: LayoutDashboard,
+      },
+      {
+        title: "User",
+        path: "/admin/users",
+        icon: Users,
+      },
+      {
+        title: "Company Verify",
+        path: "/admin/company-approvals",
+        icon: Building2,
+      },
+      {
+        title: "Job Post Approval",
+        path: "/admin/job-approvals",
+        icon: ClipboardCheck,
+      },
+      {
+        title: "Category",
+        path: "/admin/categories",
+        icon: Tags,
+      },
+      {
+        title: "Report",
+        path: "/admin/reports",
+        icon: ChartBar,
+      },
     ];
   }
 
   return [];
 });
 
+// Job Seeker Account Navigation
 const accountItems = computed(() => {
   const role = authStore.user?.role;
 
   if (role === "job_seeker") {
     return [
-      { title: "My Profile", path: "/jobseeker/profile", icon: UserRound },
-      { title: "Settings", path: "/jobseeker/settings", icon: Settings },
+      {
+        title: "My Profile",
+        path: "/jobseeker/profile",
+        icon: UserRound,
+      },
+      {
+        title: "Settings",
+        path: "/jobseeker/settings",
+        icon: Settings,
+      },
     ];
   }
 
@@ -140,6 +213,7 @@ const accountItems = computed(() => {
             @click="uiStore.closeSidebar()"
           >
             <component :is="item.icon" :size="19" />
+
             <span>{{ item.title }}</span>
           </RouterLink>
         </div>
@@ -162,6 +236,7 @@ const accountItems = computed(() => {
               @click="uiStore.closeSidebar()"
             >
               <component :is="item.icon" :size="19" />
+
               <span>{{ item.title }}</span>
             </RouterLink>
           </div>

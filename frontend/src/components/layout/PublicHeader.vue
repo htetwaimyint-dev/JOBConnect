@@ -460,14 +460,70 @@ const handleLogout = async () => {
       </RouterLink>
     </div>
 
-    <!-- Mobile Navigation Drawer -->
-    <Transition name="mobile-menu">
-      <div
+    <!-- Mobile Sidebar Overlay -->
+    <Transition name="sidebar-overlay">
+      <button
         v-if="isMenuOpen"
-        class="absolute left-0 top-full z-50 w-full border-b border-slate-100 bg-white px-5 py-5 shadow-lg lg:hidden"
+        type="button"
+        class="fixed inset-0 z-40 bg-slate-900/50 backdrop-blur-[2px] lg:hidden"
+        aria-label="Close navigation menu"
+        @click="closeMenu"
+      />
+    </Transition>
+
+    <!-- Mobile Sidebar -->
+    <Transition name="sidebar">
+      <aside
+        v-if="isMenuOpen"
+        class="fixed inset-y-0 left-0 z-50 flex w-72 max-w-[85vw] flex-col bg-white shadow-2xl lg:hidden"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Mobile navigation"
       >
-        <nav class="flex flex-col gap-1">
-          <RouterLink to="/" class="mobile-nav-link" @click="closeMenu">
+        <!-- Sidebar Header -->
+        <div
+          class="flex h-16 shrink-0 items-center justify-between border-b border-slate-100 px-5"
+        >
+          <RouterLink
+            to="/"
+            class="flex items-center gap-2 no-underline"
+            @click="closeMenus"
+          >
+            <span
+              class="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-600 text-white"
+            >
+              <BriefcaseBusiness :size="21" />
+            </span>
+
+            <span class="text-lg font-bold text-blue-700">
+              JobConnect <span class="text-slate-900">AI</span>
+            </span>
+          </RouterLink>
+
+          <button
+            type="button"
+            class="flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-slate-800"
+            aria-label="Close navigation"
+            @click="closeMenu"
+          >
+            <X :size="21" />
+          </button>
+        </div>
+
+        <!-- Sidebar Navigation -->
+        <nav class="flex-1 space-y-1 overflow-y-auto px-4 py-5">
+          <p
+            class="mb-3 px-3 text-xs font-semibold uppercase tracking-wider text-slate-400"
+          >
+            Navigation
+          </p>
+
+          <RouterLink
+            to="/"
+            class="mobile-nav-link"
+            exact-active-class="router-link-active"
+            @click="closeMenu"
+          >
             Home
           </RouterLink>
 
@@ -476,41 +532,43 @@ const handleLogout = async () => {
             :key="link.path"
             :to="link.path"
             class="mobile-nav-link"
+            active-class="router-link-active"
             @click="closeMenu"
           >
             {{ link.label }}
           </RouterLink>
-
-          <RouterLink to="/about" class="mobile-nav-link" @click="closeMenu">
-            About
-          </RouterLink>
-
-          <RouterLink to="/contact" class="mobile-nav-link" @click="closeMenu">
-            Contact
-          </RouterLink>
         </nav>
 
-        <!-- Guest Actions -->
-        <div v-if="!isAuthenticated" class="mt-5 flex gap-3">
-          <RouterLink
-            to="/login"
-            class="auth-button login-button flex-1"
-            @click="closeMenu"
-          >
-            Login
-          </RouterLink>
+        <!-- Sidebar Footer: Guest -->
+        <div
+          v-if="!isAuthenticated"
+          class="shrink-0 border-t border-slate-100 p-4"
+        >
+          <p class="mb-3 px-1 text-sm text-slate-500">
+            Welcome to JobConnect AI
+          </p>
 
-          <RouterLink
-            to="/register"
-            class="auth-button register-button flex-1"
-            @click="closeMenu"
-          >
-            Register
-          </RouterLink>
+          <div class="flex flex-col gap-2">
+            <RouterLink
+              to="/login"
+              class="auth-button login-button w-full"
+              @click="closeMenu"
+            >
+              Login
+            </RouterLink>
+
+            <RouterLink
+              to="/register"
+              class="auth-button register-button w-full"
+              @click="closeMenu"
+            >
+              Register
+            </RouterLink>
+          </div>
         </div>
 
-        <!-- Authenticated User -->
-        <div v-else class="mt-5 border-t border-slate-200 pt-4">
+        <!-- Sidebar Footer: Authenticated User -->
+        <div v-else class="shrink-0 border-t border-slate-100 p-4">
           <RouterLink
             :to="profilePath"
             class="flex items-center gap-3 rounded-xl bg-blue-50 p-3 no-underline"
@@ -560,7 +618,7 @@ const handleLogout = async () => {
             Logout
           </button>
         </div>
-      </div>
+      </aside>
     </Transition>
   </header>
 </template>
@@ -660,20 +718,29 @@ const handleLogout = async () => {
   background-color: #f1f5f9;
 }
 
-/* Transitions */
-.mobile-menu-enter-active,
-.mobile-menu-leave-active {
-  transition:
-    opacity 0.2s ease,
-    transform 0.2s ease;
+/* Sidebar Overlay Transition */
+.sidebar-overlay-enter-active,
+.sidebar-overlay-leave-active {
+  transition: opacity 0.25s ease;
 }
 
-.mobile-menu-enter-from,
-.mobile-menu-leave-to {
+.sidebar-overlay-enter-from,
+.sidebar-overlay-leave-to {
   opacity: 0;
-  transform: translateY(-8px);
 }
 
+/* Sidebar Slide Transition */
+.sidebar-enter-active,
+.sidebar-leave-active {
+  transition: transform 0.3s ease;
+}
+
+.sidebar-enter-from,
+.sidebar-leave-to {
+  transform: translateX(-100%);
+}
+
+/* Dropdown Transition */
 .dropdown-enter-active,
 .dropdown-leave-active {
   transition:

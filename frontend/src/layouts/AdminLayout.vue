@@ -9,7 +9,7 @@ const uiStore = useUiStore();
 </script>
 
 <template>
-  <div class="min-h-screen w-full overflow-x-hidden bg-slate-50">
+  <div class="relative min-h-screen w-full bg-slate-50">
     <!-- Sidebar Overlay -->
     <Transition name="fade">
       <div

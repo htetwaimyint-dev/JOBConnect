@@ -26,10 +26,67 @@ const userStore = useUserStore();
 const isProfileOpen = ref(false);
 const isNotificationOpen = ref(false);
 
-const pageTitle = computed(() => {
-  return route.meta.title || "Dashboard";
-});
+// User Roles
+const isAdmin = computed(() => authStore.user?.role === "admin");
+const isEmployer = computed(() => authStore.user?.role === "employer");
 
+// Admin Navigation
+const adminNavigation = [
+  {
+    title: "Dashboard",
+    path: "/admin/dashboard",
+  },
+  {
+    title: "User",
+    path: "/admin/users",
+  },
+  {
+    title: "Company Verify",
+    path: "/admin/company-approvals",
+  },
+  {
+    title: "Job Post Approval",
+    path: "/admin/job-approvals",
+  },
+  {
+    title: "Category",
+    path: "/admin/categories",
+  },
+  {
+    title: "Report",
+    path: "/admin/reports",
+  },
+];
+
+// Employer Navigation
+const employerNavigation = [
+  {
+    title: "Dashboard",
+    path: "/employer/dashboard",
+  },
+  {
+    title: "Job Create Post",
+    path: "/employer/jobs",
+  },
+  {
+    title: "Applicants",
+    path: "/employer/applicants",
+  },
+  {
+    title: "My Account",
+    path: "/employer/settings",
+  },
+  {
+    title: "Job Seeker Profile",
+    path: "/employer/job-seekers",
+  },
+  {
+    title: "Direct Offer",
+    path: "/employer/direct-offers",
+  },
+];
+
+// User Information
 const userName = computed(() => {
   return authStore.user?.name || "User";
 });
@@ -38,13 +95,9 @@ const userInitial = computed(() => {
   return userName.value.charAt(0).toUpperCase();
 });
 
-const closeMenus = () => {
-  isProfileOpen.value = false;
-  isNotificationOpen.value = false;
-};
-
 const profilePhoto = computed(() => userStore.profilePhoto);
 
+// Profile Paths
 const profilePath = computed(() => {
   if (authStore.user?.role === "employer") {
     return "/employer/profile";
@@ -66,24 +119,33 @@ const settingsPath = computed(() => {
   return "/jobseeker/settings";
 });
 
+// Close Dropdowns
+const closeMenus = () => {
+  isProfileOpen.value = false;
+  isNotificationOpen.value = false;
+};
+
+// Toggle Profile
 const toggleProfile = () => {
   isProfileOpen.value = !isProfileOpen.value;
   isNotificationOpen.value = false;
 };
 
+// Toggle Notifications
 const toggleNotifications = () => {
   isNotificationOpen.value = !isNotificationOpen.value;
   isProfileOpen.value = false;
 };
 
+// Logout
 const logout = async () => {
   try {
     await authStore.logout();
+
     userStore.clearProfilePhoto();
     uiStore.closeSidebar();
 
-    isProfileOpen.value = false;
-    isNotificationOpen.value = false;
+    closeMenus();
 
     await router.push("/login");
   } catch (error) {
@@ -94,14 +156,14 @@ const logout = async () => {
 
 <template>
   <header
-    class="sticky top-0 z-30 flex h-16 w-full items-center justify-between border-b border-slate-200 bg-white/150 px-2 shadow-sm backdrop-blur-md sm:px-6 lg:px-8"
+    class="sticky top-0 z-30 flex h-16 w-full items-center justify-between border-b border-slate-200 bg-white/95 px-2 shadow-sm backdrop-blur-md sm:px-6 lg:px-8"
   >
     <!-- Left Section -->
-    <div class="flex min-w-0 items-center gap-4">
-      <!-- Mobile Sidebar Toggle -->
+    <div class="flex min-w-0 shrink-0 items-center gap-4">
+      <!-- Sidebar Toggle -->
       <button
         type="button"
-        class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-slate-600 transition hover:bg-slate-100 hover:text-blue-600 lg:hidden"
+        class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-slate-600 transition hover:bg-slate-100 hover:text-blue-600 lg:hidden"
         aria-label="Toggle sidebar"
         @click="uiStore.toggleSidebar()"
       >
@@ -128,6 +190,48 @@ const logout = async () => {
         </h2>
       </RouterLink>
     </div>
+
+    <!-- Admin Navigation -->
+    <nav
+      v-if="isAdmin"
+      class="mx-3 hidden min-w-0 flex-1 items-center justify-center gap-1 overflow-x-auto lg:flex"
+    >
+      <RouterLink
+        v-for="item in adminNavigation"
+        :key="item.path"
+        :to="item.path"
+        class="flex shrink-0 items-center whitespace-nowrap rounded-lg px-2 py-2 text-xs font-medium transition xl:px-3 xl:text-sm"
+        :class="
+          route.path === item.path
+            ? 'bg-blue-50 text-blue-700'
+            : 'text-slate-600 hover:bg-slate-100 hover:text-blue-600'
+        "
+        @click="closeMenus"
+      >
+        {{ item.title }}
+      </RouterLink>
+    </nav>
+
+    <!-- Employer Navigation -->
+    <nav
+      v-if="isEmployer"
+      class="mx-3 hidden min-w-0 flex-1 items-center justify-center gap-1 overflow-x-auto lg:flex"
+    >
+      <RouterLink
+        v-for="item in employerNavigation"
+        :key="item.path"
+        :to="item.path"
+        class="flex shrink-0 items-center whitespace-nowrap rounded-lg px-2 py-2 text-xs font-medium transition xl:px-3 xl:text-sm"
+        :class="
+          route.path === item.path
+            ? 'bg-blue-50 text-blue-700'
+            : 'text-slate-600 hover:bg-slate-100 hover:text-blue-600'
+        "
+        @click="closeMenus"
+      >
+        {{ item.title }}
+      </RouterLink>
+    </nav>
 
     <!-- Right Section -->
     <div class="flex shrink-0 items-center gap-2 sm:gap-4">
