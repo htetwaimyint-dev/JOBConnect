@@ -5,7 +5,7 @@ import JobSeekerSettingsPage from "@/features/job-seeker/pages/JobSeekerSettings
 
 import Dashboard from "@/features/job-seeker/pages/Dashboard.vue";
 import ProfilePage from "@/features/job-seeker/pages/ProfilePage.vue";
-import JobsPage from "@/features/job-seeker/pages/JobsPage.vue";
+import JobListPage from "@/features/jobs/pages/JobListPage.vue";
 import SavedJobsPage from "@/features/job-seeker/pages/SavedJobsPage.vue";
 import ApplicationsPage from "@/features/job-seeker/pages/ApplicationsPage.vue";
 import InterviewsPage from "@/features/job-seeker/pages/InterviewsPage.vue";
@@ -37,7 +37,7 @@ export const jobseekerRoutes: RouteRecordRaw[] = [
       {
         path: "jobs",
         name: "JobSeekerJobs",
-        component: JobsPage,
+        component: JobListPage,
         meta: { title: "Find Jobs" },
       },
       {

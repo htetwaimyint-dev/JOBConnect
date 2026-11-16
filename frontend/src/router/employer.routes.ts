@@ -35,19 +35,19 @@ export const employerRoutes: RouteRecordRaw[] = [
                 component: ApplicantsPage,
             },
             {
+                path: "profile",
+                name: "company-profile",
+                component: CompanyProfilePage,
+            },
+            {
                 path: "job-seekers",
                 name: "EmployerJobSeekerProfiles",
-                component: JobSeekerProfilePage,
+                component: CompanyProfilePage,
             },
             {
                 path: "direct-offers",
                 name: "EmployerDirectOffers",
                 component: DirectOfferPage,
-            },
-            {
-                path: "profile",
-                name: "company-profile",
-                component: CompanyProfilePage,
             },
             {
                 path: "profile/edit",
