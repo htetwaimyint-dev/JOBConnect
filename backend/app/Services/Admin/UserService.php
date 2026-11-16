@@ -32,14 +32,28 @@ class UserService
         );
     }
 
-    public function deleteUser(int $userId): bool
+    // DELETE /admin/companies/{id}
+    public function deleteCompany(int $id): void
     {
-        $user = User::find($userId);
+        $company = User::where('id', $id)->where('role', 'employer')->first();
 
-        if (!$user) {
-            throw new Exception("User not found", 404);
-        }   
-        return $user->delete();    
+        if (!$company) {
+            throw new Exception("Company not found", 404);
+        }
 
+        $company->delete(); 
     }
+
+    // DELETE /admin/job-seekers/{id}
+    public function deleteJobSeeker(int $id): void
+    {
+        $jobSeeker = User::where('id', $id)->where('role', 'job_seeker')->first();
+
+        if (!$jobSeeker) {
+            throw new Exception("Job Seeker not found", 404);
+        }
+
+        $jobSeeker->delete(); 
+    }
+
 }

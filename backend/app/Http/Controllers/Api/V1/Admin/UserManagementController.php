@@ -41,19 +41,26 @@ class UserManagementController extends Controller
             ->setStatusCode(200);
     }
 
-    public function destroy(int $id): JsonResponse
+    // DELETE /api/v1/admin/companies/{id}
+    public function deleteCompany(int $id): JsonResponse
     {
         try {
-            $this->userService->deleteUser($id);
-
-            return response()->json([
-                'message' => 'User suspended/deleted successfully.'
-            ], 200);
-
+            $this->userService->deleteCompany($id);
+            return response()->json(['message' => 'Company suspended successfully.'], 200);
         } catch (Exception $e) {
-            return response()->json([
-                'message' => $e->getMessage()
-            ], $e->getCode() ?: 500);
+            return response()->json(['message' => $e->getMessage()], $e->getCode() ?: 500);
         }
     }
+
+    // DELETE /api/v1/admin/job-seekers/{id}
+    public function deleteJobSeeker(int $id): JsonResponse
+    {
+        try {
+            $this->userService->deleteJobSeeker($id);
+            return response()->json(['message' => 'Job Seeker suspended successfully.'], 200);
+        } catch (Exception $e) {
+            return response()->json(['message' => $e->getMessage()], $e->getCode() ?: 500);
+        }
+    }
+
 }

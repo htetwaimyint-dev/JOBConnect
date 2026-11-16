@@ -6,6 +6,8 @@ import BasePasswordInput from "@/components/common/BasePasswordInput.vue";
 import BaseCheckbox from "@/components/common/BaseCheckbox.vue";
 import BaseButton from "@/components/common/BaseButton.vue";
 
+import { Mail, LogIn } from "lucide-vue-next"; // Icon များ Import လုပ်ခြင်း
+
 import type { LoginData } from "../types/auth.types";
 
 const emit = defineEmits<{
@@ -48,84 +50,70 @@ const handleSubmit = () => {
 </script>
 
 <template>
-  <form @submit.prevent="handleSubmit" class="space-y-5" novalidate>
+  <form @submit.prevent="handleSubmit" class="space-y-6" novalidate>
     <!-- Email -->
-    <BaseInput
-      id="login-email"
-      v-model="email"
-      type="email"
-      label="Email"
-      placeholder="you@example.com"
-      size="md"
-      variant="outline"
-      :error="errors.email"
-      required
-      autocomplete="email"
-    >
-      <template #leading>
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          class="h-4 w-4"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          stroke-width="2"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-          />
-        </svg>
-      </template>
-    </BaseInput>
+    <div class="space-y-1">
+      <BaseInput
+        id="login-email"
+        v-model="email"
+        type="email"
+        label="Email Address"
+        placeholder="you@example.com"
+        size="md"
+        variant="outline"
+        :error="errors.email"
+        required
+        autocomplete="email"
+        class="[&_input]:rounded-xl [&_input]:py-3 [&_input]:shadow-sm focus-within:[&_input]:ring-4 focus-within:[&_input]:ring-blue-500/10"
+      >
+        <template #leading>
+          <Mail class="h-5 w-5 text-gray-400" />
+        </template>
+      </BaseInput>
+    </div>
 
     <!-- Password -->
-    <BasePasswordInput
-      id="login-password"
-      v-model="password"
-      label="Password"
-      placeholder="Enter your password"
-      size="md"
-      variant="outline"
-      :error="errors.password"
-      required
-      autocomplete="current-password"
-    />
+    <div class="space-y-1">
+      <BasePasswordInput
+        id="login-password"
+        v-model="password"
+        label="Password"
+        placeholder="Enter your password"
+        size="md"
+        variant="outline"
+        :error="errors.password"
+        required
+        autocomplete="current-password"
+        class="[&_input]:rounded-xl [&_input]:py-3 [&_input]:shadow-sm focus-within:[&_input]:ring-4 focus-within:[&_input]:ring-blue-500/10"
+      />
+    </div>
 
     <!-- Remember me -->
-    <BaseCheckbox
-      id="login-remember"
-      v-model="remember"
-      label="Remember me"
-      size="sm"
-    />
+    <div class="flex items-center pt-1">
+      <BaseCheckbox
+        id="login-remember"
+        v-model="remember"
+        label="Remember me "
+        size="sm"
+      />
+    </div>
 
     <!-- Submit -->
-    <BaseButton
-      type="submit"
-      color="primary"
-      variant="solid"
-      size="40"
-      class="w-full justify-center"
-    >
-      <template #leading>
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          class="h-4 w-4"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          stroke-width="2"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"
+    <div class="pt-2">
+      <BaseButton
+        type="submit"
+        color="primary"
+        variant="solid"
+        size="40"
+        class="group w-full justify-center rounded-xl py-3.5 text-base font-semibold shadow-lg shadow-blue-600/30 transition-all hover:shadow-blue-600/40 focus:ring-4 focus:ring-blue-500/30"
+      >
+        <template #leading>
+          <LogIn
+            class="h-5 w-5 transition-transform group-hover:translate-x-1"
           />
-        </svg>
-      </template>
-      Sign in
-    </BaseButton>
+        </template>
+        Sign in
+      </BaseButton>
+    </div>
   </form>
 </template>
