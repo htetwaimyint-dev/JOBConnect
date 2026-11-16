@@ -26,6 +26,7 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
 
         Route::get('/companies', [UserManagementController::class, 'companies']);
         Route::get('/job-seekers', [UserManagementController::class, 'jobSeekers']);
+        Route::delete('/users/{id}', [UserManagementController::class, 'destroy']);
 
         // Company Approval Management
         Route::get('/companies/pending', [

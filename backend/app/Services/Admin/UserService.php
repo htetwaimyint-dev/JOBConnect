@@ -1,8 +1,10 @@
 <?php
 
-namespace App\Services;
+namespace App\Services\Admin;
 
 use App\Enums\UserRole;
+use App\Models\User;
+use Exception;
 use App\Repositories\Contracts\UserRepositoryInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
@@ -28,5 +30,16 @@ class UserService
             $search,
             $perPage
         );
+    }
+
+    public function deleteUser(int $userId): bool
+    {
+        $user = User::find($userId);
+
+        if (!$user) {
+            throw new Exception("User not found", 404);
+        }   
+        return $user->delete();    
+
     }
 }

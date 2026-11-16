@@ -10,6 +10,8 @@ import {
   LogOut,
   ChevronDown,
   X,
+  Building2,
+  UserSearch,
 } from "lucide-vue-next";
 
 import { useAuthStore } from "@/stores/auth.store";
@@ -25,6 +27,7 @@ const userStore = useUserStore();
 
 const isProfileOpen = ref(false);
 const isNotificationOpen = ref(false);
+const isUserMenuOpen = ref(false);
 
 // User Roles
 const isAdmin = computed(() => authStore.user?.role === "admin");
@@ -38,7 +41,11 @@ const adminNavigation = [
   },
   {
     title: "User",
-    path: "/admin/users",
+    path: "#",
+    children: [
+      { title: "Companies", path: "/admin/companies" },
+      { title: "Job Seekers", path: "/admin/job-seekers" },
+    ],
   },
   {
     title: "Company Verify",
@@ -123,11 +130,20 @@ const settingsPath = computed(() => {
 const closeMenus = () => {
   isProfileOpen.value = false;
   isNotificationOpen.value = false;
+  isUserMenuOpen.value = false;
 };
 
 // Toggle Profile
 const toggleProfile = () => {
   isProfileOpen.value = !isProfileOpen.value;
+  isNotificationOpen.value = false;
+  isUserMenuOpen.value = false;
+};
+
+// Toggle User Submenu
+const toggleUserMenu = () => {
+  isUserMenuOpen.value = !isUserMenuOpen.value;
+  isProfileOpen.value = false;
   isNotificationOpen.value = false;
 };
 
@@ -135,6 +151,7 @@ const toggleProfile = () => {
 const toggleNotifications = () => {
   isNotificationOpen.value = !isNotificationOpen.value;
   isProfileOpen.value = false;
+  isUserMenuOpen.value = false;
 };
 
 // Logout
@@ -194,22 +211,73 @@ const logout = async () => {
     <!-- Admin Navigation -->
     <nav
       v-if="isAdmin"
-      class="mx-3 hidden min-w-0 flex-1 items-center justify-center gap-1 overflow-x-auto lg:flex"
+      class="mx-3 hidden min-w-0 flex-1 items-center justify-center gap-1 overflow-visible lg:flex"
     >
-      <RouterLink
-        v-for="item in adminNavigation"
-        :key="item.path"
-        :to="item.path"
-        class="flex shrink-0 items-center whitespace-nowrap rounded-lg px-2 py-2 text-xs font-medium transition xl:px-3 xl:text-sm"
-        :class="
-          route.path === item.path
-            ? 'bg-blue-50 text-blue-700'
-            : 'text-slate-600 hover:bg-slate-100 hover:text-blue-600'
-        "
-        @click="closeMenus"
-      >
-        {{ item.title }}
-      </RouterLink>
+      <template v-for="item in adminNavigation" :key="item.title">
+        <div v-if="item.children" class="relative">
+          <button
+            type="button"
+            class="flex shrink-0 items-center gap-1 whitespace-nowrap rounded-lg px-2 py-2 text-xs font-medium transition xl:px-3 xl:text-sm"
+            :class="
+              isUserMenuOpen ||
+              route.path.includes('/admin/companies') ||
+              route.path.includes('/admin/job-seekers')
+                ? 'bg-blue-50 text-blue-700'
+                : 'text-slate-600 hover:bg-slate-100 hover:text-blue-600'
+            "
+            @click="toggleUserMenu"
+          >
+            {{ item.title }}
+            <ChevronDown
+              :size="14"
+              class="transition-transform"
+              :class="{ 'rotate-180': isUserMenuOpen }"
+            />
+          </button>
+          <div
+            v-if="isUserMenuOpen"
+            class="absolute left-1/2 top-full mt-2 w-48 -translate-x-1/2 overflow-hidden rounded-xl border border-slate-200 bg-white py-1 shadow-xl"
+          >
+            <RouterLink
+              v-for="child in item.children"
+              :key="child.path"
+              :to="child.path"
+              class="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 hover:text-blue-600"
+              :class="{ 'bg-blue-50 text-blue-700': route.path === child.path }"
+              @click="closeMenus"
+            >
+              <!-- Icon အပိုင်း -->
+              <Building2
+                v-if="child.title === 'Companies'"
+                :size="18"
+                class="shrink-0 text-slate-400"
+              />
+              <UserSearch
+                v-else-if="child.title === 'Job Seekers'"
+                :size="18"
+                class="shrink-0 text-slate-400"
+              />
+
+              <!-- Text အပိုင်း -->
+              <span class="whitespace-nowrap">{{ child.title }}</span>
+            </RouterLink>
+          </div>
+        </div>
+
+        <RouterLink
+          v-else
+          :to="item.path"
+          class="flex shrink-0 items-center whitespace-nowrap rounded-lg px-2 py-2 text-xs font-medium transition xl:px-3 xl:text-sm"
+          :class="
+            route.path === item.path
+              ? 'bg-blue-50 text-blue-700'
+              : 'text-slate-600 hover:bg-slate-100 hover:text-blue-600'
+          "
+          @click="closeMenus"
+        >
+          {{ item.title }}
+        </RouterLink>
+      </template>
     </nav>
 
     <!-- Employer Navigation -->
