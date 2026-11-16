@@ -13,8 +13,13 @@
     "dependencies": {
         "@tailwindcss/vite": "^4.3.4",
         "@tanstack/vue-query": "^5.107.1",
+        "@tiptap/extension-placeholder": "^3.34.0",
+        "@tiptap/extension-underline": "^3.34.0",
+        "@tiptap/starter-kit": "^3.34.0",
+        "@tiptap/vue-3": "^3.34.0",
         "axios": "^1.21.0",
         "bootstrap": "^5.3.8",
+        "dompurify": "^3.4.18",
         "gensync": "^1.0.0-beta.2",
         "lucide-vue-next": "^0.577.0",
         "pinia": "^4.1.0",

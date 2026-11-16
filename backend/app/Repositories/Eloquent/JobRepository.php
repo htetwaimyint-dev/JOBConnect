@@ -18,10 +18,35 @@ class JobRepository implements JobRepositoryInterface
 
     public function getByCompany(
         Company $company,
+        array $params = [],
         int $perPage = 10
     ): LengthAwarePaginator {
         return $company->jobs()
             ->with('category')
+
+            ->when($params['search'] ?? null, function ($query, $search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('title', 'like', "%{$search}%")
+                        ->orWhere('description_plain_text', 'like', "%{$search}%");
+                });
+            })
+
+            ->when($params['category_id'] ?? null, function ($query, $categoryId) {
+                $query->where('category_id', $categoryId);
+            })
+
+            ->when($params['employment_type'] ?? null, function ($query, $employmentType) {
+                $query->where('employment_type', $employmentType);
+            })
+
+            ->when($params['workplace_type'] ?? null, function ($query, $workplaceType) {
+                $query->where('workplace_type', $workplaceType);
+            })
+
+            ->when($params['location'] ?? null, function ($query, $location) {
+                $query->where('location', 'like', "%{$location}%");
+            })
+
             ->latest()
             ->paginate($perPage);
     }
@@ -117,7 +142,8 @@ class JobRepository implements JobRepositoryInterface
                 $query->where(function ($q) use ($search) {
                     $q->where('title', 'like', "%{$search}%")
                         ->orWhere('description', 'like', "%{$search}%")
-                        ->orWhere('location', 'like', "%{$search}%")
+                        ->orWhere('city', 'like', "%{$search}%")
+                        ->orWhere('country', 'like', "%{$search}%")
                         ->orWhereHas('company', function ($companyQuery) use ($search) {
                             $companyQuery->where(
                                 'name',
@@ -145,11 +171,18 @@ class JobRepository implements JobRepositoryInterface
                     $filters['workplace_type']
                 );
             })
-            ->when(!empty($filters['location']), function ($query) use ($filters) {
+            ->when(!empty($filters['city']), function ($query) use ($filters) {
                 $query->where(
-                    'location',
+                    'city',
                     'like',
-                    '%' . $filters['location'] . '%'
+                    "%{$filters['city']}%"
+                );
+            })
+            ->when(!empty($filters['country']), function ($query) use ($filters) {
+                $query->where(
+                    'country',
+                    'like',
+                    "%{$filters['country']}%"
                 );
             })
             ->latest()

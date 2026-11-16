@@ -8,7 +8,6 @@ import DirectOfferPage from "@/features/employer/pages/DirectOfferPage.vue";
 
 import CreateJobPage from "@/features/jobs/pages/CreateJobPage.vue";
 import EmployerLayout from "@/layouts/EmployerLayout.vue";
-
 import type { RouteRecordRaw } from "vue-router";
 
 export const employerRoutes: RouteRecordRaw[] = [

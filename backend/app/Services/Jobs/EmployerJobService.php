@@ -4,13 +4,12 @@ namespace App\Services\Jobs;
 
 use App\Models\Company;
 use App\Models\Job;
-use App\Models\User;
 use App\Repositories\Contracts\JobRepositoryInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Validation\ValidationException;
 
-class JobService
+class EmployerJobService
 {
     protected JobRepositoryInterface $jobRepository;
 
@@ -19,17 +18,12 @@ class JobService
         $this->jobRepository = $jobRepository;
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Employer Job Management
-    |--------------------------------------------------------------------------
-    */
-
     public function getJobs(
         Company $company,
+        array $params,
         int $perPage
     ): LengthAwarePaginator {
-        return $this->jobRepository->getByCompany($company, $perPage);
+        return $this->jobRepository->getByCompany($company, $params, $perPage);
     }
 
     public function getJob(
@@ -60,6 +54,10 @@ class JobService
 
         $data['status'] = $status;
 
+        $data['description_plain_text'] = $this->extractPlainText(
+            $data['description'] ?? ''
+        );
+
         return $this->jobRepository->create($company, $data);
     }
 
@@ -72,9 +70,7 @@ class JobService
 
         if ($job->status === 'closed') {
             throw ValidationException::withMessages([
-                'job' => [
-                    'Closed jobs cannot be edited.'
-                ],
+                'job' => ['Closed jobs cannot be edited.'],
             ]);
         }
 
@@ -112,6 +108,12 @@ class JobService
             $data['rejection_reason'] = null;
         }
 
+        if (array_key_exists('description', $data)) {
+            $data['description_plain_text'] = $this->extractPlainText(
+                $data['description']
+            );
+        }
+
         return $this->jobRepository->update($job, $data);
     }
 
@@ -123,87 +125,39 @@ class JobService
 
         if ($job->status === 'published') {
             throw ValidationException::withMessages([
-                'job' => [
-                    'Published jobs cannot be deleted.'
-                ],
+                'job' => ['Published jobs cannot be deleted.'],
             ]);
         }
 
         return $this->jobRepository->delete($job);
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Admin Job Approval
-    |--------------------------------------------------------------------------
-    */
-
-    public function getPendingJobsForAdmin(
-        int $perPage = 10
-    ): LengthAwarePaginator {
-        return $this->jobRepository->getPendingForAdmin($perPage);
-    }
-
-    public function getJobForAdmin(int $jobId): Job
+    private function extractPlainText(?string $html): string
     {
-        $job = $this->jobRepository->findForAdmin($jobId);
-
-        if (!$job) {
-            throw new ModelNotFoundException('Job not found.');
+        if (empty($html)) {
+            return '';
         }
 
-        return $job;
-    }
-
-    public function updateJobApproval(
-        Job $job,
-        User $admin,
-        array $data
-    ): Job {
-        if ($job->status !== 'pending') {
-            throw ValidationException::withMessages([
-                'status' => [
-                    'Only pending jobs can be approved or rejected.'
-                ],
-            ]);
-        }
-
-        if ($data['status'] === 'published') {
-            $data['approved_by'] = $admin->id;
-            $data['approved_at'] = now();
-            $data['rejection_reason'] = null;
-        } else {
-            $data['approved_by'] = null;
-            $data['approved_at'] = null;
-        }
-
-        return $this->jobRepository->update($job, $data);
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | Public Job Listing
-    |--------------------------------------------------------------------------
-    */
-
-    public function getPublishedJobs(
-        array $filters,
-        int $perPage = 10
-    ): LengthAwarePaginator {
-        return $this->jobRepository->getPublishedJobs(
-            $filters,
-            $perPage
+        // Replace closing block tags and line breaks with spaces.
+        $html = preg_replace(
+            '/<\/(p|div|li|h[1-6]|blockquote)>|<br\s*\/?>/i',
+            ' ',
+            $html
         );
-    }
 
-    public function getPublishedJob(int $jobId): Job
-    {
-        $job = $this->jobRepository->findPublishedJob($jobId);
+        // Remove HTML tags.
+        $text = strip_tags($html);
 
-        if (!$job) {
-            throw new ModelNotFoundException('Job not found.');
-        }
+        // Decode HTML entities.
+        $text = html_entity_decode(
+            $text,
+            ENT_QUOTES | ENT_HTML5,
+            'UTF-8'
+        );
 
-        return $job;
+        // Normalize whitespace.
+        $text = preg_replace('/\s+/u', ' ', $text);
+
+        return trim($text);
     }
 }

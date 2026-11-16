@@ -46,7 +46,13 @@ class PublicJobIndexRequest extends FormRequest
                 ]),
             ],
 
-            'location' => [
+            'city' => [
+                'nullable',
+                'string',
+                'max:255',
+            ],
+
+            'country' => [
                 'nullable',
                 'string',
                 'max:255',

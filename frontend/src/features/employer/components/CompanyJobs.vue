@@ -1,73 +1,105 @@
 <script setup lang="ts">
 import BaseButton from "@/components/common/BaseButton.vue";
-import type { Job } from "../types/company.types";
+import type { Company } from "../types/company.types";
+import type { Job } from "@/features/jobs/types/job.types";
 
 defineProps<{
     jobs: Job[];
+    company?: Company;
 }>();
 
 const emit = defineEmits<{
     selectJob: [job: Job];
+    viewAllJobs: [];
 }>();
 </script>
 
 <template>
-    <section class="space-y-5">
-        <div class="flex flex-wrap items-center justify-between gap-3">
-            <div>
-                <h2 class="text-xl font-bold text-gray-900">Open Positions</h2>
-                <p class="mt-1 text-sm text-gray-500">
-                    Explore career opportunities at this company.
-                </p>
-            </div>
-
-            <span
-                class="rounded-full bg-violet-50 px-3 py-1.5 text-xs font-semibold text-violet-700"
+    <section class="space-y-4">
+        <!-- Header -->
+        <div class="flex items-center justify-between">
+            <h2 class="text-lg font-bold text-gray-900">
+                Jobs From {{ company?.name || "Company" }}
+            </h2>
+            <button
+                type="button"
+                class="text-sm font-semibold text-blue-600 hover:underline"
+                @click="emit('viewAllJobs')"
             >
-                {{ jobs.length }} positions
-            </span>
+                View All Jobs
+            </button>
         </div>
 
+        <!-- Job Cards List -->
         <div v-if="jobs.length" class="space-y-4">
             <article
                 v-for="job in jobs"
                 :key="job.id"
-                class="rounded-none border border-gray-100 bg-white p-5 transition hover:border-violet-200 hover:shadow-md sm:p-6"
+                class="rounded-md border border-gray-100 bg-white p-6 transition hover:border-gray-200"
             >
-                <div
-                    class="flex flex-col justify-between gap-4 sm:flex-row sm:items-start"
-                >
+                <div class="flex items-start justify-between gap-4">
                     <div>
                         <h3 class="text-base font-bold text-gray-900">
                             {{ job.title }}
                         </h3>
-
-                        <p class="mt-2 text-sm text-gray-500">
-                            {{ job.department }}
+                        <p class="mt-1 text-xs text-gray-500">
+                            {{ company?.name }} •
+                            {{ job.location || company?.address }}
                         </p>
                     </div>
-
-                    <span
-                        class="w-fit rounded-lg bg-violet-50 px-3 py-1.5 text-xs font-semibold text-violet-700"
+                    <button
+                        type="button"
+                        class="text-gray-400 hover:text-gray-600"
                     >
-                        {{ job.employmentType }}
+                        <svg
+                            class="w-5 h-5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
+                            />
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Tags -->
+                <div class="mt-4 flex flex-wrap gap-2">
+                    <span
+                        v-if="job.employment_type"
+                        class="rounded-md bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-600"
+                    >
+                        {{ job.employment_type }}
                     </span>
+                    <!-- <span
+                        v-if="job.locationType"
+                        class="rounded-md bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-600"
+                    >
+                        {{ job.locationType }}
+                    </span> -->
+                    <!-- <span
+                        v-if="job.experienceLevel"
+                        class="rounded-md bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-600"
+                    >
+                        {{ job.experienceLevel }}
+                    </span> -->
                 </div>
 
+                <!-- Footer meta -->
                 <div
-                    class="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-xs text-gray-500"
+                    class="mt-5 flex items-center justify-between text-xs text-gray-400 pt-4 border-t border-gray-100"
                 >
-                    <span>{{ job.location }}</span>
-                    <span>{{ job.experienceLevel }}</span>
-                    <span>Posted {{ job.postedAt }}</span>
-                </div>
-
-                <div
-                    class="mt-5 flex justify-end border-t border-gray-100 pt-4"
-                >
+                    <!-- <span
+                        >Posted {{ job.postedAt || "Recently" }} •
+                        {{ job.applicantsCount || 0 }} Applicants</span
+                    > -->
                     <BaseButton
                         type="button"
-                        class="rounded-none! px-10! py-2!"
+                        class="rounded-lg bg-blue-600 px-4 py-2 text-xs font-semibold text-white hover:bg-blue-700 transition"
                         @click="emit('selectJob', job)"
                     >
                         View Details
@@ -76,14 +108,19 @@ const emit = defineEmits<{
             </article>
         </div>
 
+        <!-- Empty State -->
         <div
             v-else
-            class="rounded-2xl border border-gray-100 bg-white px-6 py-16 text-center"
+            class="flex items-stretch justify-center rounded-md border border-gray-100 bg-white p-8 text-center"
         >
-            <h3 class="font-semibold text-gray-800">No open positions</h3>
-            <p class="mt-2 text-sm text-gray-500">
-                There are currently no available jobs at this company.
-            </p>
+            <div
+                class="px-5 py-6 w-full flex flex-col justify-center items-center border-2 border-dashed border-gray-200 rounded-md"
+            >
+                <h3 class="font-semibold text-gray-800">No open positions</h3>
+                <p class="mt-1 text-sm text-gray-500">
+                    There are currently no available jobs at this company.
+                </p>
+            </div>
         </div>
     </section>
 </template>

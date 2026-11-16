@@ -34,13 +34,3 @@ export interface Benefit {
     description: string;
     icon: string;
 }
-
-export interface Job {
-    id: number;
-    title: string;
-    department: string;
-    location: string;
-    employmentType: string;
-    experienceLevel: string;
-    postedAt: string;
-}

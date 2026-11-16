@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, reactive, watch } from "vue";
+import { computed, reactive, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import axios from "axios";
 import type {
@@ -15,6 +15,8 @@ import JobLocationSection from "../components/JobLocationSection.vue";
 import JobSalarySection from "../components/JobSalarySection.vue";
 import JobDescriptionSection from "../components/JobDescriptionSection.vue";
 import JobFormActions from "../components/JobFormActions.vue";
+import JobPreviewModal from "../components/JobPreviewModal.vue";
+import { useJobCategories } from "../composables/useJobCategories.ts";
 
 const router = useRouter();
 
@@ -28,6 +30,7 @@ const form = reactive<JobFormData>({
     deadline: "",
     employment_type: "full_time",
     vacancies: 1,
+    gender: "any",
     workplace_type: "onsite",
 
     country: "",
@@ -102,10 +105,19 @@ fieldsWithErrors.forEach((field) => {
 // ----------------------------------------
 // Category options
 // ----------------------------------------
+const {
+    data: categories,
+    isLoading: categoriesLoading,
+    error: categoriesError,
+} = useJobCategories();
 
-// Connect this to your categories API using TanStack Query.
-const categoryOptions = computed(() => []);
-
+const categoryOptions = computed(() =>
+    (categories.value ?? []).map((category) => ({
+        label: category.name,
+        value: category.id,
+    })),
+);
+console.log(categoryOptions);
 // ----------------------------------------
 // Create job mutation
 // ----------------------------------------
@@ -158,8 +170,22 @@ async function submitJob(status: SubmissionStatus) {
 // Preview
 // ----------------------------------------
 
-function previewJob() {
-    // Implement your job preview modal or preview route here.
+const showPreview = ref(false);
+
+const previewCategoryName = computed(() => {
+    return (
+        categoryOptions.value.find(
+            (category) => category.value === form.category_id,
+        )?.label ?? "Uncategorized"
+    );
+});
+
+function openPreview() {
+    showPreview.value = true;
+}
+
+function closePreview() {
+    showPreview.value = false;
 }
 </script>
 
@@ -190,12 +216,19 @@ function previewJob() {
                     <JobFormActions
                         :loading="loading"
                         :error-message="generalError.message"
-                        @preview="previewJob"
+                        @preview="openPreview"
                         @save-draft="submitJob('draft')"
                         @submit="submitJob('pending')"
                     />
                 </aside>
             </div>
         </form>
+
+        <JobPreviewModal
+            v-if="showPreview"
+            :job="form"
+            :category-name="previewCategoryName"
+            @close="closePreview"
+        />
     </div>
 </template>
