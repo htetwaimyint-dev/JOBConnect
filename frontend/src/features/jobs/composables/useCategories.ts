@@ -1,7 +1,6 @@
-
 import { useQuery } from "@tanstack/vue-query";
 
-import { categoryService } from "../repositories/categoryRepository";
+import { categoryRepository } from "../repositories/categoryRepository";
 
 export function useCategories() {
     const getPublicCategories = () => {
@@ -9,8 +8,7 @@ export function useCategories() {
             queryKey: ["public", "categories"],
 
             queryFn: async () => {
-                const response =
-                    await categoryService.getPublicCategories();
+                const response = await categoryRepository.getPublicCategories();
 
                 return response.data;
             },

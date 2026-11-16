@@ -8,10 +8,10 @@ use App\Http\Requests\Api\Jobs\StoreJobRequest;
 use App\Http\Requests\Api\Jobs\UpdateJobRequest;
 use App\Http\Resources\Api\Jobs\JobResource;
 use App\Services\Employer\CompanyService;
-use App\Services\Jobs\EmployerJobService;
 use Illuminate\Http\Request;
 use App\Models\Company;
 use App\Models\User;
+use App\Services\Jobs\EmployerJobService;
 
 class CompanyJobController extends Controller
 {
@@ -36,13 +36,9 @@ class CompanyJobController extends Controller
             50
         );
 
-<<<<<<< HEAD
         $job = $this->jobService->getjobs($company, $request->validated(), $perPage);
-=======
-        $jobs = $this->jobService->getjobs($company, $perPage);
->>>>>>> feature/#16
 
-        return JobResource::collection($jobs)->additional([
+        return JobResource::collection($job)->additional([
             'success' => true,
             'message' => 'Jobs retrieved successfully.',
         ]);
@@ -113,34 +109,5 @@ class CompanyJobController extends Controller
         );
 
         return $company;
-    }
-
-    private function extractPlainText(?string $html): string
-    {
-        if (empty($html)) {
-            return '';
-        }
-
-        // Replace closing block tags and line breaks with spaces.
-        $html = preg_replace(
-            '/<\/(p|div|li|h[1-6]|blockquote)>|<br\s*\/?>/i',
-            ' ',
-            $html
-        );
-
-        // Remove HTML tags.
-        $text = strip_tags($html);
-
-        // Decode HTML entities.
-        $text = html_entity_decode(
-            $text,
-            ENT_QUOTES | ENT_HTML5,
-            'UTF-8'
-        );
-
-        // Normalize whitespace.
-        $text = preg_replace('/\s+/u', ' ', $text);
-
-        return trim($text);
     }
 }
