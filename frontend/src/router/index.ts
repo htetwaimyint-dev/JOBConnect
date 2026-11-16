@@ -1,8 +1,7 @@
-
 import {
-    createRouter,
-    createWebHistory,
-    type RouteRecordRaw,
+  createRouter,
+  createWebHistory,
+  type RouteRecordRaw,
 } from "vue-router";
 import { useAuthStore } from "@/stores/auth.store";
 
@@ -13,51 +12,51 @@ import { jobseekerRoutes } from "./jobseeker.routes";
 import { publicRoutes } from "./public.routes";
 
 const routes: RouteRecordRaw[] = [
-    ...publicRoutes,
-    ...authRoutes,
-    ...adminRoutes,
-    ...employerRoutes,
-    ...jobseekerRoutes,
+  ...publicRoutes,
+  ...authRoutes,
+  ...adminRoutes,
+  ...employerRoutes,
+  ...jobseekerRoutes,
 ];
 
 const router = createRouter({
-    history: createWebHistory(),
-    routes,
+  history: createWebHistory(),
+  routes,
 });
 
 router.beforeEach(async (to) => {
-    const authStore = useAuthStore();
+  const authStore = useAuthStore();
 
-    if (!authStore.initialized) {
-        await authStore.initializeAuth();
-    }
+  if (!authStore.initialized) {
+    await authStore.initializeAuth();
+  }
 
-    if (to.meta.requiresAuth && !authStore.token) {
-        return "/login";
-    }
+  if (to.meta.requiresAuth && !authStore.token) {
+    return "/login";
+  }
 
-    // Redirect authenticated users away from guest-only pages
-    if (to.meta.guestOnly && authStore.isAuthenticated) {
-        switch (authStore.user?.role) {
-            case "job_seeker":
-                return "/jobseeker/dashboard";
+  // Redirect authenticated users away from guest-only pages
+  if (to.meta.guestOnly && authStore.isAuthenticated) {
+    switch (authStore.user?.role) {
+      case "job_seeker":
+        return "/jobseeker/dashboard";
 
-            case "employer":
-                return "/employer/dashboard";
+      case "employer":
+        return "/employer/dashboard";
 
-            case "admin":
-                return "/admin/dashboard";
+      case "admin":
+        return "/admin/dashboard";
 
-            default:
-                return "/";
-        }
-    }
-
-    if (to.meta.role && authStore.user?.role !== to.meta.role) {
+      default:
         return "/";
     }
+  }
 
-    return true;
+  if (to.meta.role && authStore.user?.role !== to.meta.role) {
+    return "/";
+  }
+
+  return true;
 });
 
 export default router;

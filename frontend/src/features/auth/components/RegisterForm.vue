@@ -6,6 +6,7 @@ import BasePasswordInput from "@/components/common/BasePasswordInput.vue";
 import BaseButton from "@/components/common/BaseButton.vue";
 
 import type { RegisterData } from "../types/auth.types";
+import { User, Mail, Lock, LogIn, Search, Briefcase } from "lucide-vue-next";
 
 const emit = defineEmits<{
   submit: [data: RegisterData];
@@ -73,29 +74,17 @@ const handleSubmit = () => {
       id="register-name"
       v-model="name"
       type="text"
-      label="Name"
-      placeholder="Enter your name"
+      label="Full Name"
+      placeholder="Enter your full name"
       size="md"
       variant="outline"
       :error="errors.name"
       required
       autocomplete="name"
+      class="[&_input]:rounded-xl [&_input]:py-3 [&_input]:shadow-sm focus-within:[&_input]:ring-4 focus-within:[&_input]:ring-blue-500/10"
     >
       <template #leading>
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          class="h-4 w-4"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          stroke-width="2"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-          />
-        </svg>
+        <User class="h-5 w-5 text-gray-400" />
       </template>
     </BaseInput>
 
@@ -104,29 +93,17 @@ const handleSubmit = () => {
       id="register-email"
       v-model="email"
       type="email"
-      label="Email"
+      label="Email Address"
       placeholder="you@example.com"
       size="md"
       variant="outline"
       :error="errors.email"
       required
       autocomplete="email"
+      class="[&_input]:rounded-xl [&_input]:py-3 [&_input]:shadow-sm focus-within:[&_input]:ring-4 focus-within:[&_input]:ring-blue-500/10"
     >
       <template #leading>
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          class="h-4 w-4"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          stroke-width="2"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-          />
-        </svg>
+        <Mail class="h-5 w-5 text-gray-400" />
       </template>
     </BaseInput>
 
@@ -141,6 +118,7 @@ const handleSubmit = () => {
       :error="errors.password"
       required
       autocomplete="new-password"
+      class="[&_input]:rounded-xl [&_input]:py-3 [&_input]:shadow-sm focus-within:[&_input]:ring-4 focus-within:[&_input]:ring-blue-500/10"
     />
 
     <!-- Confirm Password -->
@@ -154,124 +132,107 @@ const handleSubmit = () => {
       :error="errors.confirmPassword"
       required
       autocomplete="new-password"
+      class="[&_input]:rounded-xl [&_input]:py-3 [&_input]:shadow-sm focus-within:[&_input]:ring-4 focus-within:[&_input]:ring-blue-500/10"
     />
 
-    <!-- Role Selection -->
-    <div>
+    <!-- Role Selection (Compact Cards) -->
+    <div class="pt-1">
       <span class="mb-2 block text-sm font-medium text-gray-700">
-        Register as
+        I want to join as
       </span>
 
-      <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <!-- Job seeker -->
+      <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+        <!-- Job Seeker Card -->
         <label
-          class="flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors"
+          class="group relative flex cursor-pointer items-center gap-3 rounded-lg border p-2.5 transition-all hover:bg-gray-50"
           :class="
             role === 'job_seeker'
-              ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-500/20'
-              : 'border-gray-300 bg-white hover:border-gray-400'
+              ? 'border-blue-600 bg-blue-50/50 ring-2 ring-blue-600/20'
+              : 'border-gray-200 bg-white'
           "
         >
           <input
             v-model="role"
             type="radio"
             value="job_seeker"
-            class="mt-0.5 h-4 w-4 accent-blue-600"
+            class="sr-only"
           />
-          <div class="min-w-0">
-            <span
-              class="flex items-center gap-1.5 text-sm font-medium text-gray-900"
+          <div
+            class="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-blue-100 text-blue-600 transition-colors group-hover:bg-blue-200"
+          >
+            <Search class="h-4 w-4" />
+          </div>
+          <div class="min-w-0 flex-1">
+            <span class="block text-sm font-semibold text-gray-900"
+              >Job Seeker</span
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="h-4 w-4 text-blue-600"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z"
-                />
-              </svg>
-              Find a Job
-            </span>
-            <p class="mt-0.5 text-xs text-gray-500">
-              Browse and apply to open positions
-            </p>
+            <p class="text-[11px] text-gray-500">Looking for a job</p>
+          </div>
+          <!-- Radio Indicator -->
+          <div
+            class="flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2 transition-all"
+            :class="
+              role === 'job_seeker' ? 'border-blue-600' : 'border-gray-300'
+            "
+          >
+            <div
+              v-if="role === 'job_seeker'"
+              class="h-2 w-2 rounded-full bg-blue-600"
+            />
           </div>
         </label>
 
-        <!-- Employer -->
+        <!-- Employer Card -->
         <label
-          class="flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors"
+          class="group relative flex cursor-pointer items-center gap-3 rounded-lg border p-2.5 transition-all hover:bg-gray-50"
           :class="
             role === 'employer'
-              ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-500/20'
-              : 'border-gray-300 bg-white hover:border-gray-400'
+              ? 'border-blue-600 bg-blue-50/50 ring-2 ring-blue-600/20'
+              : 'border-gray-200 bg-white'
           "
         >
-          <input
-            v-model="role"
-            type="radio"
-            value="employer"
-            class="mt-0.5 h-4 w-4 accent-blue-600"
-          />
-          <div class="min-w-0">
-            <span
-              class="flex items-center gap-1.5 text-sm font-medium text-gray-900"
+          <input v-model="role" type="radio" value="employer" class="sr-only" />
+          <div
+            class="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-indigo-100 text-indigo-600 transition-colors group-hover:bg-indigo-200"
+          >
+            <Briefcase class="h-4 w-4" />
+          </div>
+          <div class="min-w-0 flex-1">
+            <span class="block text-sm font-semibold text-gray-900"
+              >Employer</span
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="h-4 w-4 text-blue-600"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  d="M21 13.255A23.93 23.93 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                />
-              </svg>
-              Post a Job
-            </span>
-            <p class="mt-0.5 text-xs text-gray-500">
-              Create listings and find talent
-            </p>
+            <p class="text-[11px] text-gray-500">Hiring talent</p>
+          </div>
+          <!-- Radio Indicator -->
+          <div
+            class="flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2 transition-all"
+            :class="role === 'employer' ? 'border-blue-600' : 'border-gray-300'"
+          >
+            <div
+              v-if="role === 'employer'"
+              class="h-2 w-2 rounded-full bg-blue-600"
+            />
           </div>
         </label>
       </div>
     </div>
 
     <!-- Submit -->
-    <BaseButton
-      type="submit"
-      color="primary"
-      variant="solid"
-      size="40"
-      class="w-full justify-center"
-    >
-      <template #leading>
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          class="h-4 w-4"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          stroke-width="2"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"
+    <div class="pt-2">
+      <BaseButton
+        type="submit"
+        color="primary"
+        variant="solid"
+        size="40"
+        class="group w-full justify-center rounded-xl py-3.5 text-base font-semibold shadow-lg shadow-blue-600/30 transition-all hover:shadow-blue-600/40 focus:ring-4 focus:ring-blue-500/30"
+      >
+        <template #leading>
+          <LogIn
+            class="h-5 w-5 transition-transform group-hover:translate-x-1"
           />
-        </svg>
-      </template>
-      Create account
-    </BaseButton>
+        </template>
+        Create account
+      </BaseButton>
+    </div>
   </form>
 </template>
