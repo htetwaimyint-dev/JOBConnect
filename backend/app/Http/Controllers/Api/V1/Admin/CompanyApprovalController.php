@@ -7,29 +7,68 @@ use App\Http\Requests\Api\Admin\CompanyApprovalRequest;
 use App\Http\Resources\Api\CompanyResource;
 use App\Models\Company;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class CompanyApprovalController extends Controller
 {
     /**
-     * Display pending company profiles.
+     * Display all companies with status filtering and pagination.
      */
-    public function index(): JsonResponse
+    public function index(Request $request)
     {
-        $companies = Company::with('employer:id,name,email')
-            ->where('verification_status', 'pending')
+        $validated = $request->validate([
+            'status' => 'nullable|in:all,pending,verified,rejected',
+            'search' => 'nullable|string|max:255',
+        ]);
+
+        $query = Company::with('employer:id,name,email');
+
+        // Filter by verification status
+        if (
+            !empty($validated['status']) &&
+            $validated['status'] !== 'all'
+        ) {
+            $query->where(
+                'verification_status',
+                $validated['status']
+            );
+        }
+
+        // Backend search
+        if (!empty($validated['search'])) {
+            $search = trim($validated['search']);
+
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('industry', 'like', "%{$search}%")
+                    ->orWhere('company_email', 'like', "%{$search}%")
+                    ->orWhere('phone', 'like', "%{$search}%")
+                    ->orWhere('city', 'like', "%{$search}%")
+                    ->orWhere('address', 'like', "%{$search}%")
+                    ->orWhere('website', 'like', "%{$search}%")
+                    ->orWhereHas('employer', function ($employerQuery) use ($search) {
+                        $employerQuery
+                            ->where('name', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        $companies = $query
             ->latest()
-            ->paginate(10);
+            ->paginate(10)
+            ->withQueryString();
 
         return CompanyResource::collection($companies)
             ->additional([
                 'success' => true,
-                'message' => 'Pending companies retrieved successfully.',
-            ])
-            ->response();
+                'message' => 'Companies retrieved successfully.',
+            ]);
     }
 
     /**
-     * Display a specific company profile.
+     * Display company details.
      */
     public function show(Company $company): JsonResponse
     {
@@ -43,7 +82,7 @@ class CompanyApprovalController extends Controller
     }
 
     /**
-     * Approve or reject a company profile.
+     * Approve or reject a company.
      */
     public function update(
         CompanyApprovalRequest $request,

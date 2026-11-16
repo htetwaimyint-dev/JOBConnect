@@ -65,7 +65,7 @@ const employerNavigation = [
     path: "/employer/dashboard",
   },
   {
-    title: "Job Create Post",
+    title: "Job Post",
     path: "/employer/jobs",
   },
   {
@@ -73,8 +73,8 @@ const employerNavigation = [
     path: "/employer/applicants",
   },
   {
-    title: "My Account",
-    path: "/employer/settings",
+    title: "Comany Profile",
+    path: "/employer/profile",
   },
   {
     title: "Job Seeker Profile",
