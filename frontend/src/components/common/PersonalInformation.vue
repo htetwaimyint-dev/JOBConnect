@@ -13,14 +13,21 @@ import {
 } from "lucide-vue-next";
 
 // Props
-const props = defineProps<{
-  name: string;
-  email: string;
-  profileImage?: string | null;
-  nameLabel?: string;
-  emailLabel?: string;
-  photoLabel?: string;
-}>();
+const props = withDefaults(
+  defineProps<{
+    name: string;
+    email: string;
+    profileImage?: string | null;
+    nameLabel?: string;
+    emailLabel?: string;
+    photoLabel?: string;
+    showProfilePhoto?: boolean;
+  }>(),
+  {
+    profileImage: null,
+    showProfilePhoto: true,
+  },
+);
 
 // Emits
 const emit = defineEmits<{
@@ -30,6 +37,11 @@ const emit = defineEmits<{
       email: string;
       profileImage: File | null;
       removeProfileImage: boolean;
+      password: {
+        current_password: string;
+        new_password: string;
+        new_password_confirmation: string;
+      } | null;
     },
   ];
 }>();
@@ -135,12 +147,13 @@ const cancelPasswordEditing = () => {
   currentPassword.value = "";
   newPassword.value = "";
   confirmPassword.value = "";
+
   passwordError.value = "";
   isPasswordEditing.value = false;
 };
 
 // Validate password
-const validatePassword = () => {
+const validatePassword = (): boolean => {
   passwordError.value = "";
 
   if (!currentPassword.value || !newPassword.value || !confirmPassword.value) {
@@ -150,6 +163,12 @@ const validatePassword = () => {
 
   if (newPassword.value.length < 8) {
     passwordError.value = "Password must be at least 8 characters.";
+    return false;
+  }
+
+  if (newPassword.value === currentPassword.value) {
+    passwordError.value =
+      "New password must be different from current password.";
     return false;
   }
 
@@ -171,11 +190,20 @@ const saveChanges = () => {
     if (!validatePassword()) return;
   }
 
+  const password = isPasswordEditing.value
+    ? {
+        current_password: currentPassword.value,
+        new_password: newPassword.value,
+        new_password_confirmation: confirmPassword.value,
+      }
+    : null;
+
   emit("save", {
     name: name.value.trim(),
     email: email.value.trim(),
-    profileImage: selectedPhoto.value,
-    removeProfileImage: photoRemoved.value,
+    profileImage: props.showProfilePhoto ? selectedPhoto.value : null,
+    removeProfileImage: props.showProfilePhoto ? photoRemoved.value : false,
+    password,
   });
 
   isNameEditing.value = false;
@@ -226,7 +254,7 @@ onBeforeUnmount(() => {
       </div>
 
       <!-- Profile Photo -->
-      <div class="mb-5">
+      <div v-if="showProfilePhoto" class="mb-5">
         <label
           class="mb-3 block text-center text-sm font-medium text-slate-700"
         >
@@ -368,7 +396,6 @@ onBeforeUnmount(() => {
             "
           >
             <X v-if="isPasswordEditing" class="h-5 w-5" />
-
             <Pencil v-else class="h-5 w-5" />
           </button>
         </div>

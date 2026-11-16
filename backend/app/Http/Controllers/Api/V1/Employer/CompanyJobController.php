@@ -3,38 +3,40 @@
 namespace App\Http\Controllers\Api\V1\Employer;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\Jobs\PublicJobIndexRequest;
 use App\Http\Requests\Api\Jobs\StoreJobRequest;
 use App\Http\Requests\Api\Jobs\UpdateJobRequest;
 use App\Http\Resources\Api\Jobs\JobResource;
 use App\Services\Employer\CompanyService;
-use App\Services\Jobs\JobService;
 use Illuminate\Http\Request;
 use App\Models\Company;
 use App\Models\User;
+use App\Services\Jobs\EmployerJobService;
 
 class CompanyJobController extends Controller
 {
-    protected JobService $jobService;
+    protected EmployerJobService $jobService;
     protected CompanyService $companyService;
 
     public function __construct(
-        JobService $jobService,
+        EmployerJobService $jobService,
         CompanyService $companyService
     ) {
         $this->jobService = $jobService;
         $this->companyService = $companyService;
     }
 
-    public function index(Request $request)
+    public function index(PublicJobIndexRequest $request)
     {
         $company = $this->getEmployerCompany($request->user());
+
 
         $perPage = min(
             max((int) $request->query('perpage', 10), 1),
             50
         );
 
-        $job = $this->jobService->getjobs($company, $perPage);
+        $job = $this->jobService->getjobs($company, $request->validated(), $perPage);
 
         return JobResource::collection($job)->additional([
             'success' => true,

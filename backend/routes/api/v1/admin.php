@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\V1\Admin\CategoryManagementController;
 use App\Http\Controllers\Api\V1\Admin\CompanyApprovalController;
 use App\Http\Controllers\Api\V1\Admin\JobApprovalController;
+use App\Http\Controllers\Api\V1\Admin\UserManagementController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth:sanctum', 'admin'])->group(function () {
@@ -22,6 +23,9 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
 
     // Admin Management
     Route::prefix('admin')->group(function () {
+
+        Route::get('/companies', [UserManagementController::class, 'companies']);
+        Route::get('/job-seekers', [UserManagementController::class, 'jobSeekers']);
 
         // Company Approval Management
         Route::get('/companies/pending', [

@@ -4,23 +4,19 @@ import {
   type RouteRecordRaw,
 } from "vue-router";
 import { useAuthStore } from "@/stores/auth.store";
-import PublicLayout from "@/layouts/PublicLayout.vue";
+
 import { authRoutes } from "./auth.routes";
 import { adminRoutes } from "./admin.routes";
 import { employerRoutes } from "./employer.routes";
 import { jobseekerRoutes } from "./jobseeker.routes";
+import { publicRoutes } from "./public.routes";
 
 const routes: RouteRecordRaw[] = [
+  ...publicRoutes,
   ...authRoutes,
   ...adminRoutes,
   ...employerRoutes,
   ...jobseekerRoutes,
-  // Public Layout
-  {
-    path: "/",
-    component: PublicLayout,
-    children: [],
-  },
 ];
 
 const router = createRouter({
@@ -39,11 +35,24 @@ router.beforeEach(async (to) => {
     return "/login";
   }
 
-  if (to.meta.role && authStore.user?.role !== to.meta.role) {
-    return "/";
+  // Redirect authenticated users away from guest-only pages
+  if (to.meta.guestOnly && authStore.isAuthenticated) {
+    switch (authStore.user?.role) {
+      case "job_seeker":
+        return "/jobseeker/dashboard";
+
+      case "employer":
+        return "/employer/dashboard";
+
+      case "admin":
+        return "/admin/dashboard";
+
+      default:
+        return "/";
+    }
   }
 
-  if (to.path === "/login" && authStore.token) {
+  if (to.meta.role && authStore.user?.role !== to.meta.role) {
     return "/";
   }
 

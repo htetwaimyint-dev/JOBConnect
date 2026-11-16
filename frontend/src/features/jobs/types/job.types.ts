@@ -1,3 +1,4 @@
+
 export interface JobCompany {
     id: number;
     name: string;
@@ -7,6 +8,7 @@ export interface JobCompany {
 export interface JobCategory {
     id: number;
     name: string;
+    logo: string | null;
 }
 
 export type EmploymentType =
@@ -24,7 +26,9 @@ export type SubmissionStatus = "draft" | "pending";
 export interface Job {
     id: number;
     company_id: number;
-    category_id: number | null;
+
+    company: JobCompany;
+    category: JobCategory | null;
 
     title: string;
     description: string;
@@ -32,46 +36,31 @@ export interface Job {
     responsibilities: string | null;
 
     employment_type: EmploymentType;
-
     workplace_type: WorkplaceType;
-    location: string | null;
+
+    country: string | null;
+    city: string | null;
+
     salary_type: SalaryType;
     salary_min: number | null;
     salary_max: number | null;
+
     vacancies: number;
     deadline: string | null;
 
     status: "draft" | "pending" | "published" | "rejected" | "closed";
 
-    company?: JobCompany;
-    category?: JobCategory;
-
     created_at: string;
     updated_at: string;
 }
 
-// export interface JobFormData {
-//     title: string;
-//     category_id: number | null;
-//     description: string;
-//     requirements: string;
-//     responsibilities: string;
-//     employment_type: EmploymentType;
-//     workplace_type: WorkplaceType;
-//     location: string;
-//     salary_type: SalaryType;
-//     salary_min: number | null;
-//     salary_max: number | null;
-//     vacancies: number;
-//     deadline: string;
-//     submission_status: SubmissionStatus;
-// }
 export interface JobFormData {
     title: string;
     category_id: number | null;
     deadline: string;
     employment_type: EmploymentType;
     vacancies: number;
+    gender: "any" | "male" | "female";
     workplace_type: WorkplaceType;
     country: string;
     city: string;
@@ -90,9 +79,10 @@ export interface JobListParams {
     page?: number;
     search?: string;
     category_id?: number;
-    employment_type?: Job["employment_type"];
-    workplace_type?: Job["workplace_type"];
-    location?: string;
+    employment_type?: EmploymentType;
+    workplace_type?: WorkplaceType;
+    city?: string;
+    country?: string;
 }
 
 export interface JobListResponse {

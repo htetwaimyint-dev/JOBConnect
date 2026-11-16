@@ -1,98 +1,62 @@
 <script setup lang="ts">
-import { useRouter } from "vue-router";
 import type { GalleryImage } from "../types/company-form.types";
-import BaseButton from "@/components/common/BaseButton.vue";
 
 defineProps<{
     existingImages: string[];
     newImages?: GalleryImage[];
+    companyName?: string;
 }>();
-
-const emit = defineEmits<{
-    addImages: [files: FileList];
-    removeExisting: [index: number];
-    removeNew: [index: number];
-}>();
-
-function onImagesChange(event: Event) {
-    const input = event.target as HTMLInputElement;
-    if (input.files?.length) emit("addImages", input.files);
-    input.value = "";
-}
-
-const router = useRouter();
-
-function goToAddImages() {
-    router.push({
-        name: "employer.company-profile.edit",
-        query: {
-            tab: "gallery",
-        },
-    });
-}
 </script>
 
 <template>
-    <section class="rounded-lg border border-gray-200 bg-white p-4">
-        <div class="mb-3 flex items-center justify-between gap-3">
-            <div>
-                <h2 class="text-sm font-semibold text-gray-900">Gallery</h2>
-                <p class="mt-0.5 text-xs text-gray-500">
-                    Showcase your workplace and team.
-                </p>
-            </div>
-
-            <label class="shrink-0 cursor-pointer">
-                <BaseButton
-                    size="28"
-                    variant="outline"
-                    color="primary"
-                    @click="goToAddImages"
-                >
-                    Add images
-                </BaseButton>
-                <input
-                    type="file"
-                    accept="image/png,image/jpeg,image/webp"
-                    multiple
-                    class="hidden"
-                    @change="onImagesChange"
-                />
-            </label>
-        </div>
+    <section
+        class="rounded-xl border border-gray-100 bg-white p-6 sm:p-8 space-y-4"
+    >
+        <h2 class="text-lg font-bold text-gray-900">
+            Life at {{ companyName || "Company" }}
+        </h2>
 
         <div
             v-if="existingImages.length || newImages?.length"
-            class="grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-5"
+            class="grid grid-cols-1 sm:grid-cols-3 gap-3"
         >
+            <!-- Large main image on left -->
             <div
-                v-for="(image, index) in existingImages"
-                :key="`existing-${index}`"
-                class="group relative aspect-square overflow-hidden rounded-lg border border-gray-200"
+                v-if="existingImages[0]"
+                class="sm:col-span-2 aspect-video overflow-hidden rounded-lg bg-gray-100"
             >
                 <img
-                    :src="image"
+                    :src="existingImages[0]"
                     class="h-full w-full object-cover"
-                    alt="Gallery image"
+                    alt="Life at company"
                 />
             </div>
 
-            <div
-                v-for="(image, index) in newImages"
-                :key="`new-${index}`"
-                class="group relative aspect-square overflow-hidden rounded-lg border border-gray-200"
-            >
-                <img
-                    :src="image.preview"
-                    class="h-full w-full object-cover"
-                    alt="New gallery image"
-                />
+            <!-- Smaller images on right -->
+            <div class="grid grid-cols-2 sm:grid-cols-1 gap-3 sm:col-span-1">
+                <div
+                    v-for="(image, index) in existingImages.slice(1, 3)"
+                    :key="`existing-${index + 1}`"
+                    class="aspect-video sm:aspect-2/1 overflow-hidden rounded-lg bg-gray-100 relative"
+                >
+                    <img
+                        :src="image"
+                        class="h-full w-full object-cover"
+                        alt="Life at company"
+                    />
+                    <div
+                        v-if="index === 1 && existingImages.length > 3"
+                        class="absolute inset-0 bg-black/50 flex items-center justify-center text-white font-semibold text-sm cursor-pointer"
+                    >
+                        See More
+                    </div>
+                </div>
             </div>
         </div>
 
         <div
             v-else
-            class="rounded-lg border border-dashed border-gray-300 px-4 py-6 text-center"
+            class="rounded-md border border-dashed border-gray-200 p-8 text-center"
         >
             <p class="text-xs text-gray-500">No gallery images added yet.</p>
         </div>
