@@ -34,7 +34,7 @@ class CompanyJobController extends Controller
             50
         );
 
-        $jobs = $this->jobService->getjobs($company, $perPage);
+        $jobs = $this->jobService->getjobs($company, $request->validated(), $perPage);
 
         return JobResource::collection($jobs)->additional([
             'success' => true,

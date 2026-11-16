@@ -20,9 +20,10 @@ class EmployerJobService
 
     public function getJobs(
         Company $company,
+        array $params,
         int $perPage
     ): LengthAwarePaginator {
-        return $this->jobRepository->getByCompany($company, $perPage);
+        return $this->jobRepository->getByCompany($company, $params, $perPage);
     }
 
     public function getJob(
