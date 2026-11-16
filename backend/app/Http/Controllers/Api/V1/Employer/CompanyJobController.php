@@ -7,18 +7,18 @@ use App\Http\Requests\Api\Jobs\StoreJobRequest;
 use App\Http\Requests\Api\Jobs\UpdateJobRequest;
 use App\Http\Resources\Api\Jobs\JobResource;
 use App\Services\Employer\CompanyService;
-use App\Services\Jobs\JobService;
+use App\Services\Jobs\EmployerJobService;
 use Illuminate\Http\Request;
 use App\Models\Company;
 use App\Models\User;
 
 class CompanyJobController extends Controller
 {
-    protected JobService $jobService;
+    protected EmployerJobService $jobService;
     protected CompanyService $companyService;
 
     public function __construct(
-        JobService $jobService,
+        EmployerJobService $jobService,
         CompanyService $companyService
     ) {
         $this->jobService = $jobService;
@@ -34,9 +34,9 @@ class CompanyJobController extends Controller
             50
         );
 
-        $job = $this->jobService->getjobs($company, $perPage);
+        $jobs = $this->jobService->getjobs($company, $perPage);
 
-        return JobResource::collection($job)->additional([
+        return JobResource::collection($jobs)->additional([
             'success' => true,
             'message' => 'Jobs retrieved successfully.',
         ]);

@@ -5,14 +5,14 @@ namespace App\Http\Controllers\Api\V1\Jobs;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Jobs\PublicJobIndexRequest;
 use App\Http\Resources\Api\Jobs\JobResource;
-use App\Services\Jobs\JobService;
+use App\Services\Jobs\PublicJobService;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
-class JobController extends Controller
+class PublicJobController extends Controller
 {
-    protected JobService $jobService;
+    protected PublicJobService $jobService;
 
-    public function __construct(JobService $jobService)
+    public function __construct(PublicJobService $jobService)
     {
         $this->jobService = $jobService;
     }

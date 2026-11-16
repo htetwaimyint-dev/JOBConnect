@@ -16,9 +16,9 @@ class CategoryService
     }
 
     // Get all categories
-    public function all()
+    public function all(?string $search = null)
     {
-        return $this->categoryRepository->all();
+        return $this->categoryRepository->all($search);
     }
 
     // Find category by ID
