@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { JobFormData } from "../types/job.types";
+import BaseTextArea from "@/components/common/BaseTextArea.vue";
 
 defineProps<{
     errors: Partial<Record<keyof JobFormData, string[]>>;
@@ -18,64 +19,30 @@ const form = defineModel<JobFormData>({ required: true });
             Job Description and Requirements
         </h2>
 
-        <div class="space-y-5">
-            <div>
-                <label class="mb-2 block text-sm font-medium">
-                    Job Description
-                </label>
+        <div class="space-y-6">
+            <!-- Job Description -->
+            <BaseTextArea
+                v-model="form.description"
+                label="Job Description"
+                placeholder="Describe the job, its purpose, and what the candidate will do..."
+                :error="errors.description?.[0]"
+            />
 
-                <textarea
-                    v-model="form.description"
-                    rows="5"
-                    class="w-full rounded-xl border border-gray-300 bg-white p-3.5 text-xs text-gray-900 placeholder:text-gray-400 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/20 transition resize-y"
-                    placeholder="Describe the job..."
-                />
+            <!-- Requirements -->
+            <BaseTextArea
+                v-model="form.requirements"
+                label="Requirements"
+                placeholder="Enter the qualifications, skills, and experience required..."
+                :error="errors.requirements?.[0]"
+            />
 
-                <p
-                    v-if="errors.description?.[0]"
-                    class="mt-1 text-sm text-red-500"
-                >
-                    {{ errors.description[0] }}
-                </p>
-            </div>
-
-            <div>
-                <label class="mb-2 block text-sm font-medium">
-                    Requirements
-                </label>
-
-                <textarea
-                    v-model="form.requirements"
-                    rows="4"
-                    class="w-full rounded-xl border border-gray-300 bg-white p-3.5 text-xs text-gray-900 placeholder:text-gray-400 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/20 transition resize-y"
-                    placeholder="Enter job requirements..."
-                />
-                <p
-                    v-if="errors.description?.[0]"
-                    class="mt-1 text-sm text-red-500"
-                >
-                    {{ errors.description[0] }}
-                </p>
-            </div>
-
-            <div>
-                <label class="mb-2 block text-sm font-medium">
-                    Responsibilities
-                </label>
-
-                <textarea
-                    v-model="form.responsibilities"
-                    rows="4"
-                    class="w-full rounded-xl border border-gray-300 bg-white p-3.5 text-xs text-gray-900 placeholder:text-gray-400 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/20 transition resize-y"
-                    placeholder="Enter job responsibilities..."
-                />
-                <p
-                    v-if="errors.description?.[0]"
-                    class="mt-1 text-sm text-red-500"
-                >
-                    {{ errors.description[0] }}
-                </p>
-            </div>
+            <!-- Responsibilities -->
+            <BaseTextArea
+                v-model="form.responsibilities"
+                label="Responsibilities"
+                placeholder="Describe the candidate's main responsibilities..."
+                :error="errors.responsibilities?.[0]"
+            />
         </div>
     </section>
 </template>

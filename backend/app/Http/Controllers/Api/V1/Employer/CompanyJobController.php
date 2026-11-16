@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1\Employer;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\Jobs\PublicJobIndexRequest;
 use App\Http\Requests\Api\Jobs\StoreJobRequest;
 use App\Http\Requests\Api\Jobs\UpdateJobRequest;
 use App\Http\Resources\Api\Jobs\JobResource;
@@ -25,16 +26,17 @@ class CompanyJobController extends Controller
         $this->companyService = $companyService;
     }
 
-    public function index(Request $request)
+    public function index(PublicJobIndexRequest $request)
     {
         $company = $this->getEmployerCompany($request->user());
+
 
         $perPage = min(
             max((int) $request->query('perpage', 10), 1),
             50
         );
 
-        $job = $this->jobService->getjobs($company, $perPage);
+        $job = $this->jobService->getjobs($company, $request->validated(), $perPage);
 
         return JobResource::collection($job)->additional([
             'success' => true,
@@ -107,5 +109,34 @@ class CompanyJobController extends Controller
         );
 
         return $company;
+    }
+
+    private function extractPlainText(?string $html): string
+    {
+        if (empty($html)) {
+            return '';
+        }
+
+        // Replace closing block tags and line breaks with spaces.
+        $html = preg_replace(
+            '/<\/(p|div|li|h[1-6]|blockquote)>|<br\s*\/?>/i',
+            ' ',
+            $html
+        );
+
+        // Remove HTML tags.
+        $text = strip_tags($html);
+
+        // Decode HTML entities.
+        $text = html_entity_decode(
+            $text,
+            ENT_QUOTES | ENT_HTML5,
+            'UTF-8'
+        );
+
+        // Normalize whitespace.
+        $text = preg_replace('/\s+/u', ' ', $text);
+
+        return trim($text);
     }
 }

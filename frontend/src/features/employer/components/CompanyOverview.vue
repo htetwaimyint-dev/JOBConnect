@@ -1,7 +1,7 @@
 <script setup lang="ts">
+import type { Company } from "../types/company.types";
 import { useCompanyProfileStore } from "@/stores/company-profile.store";
 import CompanyOverviewPreview from "./CompanyOverviewPreview.vue";
-import type { Company } from "../types/company.types";
 
 defineProps<{
     company: Company;
@@ -44,96 +44,15 @@ const availableIcons = [
 </script>
 
 <template>
-    <div class="border border-gray-100 bg-white px-6 py-7 sm:px-8">
-        <!-- Company Details -->
-        <section class="py-7">
-            <h4 class="text-lg font-bold text-gray-900">Company Details</h4>
-
-            <div class="mt-2 ml-2 inline-grid grid-cols-1 gap-2 sm:grid-cols-2">
-                <div>
-                    <p class="my-1 text-[13px] font-medium text-gray-400">
-                        Industry
-                    </p>
-                    <p class="my-1 text-[13px] font-semibold text-gray-800">
-                        {{ company.industry }}
-                    </p>
-                </div>
-
-                <div>
-                    <p class="my-1 text-[13px] font-medium text-gray-400">
-                        Location
-                    </p>
-                    <p
-                        class="my-1 mt-1 text-[13px] font-semibold text-gray-800"
-                    >
-                        {{ company.address }}
-                    </p>
-                </div>
-
-                <div>
-                    <p class="my-1 text-[13px] font-medium text-gray-400">
-                        Founded
-                    </p>
-                    <p
-                        class="my-1 mt-1 text-[13px] font-semibold text-gray-800"
-                    >
-                        {{ company.founded_year }}
-                    </p>
-                </div>
-
-                <div>
-                    <p class="my-1 text-[13px] font-medium text-gray-400">
-                        Company Size
-                    </p>
-                    <p
-                        class="my-1 mt-1 text-[13px] font-semibold text-gray-800"
-                    >
-                        {{ company.employee_count }} employees
-                    </p>
-                </div>
-            </div>
-        </section>
-
-        <!-- Divider -->
-        <div class="border-t-4 border-gray-200"></div>
-
-        <!-- About -->
-        <section class="pb-7 mt-4">
-            <h4 class="text-lg font-bold text-gray-900 mb-4">About Company</h4>
-
+    <section class="pt-3">
+        <h2 class="text-lg font-bold text-gray-900 mb-4">
+            About {{ company.name }}
+        </h2>
+        <div class="text-sm text-gray-600 leading-relaxed space-y-3">
             <CompanyOverviewPreview
                 :sections="store.form.sections"
                 :available-icons="availableIcons"
             />
-        </section>
-
-        <!-- Benefits
-        <section class="pt-7">
-            <h2 class="text-lg font-bold text-gray-900">Benefits & Perks</h2>
-
-            <div class="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div
-                    v-for="benefit in company.benefits"
-                    :key="benefit.id"
-                    class="flex items-start gap-3 rounded-xl bg-gray-50 p-4"
-                >
-                    <div
-                        class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-violet-100 text-lg"
-                    >
-                        {{ benefit.icon }}
-                    </div>
-
-                    <div>
-                        <h3 class="text-sm font-semibold text-gray-900">
-                            {{ benefit.title }}
-                        </h3>
-
-                        <p class="mt-1 text-xs leading-5 text-gray-500">
-                            {{ benefit.description }}
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </section> -->
-    </div>
+        </div>
+    </section>
 </template>

@@ -45,7 +45,7 @@ const attrs = useAttrs();
 
 const selectClasses = computed(() => [
     "w-full appearance-none border bg-white",
-    !model.value && model.value !== 0 ? "text-gray-400" : "text-gray-900",
+    !model.value ? "text-gray-400" : "text-gray-900",
     "transition-colors duration-150",
     "focus:outline-none focus:ring-2 focus:ring-offset-0",
     "disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-500",
@@ -95,7 +95,12 @@ const hasOption = computed(() =>
                 "
                 :class="selectClasses"
             >
-                <option v-if="placeholder" value="" disabled hidden>
+                <option
+                    v-if="placeholder"
+                    :value="model === null ? null : ''"
+                    disabled
+                    hidden
+                >
                     {{ placeholder }}
                 </option>
 
@@ -104,6 +109,7 @@ const hasOption = computed(() =>
                     :key="option.value"
                     :value="option.value"
                     :disabled="option.disabled"
+                    class="text-gray-900"
                 >
                     {{ option.label }}
                 </option>

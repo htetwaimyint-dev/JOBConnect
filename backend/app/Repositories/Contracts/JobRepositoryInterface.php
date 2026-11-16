@@ -12,6 +12,7 @@ interface JobRepositoryInterface
 
     public function getByCompany(
         Company $company,
+        array $params = [],
         int $perPage = 10
     ): LengthAwarePaginator;
 

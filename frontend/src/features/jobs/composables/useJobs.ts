@@ -4,17 +4,15 @@ import jobRepository from "../repositories/jobRepository";
 import { computed, toValue } from "vue";
 import { jobKeys } from "./jobKeys";
 
-import type { JobFormData } from "../types/job.types";
+import type { JobFormData, JobListParams } from "../types/job.types";
 import type { MaybeRefOrGetter } from "vue";
 
 export function useJobs() {
-    function getJobs(page: MaybeRefOrGetter<number> = 1) {
+    function getJobs(params?: JobListParams) {
         return useQuery({
-            queryKey: computed(() => jobKeys.list(toValue(page))),
+            queryKey: computed(() => jobKeys.list(params?.page ?? 1)),
             queryFn: async () => {
-                const response = await jobRepository.getJobs({
-                    page: toValue(page),
-                });
+                const response = await jobRepository.getJobs(params);
                 return response.data;
             },
         });
