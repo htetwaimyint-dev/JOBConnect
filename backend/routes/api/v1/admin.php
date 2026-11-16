@@ -46,3 +46,15 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
         ]);
     });
 });
+Route::delete('/categories/bulk-delete', [
+    CategoryManagementController::class,
+    'bulkDestroy'
+]);
+
+Route::delete('/categories/delete-all', [
+    CategoryManagementController::class,
+    'deleteAllUnused'
+]);
+
+// Resource routes LAST
+Route::apiResource('categories', CategoryManagementController::class);

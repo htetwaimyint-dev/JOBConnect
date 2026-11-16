@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "pinia": "^4.1.0"
+  },
+  "devDependencies": {
+    "vue-tsc": "^3.3.14"
+  }
+}

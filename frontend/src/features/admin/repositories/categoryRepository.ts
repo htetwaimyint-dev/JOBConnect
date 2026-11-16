@@ -12,8 +12,8 @@ const categoryRepository = {
   // Get all categories
   async getCategories(
     params?: CategoryListParams,
-  ): Promise<CategoryListResponse> {
-    const response = await api.get<CategoryListResponse>("/categories", {
+  ): Promise<PaginatedResponse<Category>> {
+    const response = await api.get<PaginatedResponse<Category>>("/categories", {
       params,
     });
 
@@ -53,6 +53,20 @@ const categoryRepository = {
   // Delete category
   async deleteCategory(id: number): Promise<{ message: string }> {
     const response = await api.delete<{ message: string }>(`/categories/${id}`);
+
+    return response.data;
+  },
+
+  async bulkDeleteCategories(ids: number[]) {
+    const response = await api.delete("/categories/bulk-delete", {
+      data: { ids },
+    });
+
+    return response.data;
+  },
+
+  async deleteAllUnusedCategories() {
+    const response = await api.delete("/categories/delete-all");
 
     return response.data;
   },
