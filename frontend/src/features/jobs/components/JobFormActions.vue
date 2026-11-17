@@ -1,5 +1,6 @@
 <script setup lang="ts">
 defineProps<{
+    pageTitle: string;
     loading: boolean;
     errorMessage: string;
 }>();
@@ -16,7 +17,7 @@ const emit = defineEmits<{
         class="rounded-md border border-gray-200 bg-white p-6 shadow-xs space-y-6"
     >
         <div class="border-b border-gray-100 pb-4">
-            <h2 class="text-base font-bold text-gray-900">Create New Job</h2>
+            <h2 class="text-base font-bold text-gray-900">{{ pageTitle }}</h2>
         </div>
 
         <p class="text-xs text-gray-500 leading-relaxed">

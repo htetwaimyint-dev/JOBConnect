@@ -82,32 +82,22 @@ export function useJobs() {
     });
 
     // Update employer job
-    function updateJob() {
-        const queryClient = useQueryClient();
+    const updateJob = useMutation({
+        mutationFn: async ({ id, data }: { id: number; data: JobFormData }) => {
+            const response = await jobRepository.updateJob(id, data);
+            return response.data;
+        },
 
-        return useMutation({
-            mutationFn: async ({
-                id,
-                data,
-            }: {
-                id: number;
-                data: JobFormData;
-            }) => {
-                const response = await jobRepository.updateJob(id, data);
-                return response.data;
-            },
+        onSuccess: (_, variables) => {
+            queryClient.invalidateQueries({
+                queryKey: jobKeys.lists(),
+            });
 
-            onSuccess: (_, variables) => {
-                queryClient.invalidateQueries({
-                    queryKey: jobKeys.lists(),
-                });
-
-                queryClient.invalidateQueries({
-                    queryKey: jobKeys.detail(variables.id),
-                });
-            },
-        });
-    }
+            queryClient.invalidateQueries({
+                queryKey: jobKeys.detail(variables.id),
+            });
+        },
+    });
 
     // Delete employer job
     function deleteJob() {

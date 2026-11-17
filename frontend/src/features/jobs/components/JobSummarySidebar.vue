@@ -11,6 +11,14 @@ defineProps<{
     categoryName?: string;
 }>();
 
+const emit = defineEmits<{
+    edit: [];
+}>();
+
+function handleClick() {
+    emit("edit");
+}
+
 const authstore = useAuthStore();
 const role = authstore.user?.role;
 </script>
@@ -92,6 +100,7 @@ const role = authstore.user?.role;
                 <div v-else>
                     <BaseButton
                         class="w-full bg-gray-900 px-5 py-2.5 text-[15px]! font-semibold text-white hover:bg-gray-700"
+                        @click="handleClick"
                     >
                         Edit Job
                     </BaseButton>

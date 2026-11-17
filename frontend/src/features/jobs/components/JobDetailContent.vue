@@ -14,7 +14,12 @@ defineProps<{
 
 const emit = defineEmits<{
     apply: [];
+    edit: [];
 }>();
+
+function handleEdit() {
+    emit("edit");
+}
 </script>
 
 <template>
@@ -47,6 +52,7 @@ const emit = defineEmits<{
             :job="job"
             :mode="mode"
             :category-name="categoryName"
+            @edit="handleEdit"
         />
     </div>
 </template>
