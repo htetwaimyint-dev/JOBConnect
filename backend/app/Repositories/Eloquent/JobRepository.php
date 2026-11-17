@@ -61,7 +61,7 @@ class JobRepository implements JobRepositoryInterface
         int $jobId
     ): ?Job {
         return $company->jobs()
-            ->with('category')
+            ->with(['category', 'jobQuestion'])
             ->whereKey($jobId)
             ->first();
     }

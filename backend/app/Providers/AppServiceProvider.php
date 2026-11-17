@@ -20,7 +20,9 @@ use App\Repositories\Contracts\JobRepositoryInterface;
 use App\Repositories\Eloquent\JobRepository;
 
 use App\Repositories\Contracts\ApplicationRepositoryInterface;
+use App\Repositories\Contracts\JobQuestionRepositoryInterface;
 use App\Repositories\Eloquent\ApplicationRepository;
+use App\Repositories\Eloquent\JobQuestionRepository;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -55,6 +57,10 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(
             ApplicationRepositoryInterface::class,
             ApplicationRepository::class
+        );
+        $this->app->bind(
+            JobQuestionRepositoryInterface::class,
+            JobQuestionRepository::class
         );
     }
 

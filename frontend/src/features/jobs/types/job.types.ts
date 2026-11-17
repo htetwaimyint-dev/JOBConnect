@@ -52,6 +52,7 @@ export interface Job {
 
     created_at: string;
     updated_at: string;
+    job_questions: JobApplicationQuestionForm[];
 }
 
 export interface JobFormData {
@@ -71,6 +72,7 @@ export interface JobFormData {
     requirements: string;
     responsibilities: string;
     submission_status: SubmissionStatus;
+    job_questions: JobApplicationQuestionForm[];
 }
 
 export type JobDetailMode = "preview" | "public";
@@ -101,4 +103,18 @@ export interface JobListResponse {
         per_page: number;
         total: number;
     };
+}
+
+export interface JobApplicationQuestion {
+    id?: number;
+    question: string;
+    is_required: boolean;
+    sort_order: number;
+}
+
+export interface JobApplicationQuestionForm {
+    id?: number;
+    question: string;
+    is_required: boolean;
+    sort_order: number;
 }

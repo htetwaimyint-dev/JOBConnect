@@ -109,6 +109,36 @@ class StoreJobRequest extends FormRequest
                 'required',
                 'in:fixed,negotiable',
             ],
+
+            'job_questions' => [
+                'sometimes',
+                'array',
+                'max:20',
+            ],
+
+            'job_questions.*.id' => [
+                'sometimes',
+                'integer',
+                'distinct',
+            ],
+
+            'job_questions.*.question' => [
+                'required',
+                'string',
+                'max:2000',
+                'regex:/.*\S.*/',
+            ],
+
+            'job_questions.*.is_required' => [
+                'required',
+                'boolean',
+            ],
+
+            'job_questions.*.sort_order' => [
+                'sometimes',
+                'integer',
+                'min:0',
+            ],
         ];
     }
 

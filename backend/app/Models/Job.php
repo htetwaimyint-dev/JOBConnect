@@ -72,9 +72,9 @@ class Job extends Model
     }
 
     // Job → Screening Questions (1:M)
-    public function jobQuestions(): HasMany
+    public function jobQuestion(): HasMany
     {
-        return $this->hasMany(JobQuestion::class, 'job_id');
+        return $this->hasMany(JobQuestion::class, 'job_id')->orderBy('sort_order');
     }
 
 

@@ -13,18 +13,23 @@ use App\Models\Company;
 use App\Models\User;
 use App\Services\Jobs\EmployerJobService;
 use App\Enums\JobStatus;
+use App\Models\Job;
+use App\Services\Jobs\JobQuestionService;
 
 class CompanyJobController extends Controller
 {
     protected EmployerJobService $jobService;
     protected CompanyService $companyService;
+    protected JobQuestionService $jobQuestionService;
 
     public function __construct(
         EmployerJobService $jobService,
-        CompanyService $companyService
+        CompanyService $companyService,
+        JobQuestionService $jobQuestionService
     ) {
         $this->jobService = $jobService;
         $this->companyService = $companyService;
+        $this->jobQuestionService = $jobQuestionService;
     }
 
     public function index(PublicJobIndexRequest $request)
@@ -55,10 +60,20 @@ class CompanyJobController extends Controller
             'Your company must be approved before posting jobs.'
         );
 
+        $validated = $request->validated();
+
+        $questions = $validated['job_questions'] ?? [];
+
+        unset($validated['job_questions']);
+
         $job = $this->jobService->createJob(
             $company,
-            $request->validated()
+            $validated
         );
+
+        $this->jobQuestionService->sync($job, $questions);
+
+        $job->load('jobQuestion');
 
         return response()->json([
             'success' => true,
@@ -87,7 +102,24 @@ class CompanyJobController extends Controller
     {
         $company = $this->getEmployerCompany($request->user());
 
-        $job = $this->jobService->updateJob($company, $jobId, $request->validated());
+        $validated = $request->validated();
+
+        $hasQuestions = array_key_exists(
+            'job_questions',
+            $validated
+        );
+
+        $questions = $validated['job_questions'] ?? [];
+
+        unset($validated['job_questions']);
+
+        $job = $this->jobService->updateJob($company, $jobId, $validated);
+
+        if ($hasQuestions) {
+            $this->jobQuestionService->sync($job, $questions);
+        }
+
+        $job->load('jobQuestion');
 
         return response()->json([
             'success' => true,
