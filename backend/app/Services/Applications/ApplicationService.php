@@ -7,6 +7,8 @@ use App\Models\Company;
 use App\Models\User;
 use App\Repositories\Contracts\ApplicationRepositoryInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use App\Models\Job;
+use Illuminate\Validation\ValidationException;
 
 class ApplicationService
 {
@@ -28,6 +30,21 @@ class ApplicationService
             $perPage,
             $status,
             $search
+        );
+    }
+
+    /**
+     * Get one application belonging to a Job Seeker.
+     */
+    public function getMyApplicationDetail(
+        User $jobSeeker,
+        int $applicationId
+    ): Application {
+        return $this->applicationRepository->findForJobSeeker(
+            $jobSeeker,
+            $applicationId
+        ) ?? throw new \Illuminate\Database\Eloquent\ModelNotFoundException(
+            'Application not found.'
         );
     }
 
@@ -62,11 +79,65 @@ class ApplicationService
 
 
     /**
-     * Create a new application.
+     * Create an application with validated answers.
      */
     public function submitApplication(array $data): Application
     {
-        return $this->applicationRepository->create($data);
+        $job = Job::with('jobQuestions')->findOrFail($data['job_id']);
+
+        $answers = $data['answers'] ?? [];
+
+        // Get all question IDs belonging to this job.
+        $jobQuestionIds = $job->jobQuestions
+            ->pluck('id')
+            ->map(fn($id) => (int) $id)
+            ->all();
+
+        // Get submitted question IDs.
+        $submittedQuestionIds = array_map(
+            fn($answer) => (int) $answer['job_question_id'],
+            $answers
+        );
+
+        // Check whether submitted questions belong to this job.
+        $invalidQuestionIds = array_diff(
+            $submittedQuestionIds,
+            $jobQuestionIds
+        );
+
+        if (!empty($invalidQuestionIds)) {
+            throw ValidationException::withMessages([
+                'answers' => 'Some questions do not belong to this job.',
+            ]);
+        }
+
+        // Get all required question IDs.
+        $requiredQuestionIds = $job->jobQuestions
+            ->where('is_required', true)
+            ->pluck('id')
+            ->map(fn($id) => (int) $id)
+            ->all();
+
+        // Check whether all required questions are answered.
+        $missingQuestionIds = array_diff(
+            $requiredQuestionIds,
+            $submittedQuestionIds
+        );
+
+        if (!empty($missingQuestionIds)) {
+            throw ValidationException::withMessages([
+                'answers' => 'Please answer all required questions.',
+            ]);
+        }
+
+        // Remove answers from application data.
+        unset($data['answers']);
+
+        // Save application and answers together.
+        return $this->applicationRepository->createWithAnswers(
+            $data,
+            $answers
+        );
     }
 
     /**
