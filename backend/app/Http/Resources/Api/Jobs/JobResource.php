@@ -2,7 +2,7 @@
 
 namespace App\Http\Resources\Api\Jobs;
 
-use App\Http\Resources\Api\Jobs\JobQuestionResource;
+use App\Models\JobQuestion;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -31,8 +31,8 @@ class JobResource extends JsonResource
                 ]
                 : null,
 
-            'job_questions' => JobQuestionResource::collection(
-                $this->whenLoaded('jobQuestion')
+            'application_questions' => JobQuestion::collection(
+                $this->whenLoaded('applicationQuestions')
             ),
 
             'title' => $this->title,

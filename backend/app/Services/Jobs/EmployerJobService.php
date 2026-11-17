@@ -123,7 +123,23 @@ class EmployerJobService
 
         return $this->jobRepository->update($job, $data);
     }
+    //HWM add 
+    public function closeJob(
+        Company $company,
+        int $jobId
+    ): Job {
+        $job = $this->getJob($company, $jobId);
 
+        if ($job->status !== JobStatus::Published) {
+            throw ValidationException::withMessages([
+                'job' => ['Only published jobs can be closed.'],
+            ]);
+        }
+
+        return $this->jobRepository->update($job, [
+            'status' => JobStatus::Closed->value,
+        ]);
+    }
     public function deleteJob(
         Company $company,
         int $jobId

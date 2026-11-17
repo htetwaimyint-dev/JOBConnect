@@ -16,11 +16,12 @@ class Application extends Model
     protected $fillable = [
         'job_id',
         'job_seeker_id',
+        'applicant_name',
+        'applicant_phone',
         'resume_id',
         'status',
         'applied_at',
     ];
-
     protected function casts(): array
     {
         return [

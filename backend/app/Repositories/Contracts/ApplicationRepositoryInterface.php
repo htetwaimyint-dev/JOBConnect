@@ -29,10 +29,18 @@ interface ApplicationRepositoryInterface
     ): LengthAwarePaginator;
 
 
-    public function create(array $data): Application;
+    public function createWithAnswers(
+        array $applicationData,
+        array $answers
+    ): Application;
 
     public function findForCompany(
         Company $company,
+        int $applicationId
+    ): ?Application;
+
+    public function findForJobSeeker(
+        User $jobSeeker,
         int $applicationId
     ): ?Application;
 

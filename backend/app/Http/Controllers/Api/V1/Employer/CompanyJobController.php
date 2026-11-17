@@ -127,7 +127,19 @@ class CompanyJobController extends Controller
             'data' => new JobResource($job),
         ]);
     }
+    //HWM add 
+    public function close(Request $request, int $jobId)
+    {
+        $company = $this->getEmployerCompany($request->user());
 
+        $job = $this->jobService->closeJob($company, $jobId);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Job closed successfully.',
+            'data' => new JobResource($job),
+        ]);
+    }
 
     public function destroy(Request $request, int $jobId)
     {
