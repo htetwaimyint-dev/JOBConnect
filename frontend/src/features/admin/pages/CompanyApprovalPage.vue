@@ -8,6 +8,7 @@ import CompanyDetailsModal from "../components/company/CompanyDetailsModal.vue";
 import CompanyApprovalModal from "../components/company/CompanyApprovalModal.vue";
 
 import companyApprovalRepository from "../repositories/companyApprovalRepository";
+import { formatDate } from "@/utils/formatDate.ts";
 
 import type {
   Company,
@@ -67,6 +68,7 @@ const fetchCompanies = async (page = 1) => {
       status: activeFilter.value,
       search: searchQuery.value.trim(),
       page,
+      per_page: perPage.value,
     });
 
     // Ignore outdated responses
@@ -111,12 +113,18 @@ const changeFilter = (status: CompanyStatusFilter) => {
 };
 
 // Pagination
+const perPage = ref(5);
 const goToPage = (page: number) => {
   if (page < 1 || page > lastPage.value || loading.value) return;
 
   fetchCompanies(page);
 };
 
+const changePerPage = (value: number) => {
+  perPage.value = value;
+  currentPage.value = 1;
+  fetchCompanies(1);
+};
 // Refresh
 const refreshCompanies = () => {
   if (loading.value) return;
@@ -154,21 +162,6 @@ const statusDotClass = (status: CompanyVerificationStatus) => {
   };
 
   return classes[status];
-};
-
-// Date Formatter
-const formatDate = (date: string | null) => {
-  if (!date) return "—";
-
-  const parsedDate = new Date(date);
-
-  if (Number.isNaN(parsedDate.getTime())) return "—";
-
-  return parsedDate.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
 };
 
 // Company Details
@@ -376,10 +369,12 @@ onUnmounted(() => {
       :current-page="currentPage"
       :last-page="lastPage"
       :total-companies="totalCompanies"
+      :per-page="perPage"
       :status-class="statusClass"
       :status-dot-class="statusDotClass"
       :status-label="statusLabel"
       :format-date="formatDate"
+      @update:per-page="changePerPage"
       @change-filter="changeFilter"
       @go-to-page="goToPage"
       @open-details="openDetails"

@@ -98,6 +98,12 @@ class User extends Authenticatable
         return $this->hasMany(AiAnalysis::class, 'user_id');
     }
 
+    // User → AI Analyses requested by this user (1:M)
+    public function requestedAiAnalyses(): HasMany
+    {
+        return $this->hasMany(AiAnalysis::class, 'requested_by');
+    }
+
     // User → AI Recommendations (1:M)
     public function aiRecommendations(): HasMany
     {

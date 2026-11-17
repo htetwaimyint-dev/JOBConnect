@@ -57,7 +57,7 @@ class JobResource extends JsonResource
 
             'deadline' => $this->deadline?->format('Y-m-d'),
 
-            'status' => $this->status,
+            'status' => $this->status?->value,
 
             'approved_by' => $this->approved_by,
 

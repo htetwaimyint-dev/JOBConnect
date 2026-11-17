@@ -7,6 +7,7 @@ use App\Models\Job;
 use App\Repositories\Contracts\JobRepositoryInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
+use App\Enums\JobStatus;
 
 class JobRepository implements JobRepositoryInterface
 {
@@ -21,6 +22,7 @@ class JobRepository implements JobRepositoryInterface
         array $params = [],
         int $perPage = 10
     ): LengthAwarePaginator {
+        $perPage = $params['page'] ?? 10;
         return $company->jobs()
             ->with('category')
 
@@ -44,7 +46,10 @@ class JobRepository implements JobRepositoryInterface
             })
 
             ->when($params['location'] ?? null, function ($query, $location) {
-                $query->where('location', 'like', "%{$location}%");
+                $query->where(function ($q) use ($location) {
+                    $q->where('city', 'like', "%{$location}%")
+                        ->orWhere('country', 'like', "%{$location}%");
+                });
             })
 
             ->latest()
@@ -101,7 +106,7 @@ class JobRepository implements JobRepositoryInterface
             'company:id,name,logo,city',
             'category:id,name',
         ])
-            ->where('status', 'pending')
+            ->where('status', JobStatus::Pending->value)
             ->latest()
             ->paginate($perPage);
     }
@@ -129,7 +134,7 @@ class JobRepository implements JobRepositoryInterface
             'company:id,name,logo,verification_status',
             'category:id,name,logo',
         ])
-            ->where('status', 'published')
+            ->where('status', JobStatus::Published->value)
             ->whereHas('company', function ($query) {
                 $query->where(
                     'verification_status',
@@ -141,7 +146,7 @@ class JobRepository implements JobRepositoryInterface
 
                 $query->where(function ($q) use ($search) {
                     $q->where('title', 'like', "%{$search}%")
-                        ->orWhere('description', 'like', "%{$search}%")
+                        ->orWhere('description_plain_text', 'like', "%{$search}%")
                         ->orWhere('city', 'like', "%{$search}%")
                         ->orWhere('country', 'like', "%{$search}%")
                         ->orWhereHas('company', function ($companyQuery) use ($search) {
@@ -196,7 +201,7 @@ class JobRepository implements JobRepositoryInterface
             'company:id,name,logo,tagline,description,website,industry,city,verification_status',
             'category:id,name,logo',
         ])
-            ->where('status', 'published')
+            ->where('status', JobStatus::Published->value)
             ->whereHas('company', function ($query) {
                 $query->where(
                     'verification_status',

@@ -28,17 +28,40 @@ export function useJobs() {
     });
   }
 
-  // Get job details
-  function getJobById(id: number) {
+  function getJobsByCompany(params: MaybeRefOrGetter<JobListParams> = {}) {
+    const currentParams = computed(() => ({
+      page: 1,
+      ...toValue(params),
+    }));
+
     return useQuery({
-      queryKey: jobKeys.detail(id),
+      queryKey: computed(() => jobKeys.list(currentParams.value)),
 
       queryFn: async () => {
-        const response = await jobRepository.getJobById(id);
+        const response = await jobRepository.getJobsByCompany(
+          currentParams.value,
+        );
+
         return response.data;
       },
+    });
+  }
 
-      enabled: id > 0,
+  // Get job details
+  function getJobById(id: MaybeRefOrGetter<number | string>) {
+    // 1. Always unwrap the reactive value cleanly first
+    const jobId = computed(() => toValue(id));
+
+    return useQuery({
+      queryKey: computed(() => jobKeys.detail(jobId.value)),
+
+      queryFn: async () => {
+        const response = await jobRepository.getJobById(jobId.value);
+        return response.data.data;
+      },
+      enabled: computed(
+        () => Boolean(jobId.value) && jobId.value !== "undefined",
+      ),
     });
   }
 
@@ -57,26 +80,22 @@ export function useJobs() {
   });
 
   // Update employer job
-  function updateJob() {
-    const queryClient = useQueryClient();
+  const updateJob = useMutation({
+    mutationFn: async ({ id, data }: { id: number; data: JobFormData }) => {
+      const response = await jobRepository.updateJob(id, data);
+      return response.data;
+    },
 
-    return useMutation({
-      mutationFn: async ({ id, data }: { id: number; data: JobFormData }) => {
-        const response = await jobRepository.updateJob(id, data);
-        return response.data;
-      },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: jobKeys.lists(),
+      });
 
-      onSuccess: (_, variables) => {
-        queryClient.invalidateQueries({
-          queryKey: jobKeys.lists(),
-        });
-
-        queryClient.invalidateQueries({
-          queryKey: jobKeys.detail(variables.id),
-        });
-      },
-    });
-  }
+      queryClient.invalidateQueries({
+        queryKey: jobKeys.detail(variables.id),
+      });
+    },
+  });
 
   // Delete employer job
   function deleteJob() {
@@ -98,6 +117,7 @@ export function useJobs() {
 
   return {
     getJobs,
+    getJobsByCompany,
     getJobById,
     createJob,
     updateJob,

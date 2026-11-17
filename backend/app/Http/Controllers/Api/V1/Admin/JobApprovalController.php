@@ -8,7 +8,7 @@ use App\Http\Resources\Api\Jobs\JobResource;
 use App\Models\Job;
 use App\Services\Jobs\AdminJobService;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
+use App\Enums\JobStatus;
 
 class JobApprovalController extends Controller
 {
@@ -48,7 +48,7 @@ class JobApprovalController extends Controller
     }
 
     /**
-     * Approve or reject a job.
+     * Approve or reject a job .
      */
     public function update(
         JobApprovalRequest $request,
@@ -64,7 +64,7 @@ class JobApprovalController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => $updatedJob->status === 'published'
+            'message' => $updatedJob->status === JobStatus::Published
                 ? 'Job approved successfully.'
                 : 'Job rejected successfully.',
             'data' => new JobResource($updatedJob),

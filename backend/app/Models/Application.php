@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Enums\ApplicationStatus;
 
 class Application extends Model
 {
@@ -16,7 +17,6 @@ class Application extends Model
         'job_id',
         'job_seeker_id',
         'resume_id',
-        'cover_letter',
         'status',
         'applied_at',
     ];
@@ -25,6 +25,7 @@ class Application extends Model
     {
         return [
             'applied_at' => 'datetime',
+            'status' => ApplicationStatus::class,
         ];
     }
 
@@ -56,5 +57,17 @@ class Application extends Model
     public function statusHistories(): HasMany
     {
         return $this->hasMany(ApplicationStatusHistory::class, 'application_id');
+    }
+
+    // Application has many Answers
+    public function answers(): HasMany
+    {
+        return $this->hasMany(ApplicationAnswer::class, 'application_id');
+    }
+
+    // Application has many AI Analyses
+    public function aiAnalyses(): HasMany
+    {
+        return $this->hasMany(AiAnalysis::class, 'application_id');
     }
 }

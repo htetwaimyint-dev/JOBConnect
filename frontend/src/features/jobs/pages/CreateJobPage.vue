@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from "vue";
-import { useRouter } from "vue-router";
+import { useRouter, useRoute } from "vue-router";
 import axios from "axios";
 import type {
+    Job,
     JobFormData,
     JobFormField,
     SubmissionStatus,
@@ -15,11 +16,29 @@ import JobLocationSection from "../components/JobLocationSection.vue";
 import JobSalarySection from "../components/JobSalarySection.vue";
 import JobDescriptionSection from "../components/JobDescriptionSection.vue";
 import JobFormActions from "../components/JobFormActions.vue";
-import JobPreviewModal from "../components/JobPreviewModal.vue";
 import { useJobCategories } from "../composables/useJobCategories.ts";
+import JobPreviewModal from "../components/JobPreviewModal.vue";
 
 const router = useRouter();
+const route = useRoute();
 
+const isEditMode = computed(() => Boolean(route.params.id));
+
+const jobId = computed(() =>
+    isEditMode.value ? Number(route.params.id) : null,
+);
+
+const pageTitle = computed(() =>
+    isEditMode.value ? "Edit Job" : "Create Job",
+);
+
+const { createJob, getJobById, updateJob } = useJobs();
+
+const {
+    data: existingJob,
+    isLoading: jobLoading,
+    isError: jobLoadingError,
+} = getJobById(computed(() => jobId.value?.toString() ?? ""));
 // ----------------------------------------
 // Form state
 // ----------------------------------------
@@ -46,6 +65,43 @@ const form = reactive<JobFormData>({
 
     submission_status: "pending",
 });
+
+function populateForm(job: Job) {
+    Object.assign(form, {
+        title: job.title,
+        category_id: job.category?.id ?? null,
+        deadline: job.deadline ?? "",
+        employment_type: job.employment_type,
+        vacancies: job.vacancies,
+        gender: job.gender,
+        workplace_type: job.workplace_type,
+
+        country: job.country ?? "",
+        city: job.city ?? "",
+
+        salary_type: job.salary_type,
+        salary_min: job.salary_min ?? undefined,
+        salary_max: job.salary_max ?? undefined,
+
+        description: job.description,
+        requirements: job.requirements,
+        responsibilities: job.responsibilities ?? "",
+
+        submission_status: (job.status === "draft"
+            ? "draft"
+            : "pending") as SubmissionStatus,
+    });
+}
+
+watch(
+    existingJob,
+    (job) => {
+        if (job) {
+            populateForm(job);
+        }
+    },
+    { immediate: true },
+);
 
 // ----------------------------------------
 // Backend validation errors
@@ -122,9 +178,9 @@ console.log(categoryOptions);
 // Create job mutation
 // ----------------------------------------
 
-const { createJob } = useJobs();
-
-const loading = computed(() => createJob.isPending.value);
+const loading = computed(
+    () => createJob.isPending.value || updateJob.isPending.value,
+);
 
 // ----------------------------------------
 // Submit job
@@ -141,15 +197,24 @@ async function submitJob(status: SubmissionStatus) {
     }
 
     try {
-        await createJob.mutateAsync(form);
+        if (isEditMode.value && jobId.value) {
+            await updateJob.mutateAsync({
+                id: jobId.value,
+                data: { ...form },
+            });
+        } else {
+            await createJob.mutateAsync({ ...form });
+        }
 
-        //router.push({ name: "employer-jobs" });
+        router.push({ name: "job-detail" });
     } catch (error) {
         if (axios.isAxiosError(error)) {
             if (error.response?.status === 422) {
                 setErrors(error.response.data.errors ?? {});
+
                 generalError.message =
                     "One or more required fields are missing or invalid";
+
                 return;
             }
 
@@ -160,7 +225,7 @@ async function submitJob(status: SubmissionStatus) {
             return;
         }
 
-        generalError.message = "Unable to create the job. Please try again.";
+        generalError.message = "Unable to save the job. Please try again.";
 
         console.error(error);
     }
@@ -169,7 +234,6 @@ async function submitJob(status: SubmissionStatus) {
 // ----------------------------------------
 // Preview
 // ----------------------------------------
-
 const showPreview = ref(false);
 
 const previewCategoryName = computed(() => {
@@ -193,8 +257,35 @@ function closePreview() {
     <div
         class="mx-auto max-w-7xl px-6 space-y-6 min-h-screen bg-gray-50/60 pb-20 font-sans text-slate-900"
     >
+        <div
+            v-if="isEditMode && jobLoading"
+            class="flex min-h-96 items-center justify-center"
+        >
+            Loading job information...
+        </div>
+
+        <div
+            v-else-if="isEditMode && (jobLoadingError || !existingJob)"
+            class="flex min-h-96 flex-col items-center justify-center gap-3"
+        >
+            <h2 class="text-xl font-bold">Job Not Found</h2>
+
+            <p class="text-sm text-gray-500">
+                This job may have been removed or you may not have permission to
+                edit it.
+            </p>
+
+            <button
+                type="button"
+                class="rounded-lg bg-gray-900 px-5 py-2.5 text-white"
+                @click="router.back()"
+            >
+                Go Back
+            </button>
+        </div>
+
         <!-- Job form -->
-        <form @submit.prevent="submitJob('pending')">
+        <form v-else @submit.prevent="submitJob('pending')">
             <div class="grid grid-cols-1 items-start gap-6 lg:grid-cols-12">
                 <!-- Main form sections -->
                 <div class="space-y-6 lg:col-span-9">
@@ -216,6 +307,7 @@ function closePreview() {
                     <JobFormActions
                         :loading="loading"
                         :error-message="generalError.message"
+                        :page-title="pageTitle"
                         @preview="openPreview"
                         @save-draft="submitJob('draft')"
                         @submit="submitJob('pending')"
@@ -224,11 +316,20 @@ function closePreview() {
             </div>
         </form>
 
-        <JobPreviewModal
-            v-if="showPreview"
-            :job="form"
-            :category-name="previewCategoryName"
-            @close="closePreview"
-        />
+        <Transition
+            enter-active-class="transform transition ease-out duration-300"
+            enter-from-class="translate-y-full opacity-0"
+            enter-to-class="translate-y-0 opacity-100"
+            leave-active-class="transform transition ease-in duration-200"
+            leave-from-class="translate-y-0 opacity-100"
+            leave-to-class="translate-y-full opacity-0"
+        >
+            <JobPreviewModal
+                v-if="showPreview"
+                :job="form"
+                :category-name="previewCategoryName"
+                @close="closePreview"
+            />
+        </Transition>
     </div>
 </template>

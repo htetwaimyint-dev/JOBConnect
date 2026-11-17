@@ -19,11 +19,8 @@ use App\Repositories\Eloquent\SkillRepository;
 use App\Repositories\Contracts\JobRepositoryInterface;
 use App\Repositories\Eloquent\JobRepository;
 
-use App\Repositories\Contracts\CategoryRepositoryInterface;
-use App\Repositories\Eloquent\CategoryRepository;
-
-use App\Repositories\Contracts\UserRepositoryInterface;
-use App\Repositories\Eloquent\UserRepository;
+use App\Repositories\Contracts\ApplicationRepositoryInterface;
+use App\Repositories\Eloquent\ApplicationRepository;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -55,10 +52,9 @@ class AppServiceProvider extends ServiceProvider
             CategoryRepositoryInterface::class,
             CategoryRepository::class
         );
-
-         $this->app->bind(
-            UserRepositoryInterface::class,
-            UserRepository::class
+        $this->app->bind(
+            ApplicationRepositoryInterface::class,
+            ApplicationRepository::class
         );
     }
 

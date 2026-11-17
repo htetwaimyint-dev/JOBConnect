@@ -6,6 +6,7 @@ import type {
     JobListParams,
     JobListResponse,
 } from "../types/job.types";
+import type { MaybeRefOrGetter } from "vue";
 
 const jobRepository = {
     createJob(data: JobFormData) {
@@ -18,7 +19,13 @@ const jobRepository = {
         });
     },
 
-    getJobById(id: number) {
+    getJobsByCompany(params?: JobListParams) {
+        return api.get<JobListResponse>("/employer/jobs", {
+            params,
+        });
+    },
+
+    getJobById(id: MaybeRefOrGetter<number | string>) {
         return api.get<{ data: Job }>(`/jobs/${id}`);
     },
 
