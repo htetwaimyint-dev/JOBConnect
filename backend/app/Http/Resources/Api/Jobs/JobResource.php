@@ -33,7 +33,7 @@ class JobResource extends JsonResource
                 : null,
 
             'job_questions' => JobQuestionResource::collection(
-                $this->whenLoaded('applicationQuestions')
+                $this->whenLoaded('jobQuestion')
             ),
 
             'title' => $this->title,
