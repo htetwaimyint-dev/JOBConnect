@@ -6,6 +6,7 @@ import type { MaybeRefOrGetter } from "vue";
 import { jobKeys } from "./jobKeys";
 
 import type { JobFormData, JobListParams } from "../types/job.types";
+import { useAuthStore } from "@/stores/auth.store";
 
 export function useJobs() {
     const queryClient = useQueryClient();
@@ -51,19 +52,27 @@ export function useJobs() {
 
     // Get job details
     function getJobById(id: MaybeRefOrGetter<number | string>) {
-        // 1. Always unwrap the reactive value cleanly first
         const jobId = computed(() => toValue(id));
+        const authStore = useAuthStore();
+
+        const isEmployer = computed(() => authStore.user?.role === "employer");
 
         return useQuery({
-            queryKey: computed(() => jobKeys.detail(jobId.value)),
+            queryKey: computed(() => [
+                "jobs",
+                isEmployer.value ? "employer" : "public",
+                jobId.value,
+            ]),
 
             queryFn: async () => {
-                const response = await jobRepository.getJobById(jobId.value);
+                const response = isEmployer.value
+                    ? await jobRepository.getEmployerJobById(jobId.value)
+                    : await jobRepository.getPublicJobById(jobId.value);
+
                 return response.data.data;
             },
-            enabled: computed(
-                () => Boolean(jobId.value) && jobId.value !== "undefined",
-            ),
+
+            enabled: computed(() => Boolean(jobId.value)),
         });
     }
 

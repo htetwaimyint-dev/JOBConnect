@@ -2,12 +2,7 @@
 import { computed, reactive, ref, watch } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import axios from "axios";
-import type {
-    Job,
-    JobFormData,
-    JobFormField,
-    SubmissionStatus,
-} from "../types/job.types";
+import type { JobFormField, SubmissionStatus } from "../types/job.types";
 
 import { useJobs } from "../composables/useJobs";
 
@@ -16,8 +11,10 @@ import JobLocationSection from "../components/JobLocationSection.vue";
 import JobSalarySection from "../components/JobSalarySection.vue";
 import JobDescriptionSection from "../components/JobDescriptionSection.vue";
 import JobFormActions from "../components/JobFormActions.vue";
+import JobQuestionSection from "../components/JobQuestionSection.vue";
 import { useJobCategories } from "../composables/useJobCategories.ts";
 import JobPreviewModal from "../components/JobPreviewModal.vue";
+import { form, populateForm } from "@/utils/jobs.utils.ts";
 
 const router = useRouter();
 const route = useRoute();
@@ -43,66 +40,15 @@ const {
 // Form state
 // ----------------------------------------
 
-const form = reactive<JobFormData>({
-    title: "",
-    category_id: null,
-    deadline: "",
-    employment_type: "full_time",
-    vacancies: 1,
-    gender: "any",
-    workplace_type: "onsite",
-
-    country: "",
-    city: "",
-
-    salary_type: "fixed",
-    salary_min: undefined,
-    salary_max: undefined,
-
-    description: "",
-    requirements: "",
-    responsibilities: "",
-
-    submission_status: "pending",
-});
-
-function populateForm(job: Job) {
-    Object.assign(form, {
-        title: job.title,
-        category_id: job.category?.id ?? null,
-        deadline: job.deadline ?? "",
-        employment_type: job.employment_type,
-        vacancies: job.vacancies,
-        gender: job.gender,
-        workplace_type: job.workplace_type,
-
-        country: job.country ?? "",
-        city: job.city ?? "",
-
-        salary_type: job.salary_type,
-        salary_min: job.salary_min ?? undefined,
-        salary_max: job.salary_max ?? undefined,
-
-        description: job.description,
-        requirements: job.requirements,
-        responsibilities: job.responsibilities ?? "",
-
-        submission_status: (job.status === "draft"
-            ? "draft"
-            : "pending") as SubmissionStatus,
-    });
-}
-
 watch(
     existingJob,
     (job) => {
-        if (job) {
+        if (job && isEditMode.value) {
             populateForm(job);
         }
     },
     { immediate: true },
 );
-
 // ----------------------------------------
 // Backend validation errors
 // ----------------------------------------
@@ -300,6 +246,8 @@ function closePreview() {
                     <JobSalarySection v-model="form" :errors="errors" />
 
                     <JobDescriptionSection v-model="form" :errors="errors" />
+
+                    <JobQuestionSection v-model="form.job_questions" />
                 </div>
 
                 <!-- Form actions -->
