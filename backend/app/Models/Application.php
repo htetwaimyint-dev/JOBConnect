@@ -17,7 +17,6 @@ class Application extends Model
         'job_id',
         'job_seeker_id',
         'resume_id',
-        'cover_letter',
         'status',
         'applied_at',
     ];
@@ -58,5 +57,17 @@ class Application extends Model
     public function statusHistories(): HasMany
     {
         return $this->hasMany(ApplicationStatusHistory::class, 'application_id');
+    }
+
+    // Application has many Answers
+    public function answers(): HasMany
+    {
+        return $this->hasMany(ApplicationAnswer::class, 'application_id');
+    }
+
+    // Application has many AI Analyses
+    public function aiAnalyses(): HasMany
+    {
+        return $this->hasMany(AiAnalysis::class, 'application_id');
     }
 }

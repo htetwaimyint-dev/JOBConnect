@@ -71,6 +71,13 @@ class Job extends Model
         return $this->hasMany(Application::class, 'job_id');
     }
 
+    // Job → Screening Questions (1:M)
+    public function jobQuestions(): HasMany
+    {
+        return $this->hasMany(JobQuestion::class, 'job_id');
+    }
+
+
     // Job → Job Offers (1:M)
     public function jobOffers(): HasMany
     {

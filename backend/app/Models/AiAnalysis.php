@@ -14,6 +14,8 @@ class AiAnalysis extends Model
     protected $fillable = [
         'user_id',
         'job_id',
+        'application_id',
+        'requested_by',
         'analysis_type',
         'input_data',
         'result',
@@ -38,6 +40,18 @@ class AiAnalysis extends Model
     public function job(): BelongsTo
     {
         return $this->belongsTo(Job::class, 'job_id');
+    }
+
+    // AI Analysis belongs to one Application
+    public function application(): BelongsTo
+    {
+        return $this->belongsTo(Application::class, 'application_id');
+    }
+
+    // AI Analysis was requested by one Employer
+    public function requestedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'requested_by');
     }
 
     public function recommendations(): HasMany
