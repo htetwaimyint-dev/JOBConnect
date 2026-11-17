@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1\Employer;
 
+use App\Models\Company;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Employer\StoreCompanyRequest;
 use App\Http\Requests\Api\Employer\UpdateCompanyRequest;
@@ -18,7 +19,7 @@ class CompanyProfileController extends Controller
     {
         $this->companyService = $companyService;
     }
-
+    
     /**
      * Get the authenticated employer's company profile.
      */

@@ -3,10 +3,12 @@
 use App\Http\Controllers\Api\V1\Employer\CompanyProfileController;
 use Illuminate\Support\Facades\Route;
 
+
+
 Route::middleware(['auth:sanctum', 'employer'])
     ->prefix('employer')
     ->group(function () {
-
+    
         Route::get('/profile', [
             CompanyProfileController::class,
             'show',
