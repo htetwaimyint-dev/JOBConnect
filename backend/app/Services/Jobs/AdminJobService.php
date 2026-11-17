@@ -2,6 +2,7 @@
 
 namespace App\Services\Jobs;
 
+use App\Enums\JobStatus;
 use App\Models\Job;
 use App\Models\User;
 use App\Repositories\Contracts\JobRepositoryInterface;
@@ -40,7 +41,7 @@ class AdminJobService
         User $admin,
         array $data
     ): Job {
-        if ($job->status !== 'pending') {
+        if ($job->status !== JobStatus::Pending) {
             throw ValidationException::withMessages([
                 'status' => [
                     'Only pending jobs can be approved or rejected.',
@@ -48,7 +49,7 @@ class AdminJobService
             ]);
         }
 
-        if ($data['status'] === 'published') {
+        if ($data['status'] === JobStatus::Published->value) {
             $data['approved_by'] = $admin->id;
             $data['approved_at'] = now();
             $data['rejection_reason'] = null;

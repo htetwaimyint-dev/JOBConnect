@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Enums\ApplicationStatus;
 
 class Application extends Model
 {
@@ -25,6 +26,7 @@ class Application extends Model
     {
         return [
             'applied_at' => 'datetime',
+            'status' => ApplicationStatus::class,
         ];
     }
 

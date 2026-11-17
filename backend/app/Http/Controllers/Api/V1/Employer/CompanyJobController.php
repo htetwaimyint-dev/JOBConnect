@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use App\Models\Company;
 use App\Models\User;
 use App\Services\Jobs\EmployerJobService;
+use App\Enums\JobStatus;
 
 class CompanyJobController extends Controller
 {
@@ -47,11 +48,21 @@ class CompanyJobController extends Controller
     public function store(StoreJobRequest $request)
     {
         $company = $this->getEmployerCompany($request->user());
+        //admin verify to job post
+        abort_unless(
+            $company->verification_status === 'verified',
+            403,
+            'Your company must be approved before posting jobs.'
+        );
 
-        $job = $this->jobService->createJob($company, $request->validated());
+        $job = $this->jobService->createJob(
+            $company,
+            $request->validated()
+        );
+
         return response()->json([
             'success' => true,
-            'message' => $job->status === 'draft'
+            'message' => $job->status === JobStatus::Draft
                 ? 'Job saved as draft successfully.'
                 : 'Job submitted for admin approval successfully.',
             'data' => new JobResource($job),

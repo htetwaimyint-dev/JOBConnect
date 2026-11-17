@@ -16,11 +16,11 @@ const route = useRoute();
 const menuItems = [
   {
     name: "Dashboard",
-    path: "/employee/dashboard",
+    path: "/employer/dashboard",
     icon: LayoutDashboard,
   },
   {
-    name: "Job Create Post",
+    name: "Job Post",
     path: "/employee/jobs/create",
     icon: BriefcaseBusiness,
   },
@@ -30,8 +30,8 @@ const menuItems = [
     icon: Users,
   },
   {
-    name: "My Account",
-    path: "/employee/account",
+    name: "Company",
+    path: "/employer/profile",
     icon: UserRound,
   },
   {

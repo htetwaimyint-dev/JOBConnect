@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests\Api\Jobs;
 
+use App\Enums\JobStatus;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateJobRequest extends FormRequest
 {
@@ -51,8 +53,17 @@ class UpdateJobRequest extends FormRequest
                 'in:onsite,remote,hybrid',
             ],
 
-            'country' => ['nullable', 'string', 'max:255'],
-            'city' => ['nullable', 'string', 'max:255'],
+            'country' => [
+                'nullable',
+                'string',
+                'max:255',
+            ],
+
+            'city' => [
+                'nullable',
+                'string',
+                'max:255',
+            ],
 
             'salary_min' => [
                 'nullable',
@@ -86,10 +97,16 @@ class UpdateJobRequest extends FormRequest
             'submission_status' => [
                 'sometimes',
                 'required',
-                'in:draft,pending',
+                Rule::in([
+                    JobStatus::Draft->value,
+                    JobStatus::Pending->value,
+                ]),
             ],
 
-            'salary_type' => 'required|in:fixed,negotiable',
+            'salary_type' => [
+                'required',
+                'in:fixed,negotiable',
+            ],
         ];
     }
 
