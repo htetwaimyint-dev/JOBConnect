@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use App\Models\Company;
 use App\Models\User;
 use App\Services\Jobs\EmployerJobService;
+use App\Enums\JobStatus;
 
 class CompanyJobController extends Controller
 {
@@ -61,7 +62,7 @@ class CompanyJobController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => $job->status === 'draft'
+            'message' => $job->status === JobStatus::Draft
                 ? 'Job saved as draft successfully.'
                 : 'Job submitted for admin approval successfully.',
             'data' => new JobResource($job),

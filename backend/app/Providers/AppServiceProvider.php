@@ -21,6 +21,9 @@ use App\Repositories\Contracts\JobRepositoryInterface;
 use App\Repositories\Eloquent\CategoryRepository;
 use App\Repositories\Eloquent\JobRepository;
 
+use App\Repositories\Contracts\ApplicationRepositoryInterface;
+use App\Repositories\Eloquent\ApplicationRepository;
+
 class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
@@ -50,6 +53,10 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(
             CategoryRepositoryInterface::class,
             CategoryRepository::class
+        );
+        $this->app->bind(
+            ApplicationRepositoryInterface::class,
+            ApplicationRepository::class
         );
     }
 
