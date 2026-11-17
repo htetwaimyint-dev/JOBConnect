@@ -20,10 +20,9 @@ use App\Repositories\Contracts\JobRepositoryInterface;
 use App\Repositories\Eloquent\JobRepository;
 
 use App\Repositories\Contracts\ApplicationRepositoryInterface;
-use App\Repositories\Contracts\CategoryRepositoryInterface;
+
 use App\Repositories\Contracts\JobQuestionRepositoryInterface;
 use App\Repositories\Eloquent\ApplicationRepository;
-use App\Repositories\Eloquent\CategoryRepository;
 use App\Repositories\Eloquent\JobQuestionRepository;
 
 use App\Repositories\Contracts\SavedJobRepositoryInterface;
