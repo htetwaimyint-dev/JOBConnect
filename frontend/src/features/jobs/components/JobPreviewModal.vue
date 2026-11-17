@@ -70,21 +70,19 @@ function formatSalary(): string {
 
 <template>
     <div
-        class="fixed inset-0 z-50 flex items-start justify-center bg-black/60 px-3 pt-16 sm:px-5 sm:pt-16"
+        class="fixed inset-0 z-50 flex items-start justify-center bg-black/60 px-3 pt-16 sm:px-0 sm:pt-16"
         @click.self="emit('close')"
         @keydown.esc="emit('close')"
     >
-        <!-- Modal wrapper: anchors the outside close button -->
         <div class="relative flex h-[calc(100dvh-4rem)] w-full flex-col">
-            <!-- Outside Close Button -->
             <button
                 type="button"
-                class="absolute -top-11 right-0 z-20 rounded-full bg-white/20 p-2 text-white transition hover:bg-white/40 focus:outline-none focus:ring-2 focus:ring-white"
+                class="absolute -top-11 right-2 z-20 rounded-full bg-white/20 p-2 text-white transition hover:bg-white/40 focus:outline-none focus:ring-2 focus:ring-white"
                 aria-label="Close preview"
                 @click="emit('close')"
             >
                 <svg
-                    class="h-6 w-6"
+                    class="h-5 w-5"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -107,38 +105,30 @@ function formatSalary(): string {
             >
                 <!-- Preview Content -->
                 <div
-                    class="preview-scroll-area min-h-0 flex-1 overflow-y-auto p-4 sm:p-8"
+                    class="preview-scroll-area min-h-0 flex-1 overflow-y-auto py-8 px-4 sm:px-15"
                 >
                     <div
                         class="grid grid-cols-1 items-start gap-6 lg:grid-cols-12"
                     >
                         <!-- Main Job Details -->
-                        <div
-                            class="space-y-7 rounded-xl border border-gray-100 bg-white p-5 shadow-xs sm:p-8 lg:col-span-8"
-                        >
+                        <div class="space-y-3 shadow-xs lg:col-span-8">
                             <!-- Job Heading & Action Bar -->
                             <div
                                 class="border-b border-gray-100 pb-6 space-y-4"
                             >
                                 <div
-                                    class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+                                    class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-0"
                                 >
                                     <div>
-                                        <span
-                                            class="mb-2 inline-flex rounded-md bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700"
-                                        >
-                                            {{ categoryName || "Job Category" }}
-                                        </span>
-
                                         <h1
                                             id="job-preview-title"
-                                            class="text-2xl font-bold text-gray-900 sm:text-3xl"
+                                            class="font-bold text-gray-900 text-xl"
                                         >
                                             {{ job.title || "Your Job Title" }}
                                         </h1>
                                     </div>
 
-                                    <div
+                                    <!-- <div
                                         class="flex items-center gap-2 shrink-0"
                                     >
                                         <button
@@ -185,7 +175,7 @@ function formatSalary(): string {
                                         >
                                             Apply Now
                                         </button>
-                                    </div>
+                                    </div> -->
                                 </div>
 
                                 <!-- Company & Location Info Line -->

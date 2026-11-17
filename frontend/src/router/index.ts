@@ -1,4 +1,3 @@
-
 import {
     createRouter,
     createWebHistory,
@@ -23,6 +22,16 @@ const routes: RouteRecordRaw[] = [
 const router = createRouter({
     history: createWebHistory(),
     routes,
+
+    scrollBehavior(to, from, savedPosition) {
+        // If the browser's back/forward button was used, keep the saved scroll position
+        if (savedPosition) {
+            return savedPosition;
+        } else {
+            // Always scroll to the top of the page on a new navigation
+            return { top: 0, left: 0 };
+        }
+    },
 });
 
 router.beforeEach(async (to) => {

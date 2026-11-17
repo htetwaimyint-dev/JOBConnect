@@ -1,3 +1,4 @@
+import type { MaybeRefOrGetter } from "vue";
 import type { JobListParams } from "../types/job.types";
 
 export const jobKeys = {
@@ -10,5 +11,6 @@ export const jobKeys = {
 
     details: () => [...jobKeys.all, "detail"] as const,
 
-    detail: (id: number) => [...jobKeys.details(), id] as const,
+    detail: (id: MaybeRefOrGetter<number | string>) =>
+        [...jobKeys.details(), id] as const,
 };

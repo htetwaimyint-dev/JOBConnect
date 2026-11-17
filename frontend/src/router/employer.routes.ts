@@ -3,12 +3,13 @@ import CompanyProfilePage from "@/features/employer/pages/CompanyProfilePage.vue
 import EmployerDashboard from "@/features/employer/pages/EmployerDashboard.vue";
 import EmployerSettingsPage from "@/features/employer/pages/EmployerSettingsPage.vue";
 import ApplicantsPage from "@/features/employer/pages/ApplicantsPage.vue";
-import JobSeekerProfilePage from "@/features/employer/pages/JobSeekerProfilePage.vue";
+import JobPreview from "@/features/jobs/pages/JobPreview.vue";
 import DirectOfferPage from "@/features/employer/pages/DirectOfferPage.vue";
 
 import CreateJobPage from "@/features/jobs/pages/CreateJobPage.vue";
 import EmployerLayout from "@/layouts/EmployerLayout.vue";
 import type { RouteRecordRaw } from "vue-router";
+import JobDetail from "@/features/jobs/pages/JobDetail.vue";
 
 export const employerRoutes: RouteRecordRaw[] = [
     {
@@ -58,6 +59,18 @@ export const employerRoutes: RouteRecordRaw[] = [
                 path: "settings",
                 name: "EmployerSettings",
                 component: EmployerSettingsPage,
+            },
+
+            {
+                path: "/employer/jobs/preview",
+                name: "employer-job-preview",
+                component: JobPreview,
+            },
+
+            {
+                path: "/employer/jobs/:id",
+                name: "job-detail",
+                component: JobDetail,
             },
         ],
     },

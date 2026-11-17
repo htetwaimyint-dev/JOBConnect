@@ -57,6 +57,11 @@ class PublicJobIndexRequest extends FormRequest
                 'string',
                 'max:255',
             ],
+
+            'page' => [
+                'nullable',
+                'integer',
+            ]
         ];
     }
 }

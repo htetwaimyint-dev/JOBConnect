@@ -19,7 +19,6 @@ import JobPreviewModal from "../components/JobPreviewModal.vue";
 import { useJobCategories } from "../composables/useJobCategories.ts";
 
 const router = useRouter();
-
 // ----------------------------------------
 // Form state
 // ----------------------------------------
@@ -169,23 +168,22 @@ async function submitJob(status: SubmissionStatus) {
 // ----------------------------------------
 // Preview
 // ----------------------------------------
-
-const showPreview = ref(false);
-
-const previewCategoryName = computed(() => {
-    return (
-        categoryOptions.value.find(
-            (category) => category.value === form.category_id,
-        )?.label ?? "Uncategorized"
+function previewJob() {
+    const selectedCategory = categoryOptions.value.find(
+        (category) => category.value === form.category_id,
     );
-});
 
-function openPreview() {
-    showPreview.value = true;
-}
+    sessionStorage.setItem(
+        "job-preview",
+        JSON.stringify({
+            job: { ...form },
+            categoryName: selectedCategory?.label ?? "",
+        }),
+    );
 
-function closePreview() {
-    showPreview.value = false;
+    router.push({
+        name: "employer-job-preview",
+    });
 }
 </script>
 
@@ -216,19 +214,12 @@ function closePreview() {
                     <JobFormActions
                         :loading="loading"
                         :error-message="generalError.message"
-                        @preview="openPreview"
+                        @preview="previewJob"
                         @save-draft="submitJob('draft')"
                         @submit="submitJob('pending')"
                     />
                 </aside>
             </div>
         </form>
-
-        <JobPreviewModal
-            v-if="showPreview"
-            :job="form"
-            :category-name="previewCategoryName"
-            @close="closePreview"
-        />
     </div>
 </template>

@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import type { Company, Job } from "../types/company.types";
-import CompanyJobs from "./CompanyJobs.vue";
+import type { Company } from "../types/company.types";
 
 defineProps<{
     company: Company;

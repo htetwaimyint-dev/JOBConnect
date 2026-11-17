@@ -21,6 +21,7 @@ class JobRepository implements JobRepositoryInterface
         array $params = [],
         int $perPage = 10
     ): LengthAwarePaginator {
+        $perPage = $params['page'] ?? 10;
         return $company->jobs()
             ->with('category')
 

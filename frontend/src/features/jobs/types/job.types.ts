@@ -1,4 +1,3 @@
-
 export interface JobCompany {
     id: number;
     name: string;
@@ -46,6 +45,7 @@ export interface Job {
     salary_max: number | null;
 
     vacancies: number;
+    gender: "any" | "male" | "female";
     deadline: string | null;
 
     status: "draft" | "pending" | "published" | "rejected" | "closed";
@@ -72,6 +72,8 @@ export interface JobFormData {
     responsibilities: string;
     submission_status: SubmissionStatus;
 }
+
+export type JobDetailMode = "preview" | "public";
 
 export type JobFormField = keyof JobFormData;
 

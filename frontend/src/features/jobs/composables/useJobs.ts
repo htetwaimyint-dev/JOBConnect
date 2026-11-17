@@ -30,17 +30,40 @@ export function useJobs() {
         });
     }
 
-    // Get job details
-    function getJobById(id: number) {
+    function getJobsByCompany(params: MaybeRefOrGetter<JobListParams> = {}) {
+        const currentParams = computed(() => ({
+            page: 1,
+            ...toValue(params),
+        }));
+
         return useQuery({
-            queryKey: jobKeys.detail(id),
+            queryKey: computed(() => jobKeys.list(currentParams.value)),
 
             queryFn: async () => {
-                const response = await jobRepository.getJobById(id);
+                const response = await jobRepository.getJobsByCompany(
+                    currentParams.value,
+                );
+
                 return response.data;
             },
+        });
+    }
 
-            enabled: id > 0,
+    // Get job details
+    function getJobById(id: MaybeRefOrGetter<number | string>) {
+        // 1. Always unwrap the reactive value cleanly first
+        const jobId = computed(() => toValue(id));
+
+        return useQuery({
+            queryKey: computed(() => jobKeys.detail(jobId.value)),
+
+            queryFn: async () => {
+                const response = await jobRepository.getJobById(jobId.value);
+                return response.data.data;
+            },
+            enabled: computed(
+                () => Boolean(jobId.value) && jobId.value !== "undefined",
+            ),
         });
     }
 
@@ -106,6 +129,7 @@ export function useJobs() {
 
     return {
         getJobs,
+        getJobsByCompany,
         getJobById,
         createJob,
         updateJob,
