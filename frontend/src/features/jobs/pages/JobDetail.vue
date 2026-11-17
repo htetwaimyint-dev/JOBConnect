@@ -21,6 +21,13 @@ function applyForJob() {
         params: { id: jobId.value },
     });
 }
+
+function editJob() {
+    router.push({
+        name: "employer-job-edit",
+        params: { id: job.value?.id },
+    });
+}
 </script>
 
 <template>
@@ -52,7 +59,12 @@ function applyForJob() {
         </div>
 
         <div v-else class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-            <JobDetailContent :job="job" mode="public" @apply="applyForJob" />
+            <JobDetailContent
+                :job="job"
+                mode="public"
+                @apply="applyForJob"
+                @edit="editJob"
+            />
         </div>
     </div>
 </template>
