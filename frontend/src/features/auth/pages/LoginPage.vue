@@ -49,9 +49,8 @@ const handleLogin = async (data: LoginData) => {
 
 <template>
   <div class="relative flex min-h-screen w-full overflow-hidden bg-white">
-    <!-- ========================================== -->
     <!-- LEFT SIDE: Branding (Only visible on Large Screens) -->
-    <!-- ========================================== -->
+
     <div
       class="relative hidden w-1/2 flex-col justify-between bg-slate-900 p-12 lg:flex xl:p-16"
     >
@@ -64,7 +63,7 @@ const handleLogin = async (data: LoginData) => {
         />
         <!-- Gradient Overlay -->
         <div
-          class="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/80 to-transparent"
+          class="absolute inset-0 bg-linear-to-t from-slate-900 via-slate-900/80 to-transparent"
         ></div>
       </div>
 
@@ -92,8 +91,6 @@ const handleLogin = async (data: LoginData) => {
           >JobConnect AI</span
         >
       </div>
-
-      <!-- Features (Sarah ရဲ့ ပုံအစား ထည့်ထားတယ်) -->
       <div class="relative z-10 max-w-md">
         <h2 class="mb-8 text-3xl font-bold leading-tight text-white">
           Find your dream job <br />
@@ -166,9 +163,8 @@ const handleLogin = async (data: LoginData) => {
       </div>
     </div>
 
-    <!-- ========================================== -->
     <!-- RIGHT SIDE: Login Form (Visible on all screens) -->
-    <!-- ========================================== -->
+
     <div
       class="relative flex w-full flex-col justify-center px-6 py-12 lg:w-1/2 lg:px-16 xl:px-24"
     >

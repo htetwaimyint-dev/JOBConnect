@@ -4,6 +4,9 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 
+use App\Repositories\Contracts\AuthRepositoryInterface;
+use App\Repositories\Eloquent\AuthRepository;
+
 use App\Repositories\Contracts\ResumeRepositoryInterface;
 use App\Repositories\Eloquent\ResumeRepository;
 
@@ -29,6 +32,12 @@ class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
+
+        $this->app->bind(
+            AuthRepositoryInterface::class, 
+            AuthRepository::class
+        );
+
         $this->app->bind(
             ResumeRepositoryInterface::class,
             ResumeRepository::class

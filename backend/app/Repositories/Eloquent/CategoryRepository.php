@@ -2,19 +2,21 @@
 
 namespace App\Repositories\Eloquent;
 
-use App\Repositories\Contracts\CategoryRepositoryInterface;
-use Illuminate\Database\Eloquent\Collection;
 use App\Models\Category;
+use App\Repositories\Contracts\CategoryRepositoryInterface;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
 
 class CategoryRepository implements CategoryRepositoryInterface
 {
-    public function all(?string $search = null): Collection
+    public function getAll(?string $search, int $perPage): LengthAwarePaginator
     {
-        return Category::query()
-            ->when($search, function ($query, $search) {
-                $query->where('name', 'like', "%{$search}%");
-            })
-            ->get();
+        $query = Category::query();
+        if ($search) {
+            $query->where('name', 'LIKE', "%{$search}%");
+        }
+        return $query->latest()->paginate($perPage);
     }
 
     public function findById(int $id): ?Category
@@ -22,21 +24,92 @@ class CategoryRepository implements CategoryRepositoryInterface
         return Category::find($id);
     }
 
-    public function createOrUpdate(?Category $category, array $data): Category
+    public function create(array $data): Category
     {
-        if ($category) {
-            $category->update($data);
-            return $category;
-        } else {
-            return Category::create($data);
+        if (isset($data['logo'])) {
+            $data['logo'] = $data['logo']->store('categories', 'public');
         }
+        return Category::create($data);
     }
 
-    public function delete(Category $category): void
+    public function update(Category $category, array $data): Category
     {
-        if ($category->jobs()->exists()) {
-            $category->jobs()->delete();
+        // Logo ဖျက်မလား၊ အသစ်တင်မလား စစ်တယ်
+        if (isset($data['remove_logo']) && $data['remove_logo']) {
+            $this->deleteLogoFile($category->logo);
+            $data['logo'] = null;
         }
-        $category->delete();
+
+        if (isset($data['logo'])) {
+            $this->deleteLogoFile($category->logo);
+            $data['logo'] = $data['logo']->store('categories', 'public');
+        }
+
+        $category->update($data);
+        return $category;
+    }
+
+    public function delete(Category $category): bool
+    {
+        $this->deleteLogoFile($category->logo);
+        return $category->delete();
+    }
+
+    public function bulkDelete(array $ids): array
+    {
+        $categories = Category::whereIn('id', $ids)->withCount('jobs')->get();
+        
+        $deletable = $categories->where('jobs_count', 0);
+        $protected = $categories->where('jobs_count', '>', 0);
+
+        $deletedIds = $deletable->pluck('id')->all();
+        $logoPaths = $deletable->pluck('logo')->filter()->all();
+
+        DB::transaction(function () use ($deletedIds) {
+            if (!empty($deletedIds)) {
+                Category::whereIn('id', $deletedIds)->delete();
+            }
+        });
+
+        foreach ($logoPaths as $path) {
+            $this->deleteLogoFile($path);
+        }
+
+        return [
+            'deleted_count' => count($deletedIds),
+            'skipped' => $protected,
+        ];
+    }
+
+    public function deleteAllUnused(): array
+    {
+        $categories = Category::withCount('jobs')->get();
+        $deletable = $categories->where('jobs_count', 0);
+        $protected = $categories->where('jobs_count', '>', 0);
+
+        $deletedIds = $deletable->pluck('id')->all();
+        $logoPaths = $deletable->pluck('logo')->filter()->all();
+
+        DB::transaction(function () use ($deletedIds) {
+            if (!empty($deletedIds)) {
+                Category::whereIn('id', $deletedIds)->delete();
+            }
+        });
+
+        foreach ($logoPaths as $path) {
+            $this->deleteLogoFile($path);
+        }
+
+        return [
+            'deleted_count' => count($deletedIds),
+            'skipped' => $protected,
+        ];
+    }
+
+    private function deleteLogoFile(?string $path): void
+    {
+        if ($path && Storage::disk('public')->exists($path)) {
+            Storage::disk('public')->delete($path);
+        }
     }
 }

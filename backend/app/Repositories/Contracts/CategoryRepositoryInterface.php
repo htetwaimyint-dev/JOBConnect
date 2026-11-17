@@ -3,15 +3,15 @@
 namespace App\Repositories\Contracts;
 
 use App\Models\Category;
-use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 interface CategoryRepositoryInterface
 {
-    public function all(?string $search): Collection;
-
+    public function getAll(?string $search, int $perPage): LengthAwarePaginator;
     public function findById(int $id): ?Category;
-
-    public function createOrUpdate(?Category $category, array $data): Category;
-
-    public function delete(Category $category): void;
+    public function create(array $data): Category;
+    public function update(Category $category, array $data): Category;
+    public function delete(Category $category): bool;
+    public function bulkDelete(array $ids): array;
+    public function deleteAllUnused(): array;
 }

@@ -22,11 +22,15 @@ class StoreCategoryRequest extends FormRequest
      */
     public function rules(): array
     {
-        $categoryId = $this->route('category')?->id;
+        $isUpdate = $this->isMethod('PUT') || $this->isMethod('PATCH');
+   
+        $categoryParam = $this->route('category');
+        $categoryId = $categoryParam instanceof \App\Models\Category ? $categoryParam->id : $categoryParam;
 
         return [
-            'name' => 'required|string|max:255|unique:categories,name,' . $categoryId,
+            'name' => 'required|string|max:255|unique:categories,name,' . ($isUpdate ? $categoryId : 'NULL'),
             'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'remove_logo' => 'sometimes|boolean',
         ];
     }
 }
