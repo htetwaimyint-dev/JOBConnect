@@ -8,14 +8,14 @@ import {
   Eye,
   CheckCircle2,
   XCircle,
-  ChevronLeft,
-  ChevronRight,
 } from "lucide-vue-next";
 
 import type {
   Company,
   CompanyStatusFilter,
 } from "../../types/company-approval.types";
+
+import BasePagination from "@/components/common/BasePagination.vue";
 
 interface FilterOption {
   label: string;
@@ -32,6 +32,7 @@ defineProps<{
   currentPage: number;
   lastPage: number;
   totalCompanies: number;
+  perPage: number;
   statusClass: (status: Company["verification_status"]) => string;
   statusDotClass: (status: Company["verification_status"]) => string;
   statusLabel: (status: Company["verification_status"]) => string;
@@ -40,6 +41,7 @@ defineProps<{
 
 const emit = defineEmits<{
   "update:searchQuery": [value: string];
+  "update:per-page": [value: number];
   changeFilter: [value: CompanyStatusFilter];
   refresh: [];
   goToPage: [page: number];
@@ -291,48 +293,15 @@ const emit = defineEmits<{
     </div>
 
     <!-- Pagination -->
-    <div
+    <BasePagination
       v-if="!loading && totalCompanies > 0"
-      class="flex flex-col gap-3 border-t border-slate-100 px-5 py-4 sm:flex-row sm:items-center sm:justify-between"
-    >
-      <p class="text-sm text-slate-500">
-        Showing
-        <span class="font-semibold text-slate-700">{{
-          filteredCompanies.length
-        }}</span>
-        companies on this page · Page
-        <span class="font-semibold text-slate-700">{{ currentPage }}</span>
-        of
-        <span class="font-semibold text-slate-700">{{ lastPage }}</span>
-        · Total
-        <span class="font-semibold text-slate-700">{{ totalCompanies }}</span>
-      </p>
-
-      <div class="flex items-center gap-2">
-        <button
-          type="button"
-          @click="emit('goToPage', currentPage - 1)"
-          :disabled="currentPage <= 1 || loading"
-          class="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
-        >
-          <ChevronLeft :size="18" />
-        </button>
-
-        <span
-          class="min-w-[75px] text-center text-sm font-medium text-slate-600"
-        >
-          {{ currentPage }} / {{ lastPage }}
-        </span>
-
-        <button
-          type="button"
-          @click="emit('goToPage', currentPage + 1)"
-          :disabled="currentPage >= lastPage || loading"
-          class="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
-        >
-          <ChevronRight :size="18" />
-        </button>
-      </div>
-    </div>
+      :current-page="currentPage"
+      :last-page="lastPage"
+      :total="totalCompanies"
+      :per-page="perPage"
+      :loading="loading"
+      @change="emit('goToPage', $event)"
+      @update:per-page="emit('update:per-page', $event)"
+    />
   </div>
 </template>

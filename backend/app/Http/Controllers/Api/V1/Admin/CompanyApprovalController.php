@@ -8,7 +8,6 @@ use App\Http\Resources\Api\CompanyResource;
 use App\Models\Company;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 
 class CompanyApprovalController extends Controller
 {
@@ -20,6 +19,7 @@ class CompanyApprovalController extends Controller
         $validated = $request->validate([
             'status' => 'nullable|in:all,pending,verified,rejected',
             'search' => 'nullable|string|max:255',
+            'per_page' => 'nullable|integer|in:2,5,10,15,20',
         ]);
 
         $query = Company::with('employer:id,name,email');
@@ -55,9 +55,10 @@ class CompanyApprovalController extends Controller
             });
         }
 
+        $perPage = $validated['per_page'] ?? 5;
         $companies = $query
             ->latest()
-            ->paginate(10)
+            ->paginate($perPage)
             ->withQueryString();
 
         return CompanyResource::collection($companies)
