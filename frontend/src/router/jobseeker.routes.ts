@@ -10,6 +10,8 @@ import SavedJobsPage from "@/features/job-seeker/pages/SavedJobsPage.vue";
 import ApplicationsPage from "@/features/job-seeker/pages/ApplicationsPage.vue";
 import InterviewsPage from "@/features/job-seeker/pages/InterviewsPage.vue";
 import OffersPage from "@/features/job-seeker/pages/OffersPage.vue";
+import CompanyProfilePage from "@/features/job-seeker/pages/CompanyProfilePage.vue";
+import CompanyDetailPage from "@/features/job-seeker/pages/CompanyDetailPage.vue";
 //import SettingsPage from "@/features/job-seeker/pages/SettingsPage.vue";
 
 export const jobseekerRoutes: RouteRecordRaw[] = [
@@ -59,6 +61,12 @@ export const jobseekerRoutes: RouteRecordRaw[] = [
         meta: { title: "Interviews" },
       },
       {
+        path: "companyProfile",
+        name: "CompanyProfile",
+        component: CompanyProfilePage,
+        meta: { title: "Company Profile" },
+      },
+      {
         path: "offers",
         name: "JobSeekerOffers",
         component: OffersPage,
@@ -69,6 +77,12 @@ export const jobseekerRoutes: RouteRecordRaw[] = [
         name: "JobSeekerSettings",
         component: JobSeekerSettingsPage,
         meta: { title: "Settings" },
+      },
+      {
+        path: "/companies/:id", // :id က Dynamic Parameter ပါ
+        name: "CompanyDetail",
+        component: CompanyDetailPage,
+        meta: { title: "Company Detail" },
       },
     ],
   },
