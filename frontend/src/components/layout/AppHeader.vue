@@ -9,7 +9,7 @@ const route = useRoute();
 
 const isDashboard = computed(() => {
   return (
-    route.path.startsWith("/jobseeker") ||
+    //route.path.startsWith("/jobseeker") ||
     route.path.startsWith("/employer") ||
     route.path.startsWith("/admin")
   );

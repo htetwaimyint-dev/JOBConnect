@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Api\Admin;
 
+use App\Enums\JobStatus;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -17,7 +18,10 @@ class JobApprovalRequest extends FormRequest
         return [
             'status' => [
                 'required',
-                Rule::in(['published', 'rejected']),
+                Rule::in([
+                    JobStatus::Published->value,
+                    JobStatus::Rejected->value,
+                ]),
             ],
 
             'rejection_reason' => [

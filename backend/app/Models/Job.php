@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Enums\JobStatus;
 
 class Job extends Model
 {
@@ -42,6 +43,7 @@ class Job extends Model
             'salary_max' => 'decimal:2',
             'deadline' => 'date',
             'approved_at' => 'datetime',
+            'status' => JobStatus::class,
         ];
     }
 

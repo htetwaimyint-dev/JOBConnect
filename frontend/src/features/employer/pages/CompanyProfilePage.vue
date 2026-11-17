@@ -18,8 +18,8 @@ const {
 
 const jobs: Job[] = [];
 
-function goToJobs() {}
-function selectJob(job: Job) {}
+function goToJobs() { }
+function selectJob(job: Job) { }
 </script>
 
 <template>
@@ -34,11 +34,8 @@ function selectJob(job: Job) {}
       <p class="font-semibold text-red-600">
         {{ error?.message || "Unable to load company profile." }}
       </p>
-      <button
-        type="button"
-        @click="refetch()"
-        class="mt-4 rounded-lg bg-blue-600 px-5 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition"
-      >
+      <button type="button" @click="refetch()"
+        class="mt-4 rounded-lg bg-blue-600 px-5 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition">
         Try Again
       </button>
     </div>
@@ -46,27 +43,15 @@ function selectJob(job: Job) {}
     <!-- Company Profile Layout -->
     <template v-else-if="company">
       <!-- Banner & Header Card -->
-      <CompanyBanner
-        :company="company"
-        :is-following="false"
-        @follow="() => {}"
-        @view-jobs="goToJobs"
-      />
+      <CompanyBanner :company="company" :is-following="false" @follow="() => { }" @view-jobs="goToJobs" />
 
       <!-- Two-Column Body Layout -->
       <div class="mx-auto max-w-290 px-4 sm:px-6 lg:px-8">
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           <div class="lg:col-span-8 space-y-8">
             <CompanyOverview :company="company" />
-            <CompanyJobs
-              :jobs="jobs"
-              :company="company"
-              @select-job="selectJob"
-            />
-            <CompanyGallery
-              :existing-images="company.gallery ?? []"
-              :company-name="company.name"
-            />
+            <CompanyJobs :jobs="jobs" :company="company" @select-job="selectJob" />
+            <CompanyGallery :existing-images="company.gallery ?? []" :company-name="company.name" />
           </div>
 
           <!-- Right Column (People at, People Also View) -->

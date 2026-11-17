@@ -2,6 +2,7 @@
 
 namespace App\Services\Jobs;
 
+use App\Enums\JobStatus;
 use App\Models\Company;
 use App\Models\Job;
 use App\Repositories\Contracts\JobRepositoryInterface;
@@ -23,7 +24,11 @@ class EmployerJobService
         array $params,
         int $perPage
     ): LengthAwarePaginator {
-        return $this->jobRepository->getByCompany($company, $params, $perPage);
+        return $this->jobRepository->getByCompany(
+            $company,
+            $params,
+            $perPage
+        );
     }
 
     public function getJob(
@@ -43,7 +48,8 @@ class EmployerJobService
         Company $company,
         array $data
     ): Job {
-        $status = $data['submission_status'] ?? 'pending';
+        $status = $data['submission_status']
+            ?? JobStatus::Pending->value;
 
         if (($data['salary_type'] ?? 'fixed') === 'negotiable') {
             $data['salary_min'] = null;
@@ -68,7 +74,7 @@ class EmployerJobService
     ): Job {
         $job = $this->getJob($company, $jobId);
 
-        if ($job->status === 'closed') {
+        if ($job->status === JobStatus::Closed) {
             throw ValidationException::withMessages([
                 'job' => ['Closed jobs cannot be edited.'],
             ]);
@@ -90,19 +96,20 @@ class EmployerJobService
             $data['rejection_reason']
         );
 
-        if ($job->status === 'published') {
-            $data['status'] = 'pending';
-        } elseif ($job->status === 'rejected') {
-            $data['status'] = $submissionStatus === 'draft'
-                ? 'draft'
-                : 'pending';
-        } elseif ($job->status === 'draft') {
-            $data['status'] = $submissionStatus ?? 'draft';
-        } elseif ($job->status === 'pending') {
-            $data['status'] = 'pending';
+        if ($job->status === JobStatus::Published) {
+            $data['status'] = JobStatus::Pending->value;
+        } elseif ($job->status === JobStatus::Rejected) {
+            $data['status'] = $submissionStatus === JobStatus::Draft->value
+                ? JobStatus::Draft->value
+                : JobStatus::Pending->value;
+        } elseif ($job->status === JobStatus::Draft) {
+            $data['status'] = $submissionStatus
+                ?? JobStatus::Draft->value;
+        } elseif ($job->status === JobStatus::Pending) {
+            $data['status'] = JobStatus::Pending->value;
         }
 
-        if ($data['status'] === 'pending') {
+        if (($data['status'] ?? null) === JobStatus::Pending->value) {
             $data['approved_by'] = null;
             $data['approved_at'] = null;
             $data['rejection_reason'] = null;
@@ -123,7 +130,7 @@ class EmployerJobService
     ): bool {
         $job = $this->getJob($company, $jobId);
 
-        if ($job->status === 'published') {
+        if ($job->status === JobStatus::Published) {
             throw ValidationException::withMessages([
                 'job' => ['Published jobs cannot be deleted.'],
             ]);
