@@ -77,7 +77,7 @@ const navigationItems = computed(() => {
       },
       {
         title: "Job Create Post",
-        path: "/employer/jobs",
+        path: "/employer/jobs/create",
         icon: BriefcaseBusiness,
       },
       {
