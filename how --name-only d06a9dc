@@ -1,0 +1,31 @@
+[33mcommit d06a9dcfdbc7ad8f8dc98045bd7a568c1ef1dd05[m[33m ([m[1;31morigin/feature/#20[m[33m, [m[1;32mfeature/#20[m[33m)[m
+Author: Aung-KyawHtay <aungkyawh131941@gmail.com>
+Date:   Wed Nov 18 09:31:35 2026 +0630
+
+    Employer views seekers list and detail profile.
+
+ .../V1/Employer/JobSeekerDirectoryController.php   |  86 [32m+++[m
+ .../app/Http/Middleware/EnsureUserIsEmployer.php   |   1 [31m-[m
+ .../Employer/JobSeekerDirectoryResource.php        |  80 [32m+++[m
+ backend/app/Services/Employer/ResumeService.php    |  15 [32m+[m[31m-[m
+ .../0001_01_01_000000_create_users_table.php       |  78 [32m+[m[31m--[m
+ backend/routes/api/v1/employer.php                 |  53 [32m+[m[31m-[m
+ frontend/src/components/layout/AppSidebar.vue      |   2 [32m+[m[31m-[m
+ .../features/admin/pages/CompanyApprovalPage.vue   |  61 [32m+[m[31m-[m
+ .../features/employer/components/JobSeekerCard.vue | 170 [32m+++++[m
+ .../employer/pages/CompanyVerificationPage.vue     |   0
+ .../employer/pages/JobSeekerDetailPage.vue         | 378 [32m++++++++++[m
+ .../src/features/employer/pages/JobSeekersPage.vue | 186 [32m+++++[m
+ .../employer/repositories/jobSeekerRepository.ts   |  41 [32m++[m
+ .../features/employer/types/job-seeker.types.ts    |  38 [32m+[m
+ .../job-seeker/components/EducationSection.vue     | 479 [32m+++++++[m[31m------[m
+ .../job-seeker/components/ExperienceSection.vue    | 482 [32m+++++++[m[31m------[m
+ .../job-seeker/components/ProfileSection.vue       | 651 [32m+++++++++[m[31m--------[m
+ .../job-seeker/components/ResumeSection.vue        | 769 [32m++++++++++++[m[31m---------[m
+ .../job-seeker/components/SkillSection.vue         | 584 [32m+++++++++[m[31m-------[m
+ .../job-seeker/repositories/profileRepository.ts   |  20 [32m+[m[31m-[m
+ .../job-seeker/repositories/resumeRepository.ts    |  12 [32m+[m
+ .../src/features/job-seeker/types/profile.types.ts |  22 [32m+[m[31m-[m
+ .../pages/EmployerJobsPage.vue}                    |   0
+ frontend/src/router/employer.routes.ts             |  27 [32m+[m[31m-[m
+ 24 files changed, 2820 insertions(+), 1415 deletions(-)

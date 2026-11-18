@@ -22,14 +22,23 @@ class JobApprovalController extends Controller
     /**
      * Display pending jobs.
      */
+
     public function index(): JsonResponse
     {
-        $jobs = $this->jobService->getPendingJobsForAdmin(10);
+        $perPage = request()->integer('per_page', 10);
+
+        $jobs = $this->jobService->getPendingJobsForAdmin($perPage);
 
         return response()->json([
             'success' => true,
             'message' => 'Pending jobs retrieved successfully.',
-            'data' => JobResource::collection($jobs),
+            'data' => JobResource::collection($jobs)->resolve(),
+            'meta' => [
+                'current_page' => $jobs->currentPage(),
+                'last_page' => $jobs->lastPage(),
+                'per_page' => $jobs->perPage(),
+                'total' => $jobs->total(),
+            ],
         ]);
     }
 

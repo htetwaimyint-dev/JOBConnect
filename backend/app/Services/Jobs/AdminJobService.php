@@ -20,7 +20,7 @@ class AdminJobService
     }
 
     public function getPendingJobsForAdmin(
-        int $perPage = 10
+        int $perPage = 5
     ): LengthAwarePaginator {
         return $this->jobRepository->getPendingForAdmin($perPage);
     }

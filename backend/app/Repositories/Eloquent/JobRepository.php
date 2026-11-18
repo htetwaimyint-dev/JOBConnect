@@ -20,9 +20,9 @@ class JobRepository implements JobRepositoryInterface
     public function getByCompany(
         Company $company,
         array $params = [],
-        int $perPage = 10
+        int $perPage = 5
     ): LengthAwarePaginator {
-        $perPage = $params['page'] ?? 10;
+        $perPage = $params['perPage'] ?? 10;
         return $company->jobs()
             ->with('category')
 
@@ -100,7 +100,7 @@ class JobRepository implements JobRepositoryInterface
     */
 
     public function getPendingForAdmin(
-        int $perPage = 10
+        int $perPage = 5
     ): LengthAwarePaginator {
         return Job::with([
             'company:id,name,logo,city',
@@ -117,9 +117,9 @@ class JobRepository implements JobRepositoryInterface
             'company:id,name,logo,city',
             'category:id,name',
             'approvedBy:id,name,email',
+            'jobQuestion',
         ])->find($jobId);
     }
-
     /*
     |--------------------------------------------------------------------------
     | Public Job Listing
@@ -128,7 +128,7 @@ class JobRepository implements JobRepositoryInterface
 
     public function getPublishedJobs(
         array $filters,
-        int $perPage = 10
+        int $perPage = 5
     ): LengthAwarePaginator {
         return Job::with([
             'company:id,name,logo,verification_status',

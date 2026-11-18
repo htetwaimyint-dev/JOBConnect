@@ -1,0 +1,15 @@
+[33mc979a5e[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mfeature/#23[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/feature/#23[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mmain[m[33m)[m Update AppServiceProvider.php
+[33m6a0f914[m Merge branch 'feature/#20'
+[33md06a9dc[m[33m ([m[1;31morigin/feature/#20[m[33m, [m[1;32mfeature/#20[m[33m)[m Employer views seekers list and detail profile.
+[33mec1ad35[m Merge branch 'feature-/#21'
+[33m089d637[m[33m ([m[1;31morigin/feature-/#21[m[33m)[m company Profile(commit)
+[33m84d3b1e[m[33m ([m[1;31morigin/feature/#19[m[33m)[m Merge branch 'feature/#19'
+[33mb002c8d[m Finish Joblist and save job list route
+[33mb8c7fab[m Merge branch 'feature/#18'
+[33ma04f286[m[33m ([m[1;31morigin/feature/#18[m[33m)[m commit
+[33ma2319f6[m Merge branch 'main' of https://github.com/htetwaimyint-dev/JOBConnect
+[33mea47279[m[33m ([m[1;31morigin/feature/#17[m[33m, [m[1;32mfeature/#17[m[33m)[m Merge branch 'feature/#17'
+[33mebf7ab1[m common pagination and date format in utils
+[33m295ae8c[m Merge branch 'feature/#18'
+[33m1b9e05b[m edit job preview
+[33md98509a[m Database Repair
