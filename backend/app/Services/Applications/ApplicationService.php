@@ -9,6 +9,7 @@ use App\Repositories\Contracts\ApplicationRepositoryInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use App\Models\Job;
 use Illuminate\Validation\ValidationException;
+use App\Enums\ApplicationStatus;
 
 class ApplicationService
 {
@@ -163,6 +164,38 @@ class ApplicationService
         return $this->applicationRepository->updateStatus(
             $application,
             $data
+        );
+    }
+
+    /**
+     * Withdraw an application belonging to a Job Seeker.
+     */
+    public function withdrawMyApplication(
+        User $jobSeeker,
+        int $applicationId
+    ): Application {
+
+        // Find application belonging to this Job Seeker
+        $application = $this->getMyApplicationDetail(
+            $jobSeeker,
+            $applicationId
+        );
+
+        // Only pending applications can be withdrawn
+        if ($application->status !== ApplicationStatus::Pending) {
+            throw ValidationException::withMessages([
+                'status' => 'Only pending applications can be withdrawn.',
+            ]);
+        }
+
+        // Update status and create history
+        return $this->applicationRepository->updateStatus(
+            $application,
+            [
+                'new_status' => ApplicationStatus::Withdrawn->value,
+                'changed_by_company_id' => null,
+                'note' => 'Withdrawn by job seeker.',
+            ]
         );
     }
 }

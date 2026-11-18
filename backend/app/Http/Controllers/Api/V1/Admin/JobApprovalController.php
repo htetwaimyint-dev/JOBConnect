@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Api\V1\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Admin\JobApprovalRequest;
 use App\Http\Resources\Api\Jobs\JobResource;
-use App\Models\Job;
+
 use App\Services\Jobs\AdminJobService;
 use Illuminate\Http\JsonResponse;
 use App\Enums\JobStatus;

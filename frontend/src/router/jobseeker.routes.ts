@@ -6,10 +6,11 @@ import JobSeekerSettingsPage from "@/features/job-seeker/pages/JobSeekerSettings
 import Dashboard from "@/features/job-seeker/pages/Dashboard.vue";
 import ProfilePage from "@/features/job-seeker/pages/ProfilePage.vue";
 import JobListPage from "@/features/jobs/pages/JobListPage.vue";
-import SavedJobsPage from "@/features/job-seeker/pages/SavedJobsPage.vue";
-import ApplicationsPage from "@/features/job-seeker/pages/ApplicationsPage.vue";
+import SavedJobsPage from "@/features/jobs/pages/SavedJobsPage.vue";
+import MyApplicationsPage from "@/features/applications/pages/MyApplicationsPage.vue";
 import InterviewsPage from "@/features/job-seeker/pages/InterviewsPage.vue";
 import OffersPage from "@/features/job-seeker/pages/OffersPage.vue";
+import ApplicationDetailPage from "@/features/applications/pages/ApplicationDetailPage.vue";
 //import SettingsPage from "@/features/job-seeker/pages/SettingsPage.vue";
 
 export const jobseekerRoutes: RouteRecordRaw[] = [
@@ -49,8 +50,15 @@ export const jobseekerRoutes: RouteRecordRaw[] = [
       {
         path: "applications",
         name: "JobSeekerApplications",
-        component: ApplicationsPage,
+        component: MyApplicationsPage,
         meta: { title: "My Applications" },
+      },
+      //HWM add path for application detail page
+      {
+        path: "applications/:id",
+        name: "JobSeekerApplicationDetail",
+        component: ApplicationDetailPage,
+        meta: { title: "Application Details" },
       },
       {
         path: "interviews",

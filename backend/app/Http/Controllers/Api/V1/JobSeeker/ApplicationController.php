@@ -97,4 +97,31 @@ class ApplicationController extends Controller
             'data' => new ApplicationResource($application),
         ]);
     }
+
+    /**
+     * Withdraw a pending application.
+     */
+    public function withdraw(
+        Request $request,
+        int $application
+    ): JsonResponse {
+
+        $withdrawnApplication = $this->applicationService
+            ->withdrawMyApplication(
+                $request->user(),
+                $application
+            );
+
+        $withdrawnApplication->load([
+            'job.company',
+            'resume',
+            'answers.jobQuestion',
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Application withdrawn successfully.',
+            'data' => new ApplicationResource($withdrawnApplication),
+        ]);
+    }
 }
