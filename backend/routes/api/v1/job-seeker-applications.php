@@ -1,4 +1,3 @@
-
 <?php
 
 use Illuminate\Support\Facades\Route;
@@ -16,4 +15,10 @@ Route::prefix('job-seeker')
 
         // Submit a job application
         Route::post('/applications', [ApplicationController::class, 'store']);
+
+        // Withdraw a pending application
+        Route::patch(
+            '/applications/{application}/withdraw',
+            [ApplicationController::class, 'withdraw']
+        );
     });

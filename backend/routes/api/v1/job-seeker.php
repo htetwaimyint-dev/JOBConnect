@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\V1\JobSeeker\ResumeController;
 use App\Http\Controllers\Api\V1\JobSeeker\UserSkillController;
 use App\Http\Controllers\Api\V1\JobSeeker\CompanyProfileViewController;
 
+use App\Http\Controllers\Api\V1\Jobs\SavedJobController;
 
 Route::get('job-seeker/companies', [CompanyProfileViewController::class, 'index']);
 
@@ -37,4 +38,19 @@ Route::middleware(['auth:sanctum', 'job-seeker'])
             ->except(['show']);
 
         Route::get('/companies/{id}', [CompanyProfileViewController::class, 'show']);
+        // Saved Jobs
+        Route::get(
+            '/saved-jobs',
+            [SavedJobController::class, 'index']
+        );
+
+        Route::post(
+            '/saved-jobs',
+            [SavedJobController::class, 'store']
+        );
+
+        Route::delete(
+            '/saved-jobs/{jobId}',
+            [SavedJobController::class, 'destroy']
+        );
     });
