@@ -274,68 +274,11 @@ onUnmounted(() => {
         type="button"
         @click="refreshCompanies"
         :disabled="loading"
-        class="mr-auto inline-flex shrink-0 items-center gap-2 rounded-lg bg-blue-600 px-3 py-2.5 text-sm font-medium text-white transition hover:bg-blue-700 disabled:opacity-60"
+        class="mr-auto flex items-center justify-center gap-2 self-end rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-slate-50 disabled:opacity-50 sm:self-auto"
       >
-        <RefreshCw :size="16" :class="{ 'animate-spin': loading }" />
+        <RefreshCw :size="14" :class="{ 'animate-spin': loading }" />
         Refresh
       </button>
-    </div>
-
-    <!-- Summary -->
-    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-      <!-- Total Companies -->
-      <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="text-sm font-medium text-slate-500">
-              {{
-                activeFilter === "all"
-                  ? "Total Companies"
-                  : `${statusLabel(activeFilter)} Companies`
-              }}
-            </p>
-
-            <h2 class="mt-2 text-3xl font-bold text-slate-900">
-              {{ totalCompanies }}
-            </h2>
-
-            <p class="mt-1 text-xs text-slate-400">
-              Companies matching current filter
-            </p>
-          </div>
-
-          <div
-            class="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 text-blue-600"
-          >
-            <Building2 :size="24" />
-          </div>
-        </div>
-      </div>
-
-      <!-- Current Page -->
-      <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="text-sm font-medium text-slate-500">Current Page</p>
-
-            <h2 class="mt-2 text-3xl font-bold text-slate-900">
-              {{ currentPage }}
-
-              <span class="text-lg font-medium text-slate-400">
-                / {{ lastPage }}
-              </span>
-            </h2>
-
-            <p class="mt-1 text-xs text-slate-400">Company list pagination</p>
-          </div>
-
-          <div
-            class="flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600"
-          >
-            <Clock3 :size="24" />
-          </div>
-        </div>
-      </div>
     </div>
 
     <!-- Error Message -->
