@@ -6,6 +6,7 @@ use App\Models\Company;
 use App\Models\User;
 use App\Repositories\Contracts\CompanyRepositoryInterface;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Database\Eloquent\Collection;
 
 class CompanyRepository implements CompanyRepositoryInterface
 {
@@ -33,5 +34,25 @@ class CompanyRepository implements CompanyRepositoryInterface
 
             return $company->refresh();
         });
+    }
+
+    public function getAll(?string $search): Collection
+    {
+        $query = Company::query();
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('industry', 'like', "%{$search}%")
+                  ->orWhere('city', 'like', "%{$search}%");
+            });
+        }
+
+        return $query->latest()->get();
+    }
+
+    public function findById(int $id): ?Company
+    {
+        return Company::find($id);
     }
 }

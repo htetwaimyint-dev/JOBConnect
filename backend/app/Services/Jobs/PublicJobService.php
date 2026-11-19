@@ -45,7 +45,7 @@ class PublicJobService
     {
         $job = $this->getPublishedJob($jobId);
 
-        return $job->jobQuestions()
+        return $job->jobQuestion()
             ->orderBy('sort_order')
             ->get([
                 'id',

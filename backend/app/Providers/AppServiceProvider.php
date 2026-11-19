@@ -33,6 +33,9 @@ use App\Repositories\Contracts\JobOfferRepositoryInterface;
 use App\Repositories\Eloquent\CategoryRepository;
 use App\Repositories\Eloquent\JobOfferRepository;
 
+use App\Repositories\Contracts\UserRepositoryInterface;
+use App\Repositories\Eloquent\UserRepository;
+
 class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
@@ -40,6 +43,11 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(
             ResumeRepositoryInterface::class,
             ResumeRepository::class
+        );
+
+        $this->app->bind(
+            UserRepositoryInterface::class,
+            UserRepository::class
         );
 
         $this->app->bind(

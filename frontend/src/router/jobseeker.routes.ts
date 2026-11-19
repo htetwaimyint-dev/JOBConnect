@@ -6,11 +6,14 @@ import JobSeekerSettingsPage from "@/features/job-seeker/pages/JobSeekerSettings
 import Dashboard from "@/features/job-seeker/pages/Dashboard.vue";
 import ProfilePage from "@/features/job-seeker/pages/ProfilePage.vue";
 import JobListPage from "@/features/jobs/pages/JobListPage.vue";
-import SavedJobsPage from "@/features/job-seeker/pages/SavedJobsPage.vue";
-import ApplicationsPage from "@/features/job-seeker/pages/ApplicationsPage.vue";
+import SavedJobsPage from "@/features/jobs/pages/SavedJobsPage.vue";
+import MyApplicationsPage from "@/features/applications/pages/MyApplicationsPage.vue";
 import InterviewsPage from "@/features/job-seeker/pages/InterviewsPage.vue";
 import OffersPage from "@/features/job-seeker/pages/OffersPage.vue";
 import JobSeekerOffersPage from "@/features/job-offers/pages/JobSeekerOffersPage.vue";
+import CompanyProfilePage from "@/features/job-seeker/pages/CompanyProfilePage.vue";
+import CompanyDetailPage from "@/features/job-seeker/pages/CompanyDetailPage.vue";
+import ApplicationDetailPage from "@/features/applications/pages/ApplicationDetailPage.vue";
 //import SettingsPage from "@/features/job-seeker/pages/SettingsPage.vue";
 
 export const jobseekerRoutes: RouteRecordRaw[] = [
@@ -50,14 +53,27 @@ export const jobseekerRoutes: RouteRecordRaw[] = [
             {
                 path: "applications",
                 name: "JobSeekerApplications",
-                component: ApplicationsPage,
+                component: MyApplicationsPage,
                 meta: { title: "My Applications" },
+            },
+            //HWM add path for application detail page
+            {
+                path: "applications/:id",
+                name: "JobSeekerApplicationDetail",
+                component: ApplicationDetailPage,
+                meta: { title: "Application Details" },
             },
             {
                 path: "interviews",
                 name: "JobSeekerInterviews",
                 component: InterviewsPage,
                 meta: { title: "Interviews" },
+            },
+            {
+                path: "companyProfile",
+                name: "CompanyProfile",
+                component: CompanyProfilePage,
+                meta: { title: "Company Profile" },
             },
             {
                 path: "job-offers",
@@ -69,6 +85,12 @@ export const jobseekerRoutes: RouteRecordRaw[] = [
                 name: "JobSeekerSettings",
                 component: JobSeekerSettingsPage,
                 meta: { title: "Settings" },
+            },
+            {
+                path: "/companies/:id", // :id က Dynamic Parameter ပါ
+                name: "CompanyDetail",
+                component: CompanyDetailPage,
+                meta: { title: "Company Detail" },
             },
         ],
     },

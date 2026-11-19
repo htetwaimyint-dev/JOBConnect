@@ -10,6 +10,7 @@ use App\Traits\HttpResopnseTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Resources\Api\UserResource;
 use Illuminate\Support\Facades\Validator;
 
 class AuthController extends Controller
@@ -29,7 +30,6 @@ class AuthController extends Controller
         // 2. Check if validation failed
         if ($validator->fails()) {
             return $this->failResponse('Validation Fail', $validator->messages(), 422);
-            
         }
 
         $validatedData = $validator->validated();
@@ -117,13 +117,14 @@ class AuthController extends Controller
         );
     }
 
-
-    //GET LOGGED-IN USER
+    // GET LOGGED-IN USER
     public function user(Request $request)
     {
+        $user = $request->user()->load('jobSeekerProfile');
+
         return response()->json([
             'success' => true,
-            'user' => $request->user(),
+            'user' => new UserResource($user),
         ]);
     }
 

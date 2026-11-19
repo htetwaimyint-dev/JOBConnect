@@ -67,6 +67,7 @@ class EmployerJobService
         return $this->jobRepository->create($company, $data);
     }
 
+
     public function updateJob(
         Company $company,
         int $jobId,
@@ -74,6 +75,14 @@ class EmployerJobService
     ): Job {
         $job = $this->getJob($company, $jobId);
 
+        // Published jobs cannot be edited by employers.
+        if ($job->status === JobStatus::Published) {
+            throw ValidationException::withMessages([
+                'job' => ['Published jobs cannot be edited.'],
+            ]);
+        }
+
+        // Closed jobs cannot be edited.
         if ($job->status === JobStatus::Closed) {
             throw ValidationException::withMessages([
                 'job' => ['Closed jobs cannot be edited.'],
@@ -96,9 +105,7 @@ class EmployerJobService
             $data['rejection_reason']
         );
 
-        if ($job->status === JobStatus::Published) {
-            $data['status'] = JobStatus::Pending->value;
-        } elseif ($job->status === JobStatus::Rejected) {
+        if ($job->status === JobStatus::Rejected) {
             $data['status'] = $submissionStatus === JobStatus::Draft->value
                 ? JobStatus::Draft->value
                 : JobStatus::Pending->value;

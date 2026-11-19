@@ -22,6 +22,13 @@ export type SalaryType = "fixed" | "negotiable";
 
 export type SubmissionStatus = "draft" | "pending";
 
+export type JobStatus =
+    | "draft"
+    | "pending"
+    | "published"
+    | "rejected"
+    | "closed";
+
 export interface Job {
     id: number;
     company_id: number;
@@ -48,7 +55,7 @@ export interface Job {
     gender: "any" | "male" | "female";
     deadline: string | null;
 
-    status: "draft" | "pending" | "published" | "rejected" | "closed";
+    status: JobStatus;
 
     created_at: string;
     updated_at: string;
@@ -75,7 +82,7 @@ export interface JobFormData {
     job_questions: JobApplicationQuestionForm[];
 }
 
-export type JobDetailMode = "preview" | "public";
+export type JobDetailMode = "preview" | "public" | "admin" | "employer";
 
 export type JobFormField = keyof JobFormData;
 
@@ -87,6 +94,7 @@ export interface JobListParams {
     workplace_type?: WorkplaceType;
     city?: string;
     country?: string;
+    status?: JobStatus | "all";
 }
 
 export interface JobListResponse {

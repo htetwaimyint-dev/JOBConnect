@@ -2,60 +2,86 @@ import api from "@/services/api";
 import type { Company } from "@/features/employer/types/company.types";
 
 interface ApiResponse<T> {
-    success: boolean;
-    message: string;
-    data: T | null;
+  success: boolean;
+  message: string;
+  data: T | null;
 }
 
 export const companyRepository = {
-    async getCompanyProfile(): Promise<Company> {
-        const response =
-            await api.get<ApiResponse<Company>>("/employer/profile");
+  //fetch companies for job seekers
+  async getCompanies(search: string = ""): Promise<Company[]> {
+    const response = await api.get("job-seeker/companies", {
+      params: { search: search },
+    });
 
-        if (!response.data.success || !response.data.data) {
-            throw new Error(response.data.message);
-        }
+    if (!response.data.success || !response.data.data) {
+      throw new Error(response.data.message || "Failed to fetch companies");
+    }
 
-        return response.data.data;
-    },
+    return response.data.data;
+  },
+  //fetch companies for job seekers
+  async getCompanyById(id: number): Promise<Company> {
+    const response = await api.get<ApiResponse<Company>>(
+      `job-seeker/companies/${id}`,
+    );
 
-    async getCompanyProfileForForm(): Promise<Company | null> {
-        try {
-            return await this.getCompanyProfile();
-        } catch (error: any) {
-            if (error?.response?.status === 404) {
-                return null;
-            }
+    if (!response.data.success || !response.data.data) {
+      throw new Error(
+        response.data.message || "Failed to fetch company details",
+      );
+    }
 
-            throw error;
-        }
-    },
+    return response.data.data;
+  },
 
-    async createCompanyProfile(formData: FormData): Promise<Company> {
-        const response = await api.post<ApiResponse<Company>>(
-            "/employer/profile",
-            formData,
-        );
+  async getCompanyProfile(): Promise<Company> {
+    const response = await api.get<ApiResponse<Company>>("/employer/profile");
 
-        if (!response.data.success || !response.data.data) {
-            throw new Error(response.data.message);
-        }
+    if (!response.data.success || !response.data.data) {
+      throw new Error(response.data.message);
+    }
 
-        return response.data.data;
-    },
+    return response.data.data;
+  },
 
-    async updateCompanyProfile(formData: FormData): Promise<Company> {
-        formData.append("_method", "PUT");
+  async getCompanyProfileForForm(): Promise<Company | null> {
+    try {
+      return await this.getCompanyProfile();
+    } catch (error: any) {
+      if (error?.response?.status === 404) {
+        return null;
+      }
 
-        const response = await api.post<ApiResponse<Company>>(
-            "/employer/profile",
-            formData,
-        );
+      throw error;
+    }
+  },
 
-        if (!response.data.success || !response.data.data) {
-            throw new Error(response.data.message);
-        }
+  async createCompanyProfile(formData: FormData): Promise<Company> {
+    const response = await api.post<ApiResponse<Company>>(
+      "/employer/profile",
+      formData,
+    );
 
-        return response.data.data;
-    },
+    if (!response.data.success || !response.data.data) {
+      throw new Error(response.data.message);
+    }
+
+    return response.data.data;
+  },
+
+  async updateCompanyProfile(formData: FormData): Promise<Company> {
+    formData.append("_method", "PUT");
+
+    const response = await api.post<ApiResponse<Company>>(
+      "/employer/profile",
+      formData,
+    );
+
+    if (!response.data.success || !response.data.data) {
+      throw new Error(response.data.message);
+    }
+
+    return response.data.data;
+  },
 };

@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Api\V1\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Admin\JobApprovalRequest;
 use App\Http\Resources\Api\Jobs\JobResource;
-use App\Models\Job;
+
 use App\Services\Jobs\AdminJobService;
 use Illuminate\Http\JsonResponse;
 use App\Enums\JobStatus;
@@ -24,12 +24,46 @@ class JobApprovalController extends Controller
      */
     public function index(): JsonResponse
     {
-        $jobs = $this->jobService->getPendingJobsForAdmin(10);
+        $perPage = request()->integer('per_page', 5);
+        $statusValue = request()->query('status', 'all');
+        $search = trim(request()->query('search', ''));
+
+        if ($statusValue === 'all') {
+            $jobs = $this->jobService->getAllJobsForAdmin(
+                $perPage,
+                $search ?: null
+            );
+        } else {
+            $status = JobStatus::tryFrom($statusValue);
+
+            if (!$status || !in_array($status, [
+                JobStatus::Pending,
+                JobStatus::Published,
+                JobStatus::Rejected,
+            ], true)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid job status.',
+                ], 422);
+            }
+
+            $jobs = $this->jobService->getJobsByStatusForAdmin(
+                $status,
+                $perPage,
+                $search ?: null
+            );
+        }
 
         return response()->json([
             'success' => true,
-            'message' => 'Pending jobs retrieved successfully.',
-            'data' => JobResource::collection($jobs),
+            'message' => 'Jobs retrieved successfully.',
+            'data' => JobResource::collection($jobs)->resolve(),
+            'meta' => [
+                'current_page' => $jobs->currentPage(),
+                'last_page' => $jobs->lastPage(),
+                'per_page' => $jobs->perPage(),
+                'total' => $jobs->total(),
+            ],
         ]);
     }
 

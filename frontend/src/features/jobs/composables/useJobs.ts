@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from "@tanstack/vue-query";
 
 import jobRepository from "../repositories/jobRepository";
@@ -23,6 +24,28 @@ export function useJobs() {
 
             queryFn: async () => {
                 const response = await jobRepository.getJobs(
+                    currentParams.value,
+                );
+
+                return response.data;
+            },
+        });
+    }
+
+    // Get employer's own jobs with search and filters
+    function getJobsByCompany(params: MaybeRefOrGetter<JobListParams> = {}) {
+        const currentParams = computed(() => ({
+            page: 1,
+            ...toValue(params),
+        }));
+
+        return useQuery({
+            queryKey: computed(() =>
+                jobKeys.employerList(currentParams.value),
+            ),
+
+            queryFn: async () => {
+                const response = await jobRepository.getJobsByCompany(
                     currentParams.value,
                 );
 
@@ -65,42 +88,46 @@ export function useJobs() {
         },
     });
 
+
+    // Close published employer job
+    const closeJob = useMutation({
+        mutationFn: async (id: number) => {
+            const response = await jobRepository.closeJob(id);
+            return response.data;
+        },
+
+        onSuccess: (_, id) => {
+            // Refresh employer job lists
+            queryClient.invalidateQueries({
+                queryKey: jobKeys.lists(),
+            });
+
+            // Refresh specific job detail
+            queryClient.invalidateQueries({
+                queryKey: jobKeys.detail(id),
+            });
+        },
+    });
+
     // Delete employer job
-    function deleteJob() {
-        const queryClient = useQueryClient();
+    const deleteJob = useMutation({
+        mutationFn: async (id: number) => {
+            const response = await jobRepository.deleteJob(id);
+            return response.data;
+        },
 
-        return useMutation({
-            mutationFn: async (id: number) => {
-                const response = await jobRepository.deleteJob(id);
-                return response.data;
-            },
+        onSuccess: (_, id) => {
+            // Refresh employer job lists
+            queryClient.invalidateQueries({
+                queryKey: jobKeys.lists(),
+            });
 
-            onSuccess: () => {
-                queryClient.invalidateQueries({
-                    queryKey: jobKeys.lists(),
-                });
-            },
-        });
-    }
-
-    function getJobsByCompany(params: MaybeRefOrGetter<JobListParams> = {}) {
-        const currentParams = computed(() => ({
-            page: 1,
-            ...toValue(params),
-        }));
-
-        return useQuery({
-            queryKey: computed(() => jobKeys.list(currentParams.value)),
-
-            queryFn: async () => {
-                const response = await jobRepository.getJobsByCompany(
-                    currentParams.value,
-                );
-
-                return response.data;
-            },
-        });
-    }
+            // Refresh specific job detail
+            queryClient.invalidateQueries({
+                queryKey: jobKeys.detail(id),
+            });
+        },
+    });
 
     // Get job details
     function getJobById(id: MaybeRefOrGetter<number | string>) {
@@ -134,6 +161,7 @@ export function useJobs() {
         getJobById,
         createJob,
         updateJob,
+        closeJob,
         deleteJob,
     };
 }

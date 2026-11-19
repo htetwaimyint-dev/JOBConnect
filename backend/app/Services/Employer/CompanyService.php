@@ -8,6 +8,8 @@ use App\Repositories\Contracts\CompanyRepositoryInterface;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Throwable;
+use Exception;
+use Illuminate\Database\Eloquent\Collection;
 
 class CompanyService
 {
@@ -178,5 +180,21 @@ class CompanyService
             "companies/{$user->id}/{$directory}",
             'public'
         );
+    }
+
+    public function getCompanies(?string $search): Collection
+    {
+        return $this->companyRepository->getAll($search);
+    }
+
+    public function getCompanyById(int $id): Company
+    {
+        $company = $this->companyRepository->findById($id);
+
+        if (!$company) {
+            throw new Exception('Company not found', 404);
+        }
+
+        return $company;
     }
 }

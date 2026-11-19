@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api\V1\Jobs;
 
 use App\Http\Controllers\Controller;
-use App\Http\Resources\Api\JobQuestionResource;
+use App\Http\Resources\Api\Jobs\JobQuestionResource;
 use App\Services\Jobs\PublicJobService;
 use Illuminate\Http\JsonResponse;
 

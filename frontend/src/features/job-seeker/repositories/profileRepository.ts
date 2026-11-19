@@ -12,14 +12,25 @@ interface ProfileResponse {
 }
 
 export const profileRepository = {
-    // Get Job Seeker Profile
+    // Get logged-in Job Seeker Profile
     async getProfile(): Promise<JobSeekerProfile> {
-        const response = await api.get<ProfileResponse>("/job-seeker/profile");
+        const response = await api.get<ProfileResponse>(
+            "/job-seeker/profile",
+        );
 
         return response.data.data;
     },
 
-    // Update Job Seeker Profile
+    // Get another Job Seeker Profile by ID (Employer)
+    async getProfileById(id: number): Promise<JobSeekerProfile> {
+        const response = await api.get<ProfileResponse>(
+            `/employer/job-seekers/${id}/profile`,
+        );
+
+        return response.data.data;
+    },
+
+    // Update logged-in Job Seeker Profile
     async updateProfile(
         data: UpdateProfileData,
     ): Promise<JobSeekerProfile> {
@@ -36,7 +47,6 @@ export const profileRepository = {
             }
         });
 
-        // Laravel PUT method spoofing
         formData.append("_method", "PUT");
 
         const response = await api.post<ProfileResponse>(

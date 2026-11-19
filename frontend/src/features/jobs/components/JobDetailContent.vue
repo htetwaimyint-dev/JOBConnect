@@ -5,16 +5,28 @@ import JobDetailHeader from "../components/JobDetailHeader.vue";
 import JobOverview from "../components/JobOverview.vue";
 import JobRichTextSection from "../components/JobRichTextSection.vue";
 import JobSummarySidebar from "../components/JobSummarySidebar.vue";
-
-defineProps<{
-    job: Job | JobFormData;
-    mode: JobDetailMode;
-    categoryName?: string;
-}>();
+// HWM add import for application form
+const props = withDefaults(
+    defineProps<{
+        job: Job | JobFormData;
+        mode: JobDetailMode;
+        categoryName?: string;
+        showApplicationForm?: boolean;
+        applyError?: string;
+        applicationSuccess?: boolean;
+    }>(),
+    {
+        showApplicationForm: false,
+        applyError: "",
+        applicationSuccess: false,
+    },
+);
 
 const emit = defineEmits<{
     apply: [];
     edit: [];
+    submitted: [];
+    cancel: [];
 }>();
 
 function handleEdit() {
@@ -29,30 +41,19 @@ function handleEdit() {
 
             <JobOverview :job="job" />
 
-            <JobRichTextSection
-                title="About This Role"
-                :content="job.description"
-                empty-message="No job description provided."
-            />
+            <JobRichTextSection title="About This Role" :content="job.description"
+                empty-message="No job description provided." />
 
-            <JobRichTextSection
-                title="Requirements"
-                :content="job.requirements"
-                empty-message="No requirements provided."
-            />
+            <JobRichTextSection title="Requirements" :content="job.requirements"
+                empty-message="No requirements provided." />
 
-            <JobRichTextSection
-                title="Responsibilities"
-                :content="job.responsibilities"
-                empty-message="No responsibilities provided."
-            />
+            <JobRichTextSection title="Responsibilities" :content="job.responsibilities"
+                empty-message="No responsibilities provided." />
         </main>
 
-        <JobSummarySidebar
-            :job="job"
-            :mode="mode"
-            :category-name="categoryName"
-            @edit="handleEdit"
-        />
+        <JobSummarySidebar :job="job" :mode="mode" :category-name="categoryName"
+            :show-application-form="showApplicationForm" :apply-error="applyError"
+            :application-success="applicationSuccess" @apply="emit('apply')" @edit="handleEdit"
+            @submitted="emit('submitted')" @cancel="emit('cancel')" />
     </div>
 </template>
