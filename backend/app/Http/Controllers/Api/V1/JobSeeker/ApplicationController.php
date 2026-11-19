@@ -68,12 +68,60 @@ class ApplicationController extends Controller
             $data
         );
 
-        $application->load(['job.company', 'resume']);
+        $application->load([
+            'job.company',
+            'resume',
+            'answers.jobQuestion',
+        ]);
 
         return response()->json([
             'success' => true,
             'message' => 'Application submitted successfully.',
             'data' => new ApplicationResource($application),
         ], 201);
+    }
+
+    /**
+     * Show one application detail belonging to the authenticated Job Seeker.
+     */
+    public function show(Request $request, int $application): JsonResponse
+    {
+        $application = $this->applicationService->getMyApplicationDetail(
+            $request->user(),
+            $application
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Application details retrieved successfully.',
+            'data' => new ApplicationResource($application),
+        ]);
+    }
+
+    /**
+     * Withdraw a pending application.
+     */
+    public function withdraw(
+        Request $request,
+        int $application
+    ): JsonResponse {
+
+        $withdrawnApplication = $this->applicationService
+            ->withdrawMyApplication(
+                $request->user(),
+                $application
+            );
+
+        $withdrawnApplication->load([
+            'job.company',
+            'resume',
+            'answers.jobQuestion',
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Application withdrawn successfully.',
+            'data' => new ApplicationResource($withdrawnApplication),
+        ]);
     }
 }

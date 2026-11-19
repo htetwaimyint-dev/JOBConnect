@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Api\V1\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Admin\JobApprovalRequest;
 use App\Http\Resources\Api\Jobs\JobResource;
-use App\Models\Job;
+
 use App\Services\Jobs\AdminJobService;
 use Illuminate\Http\JsonResponse;
 use App\Enums\JobStatus;
@@ -22,14 +22,23 @@ class JobApprovalController extends Controller
     /**
      * Display pending jobs.
      */
+
     public function index(): JsonResponse
     {
-        $jobs = $this->jobService->getPendingJobsForAdmin(10);
+        $perPage = request()->integer('per_page', 10);
+
+        $jobs = $this->jobService->getPendingJobsForAdmin($perPage);
 
         return response()->json([
             'success' => true,
             'message' => 'Pending jobs retrieved successfully.',
-            'data' => JobResource::collection($jobs),
+            'data' => JobResource::collection($jobs)->resolve(),
+            'meta' => [
+                'current_page' => $jobs->currentPage(),
+                'last_page' => $jobs->lastPage(),
+                'per_page' => $jobs->perPage(),
+                'total' => $jobs->total(),
+            ],
         ]);
     }
 

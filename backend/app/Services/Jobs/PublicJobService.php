@@ -6,6 +6,7 @@ use App\Models\Job;
 use App\Repositories\Contracts\JobRepositoryInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Database\Eloquent\Collection;
 
 class PublicJobService
 {
@@ -35,5 +36,23 @@ class PublicJobService
         }
 
         return $job;
+    }
+
+    /**
+     * Get screening questions for a published job.
+     */
+    public function getApplicationQuestions(int $jobId): Collection
+    {
+        $job = $this->getPublishedJob($jobId);
+
+        return $job->jobQuestion()
+            ->orderBy('sort_order')
+            ->get([
+                'id',
+                'job_id',
+                'question',
+                'is_required',
+                'sort_order',
+            ]);
     }
 }

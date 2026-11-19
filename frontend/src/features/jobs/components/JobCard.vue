@@ -1,10 +1,50 @@
 <script setup lang="ts">
 import { RouterLink } from "vue-router";
 import type { Job } from "../types/job.types";
+import { computed } from "vue";
+import { useRouter } from "vue-router";
+import { useAuthStore } from "@/stores/auth.store";
+import { useSavedJobs } from "../composables/useSavedJobs";
 
-defineProps<{
+const props = defineProps<{
     job: Job;
 }>();
+
+const router = useRouter();
+const authStore = useAuthStore();
+
+const {
+    isSaved,
+    toggleSavedJob,
+    saveMutation,
+    removeMutation,
+    isJobSeeker,
+} = useSavedJobs();
+
+const saved = isSaved(props.job.id);
+
+const isSaving = computed(
+    () => saveMutation.isPending.value || removeMutation.isPending.value
+);
+
+async function handleSaveJob() {
+    // Guest → Login
+    if (!authStore.isAuthenticated) {
+        router.push({ name: "login" });
+        return;
+    }
+
+    // Only job seekers can save jobs
+    if (!isJobSeeker.value) {
+        return;
+    }
+
+    try {
+        await toggleSavedJob(props.job.id);
+    } catch (error) {
+        console.error("Failed to save job:", error);
+    }
+}
 
 const formatSalary = (job: Job) => {
     if (job.salary_type === "negotiable") {
@@ -69,9 +109,21 @@ const formatLabel = (value: string) => {
                 </p>
             </div>
 
-            <span class="shrink-0 rounded-lg bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700">
-                New
-            </span>
+
+            <button v-if="!authStore.isAuthenticated || isJobSeeker" type="button" :disabled="isSaving"
+                @click="handleSaveJob"
+                class="shrink-0 flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-semibold transition"
+                :class="saved
+                    ? 'border-blue-200 bg-blue-50 text-blue-700'
+                    : 'border-slate-200 bg-white text-slate-600 hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700'
+                    ">
+                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                    <path d="M6 4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18l-6-4-6 4V4Z"
+                        :fill="saved ? 'currentColor' : 'none'" />
+                </svg>
+
+                {{ saved ? "Saved" : "Save" }}
+            </button>
         </div>
 
         <!-- Job Tags -->

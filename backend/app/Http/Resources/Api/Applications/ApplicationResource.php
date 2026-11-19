@@ -12,8 +12,10 @@ class ApplicationResource extends JsonResource
         return [
             'id' => $this->id,
 
+            'applicant_name' => $this->applicant_name,
+            'applicant_phone' => $this->applicant_phone,
+
             'status' => $this->status->value,
-            'cover_letter' => $this->cover_letter,
             'applied_at' => $this->applied_at,
 
             'job' => [
@@ -32,6 +34,20 @@ class ApplicationResource extends JsonResource
                 'title' => $this->resume?->title,
                 'file_type' => $this->resume?->file_type,
             ],
+
+            'answers' => $this->whenLoaded('answers', function () {
+                return $this->answers->map(function ($answer) {
+                    return [
+                        'id' => $answer->id,
+                        'question' => [
+                            'id' => $answer->jobQuestion?->id,
+                            'question' => $answer->jobQuestion?->question,
+                            'is_required' => $answer->jobQuestion?->is_required,
+                        ],
+                        'answer' => $answer->answer,
+                    ];
+                });
+            }),
 
             'job_seeker' => $this->whenLoaded('jobSeeker', function () {
                 return [

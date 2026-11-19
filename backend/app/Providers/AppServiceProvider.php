@@ -20,7 +20,18 @@ use App\Repositories\Contracts\JobRepositoryInterface;
 use App\Repositories\Eloquent\JobRepository;
 
 use App\Repositories\Contracts\ApplicationRepositoryInterface;
+use App\Repositories\Contracts\JobQuestionRepositoryInterface;
 use App\Repositories\Eloquent\ApplicationRepository;
+use App\Repositories\Eloquent\JobQuestionRepository;
+
+use App\Repositories\Contracts\SavedJobRepositoryInterface;
+use App\Repositories\Eloquent\SavedJobRepository;
+
+use App\Repositories\Contracts\CategoryRepositoryInterface;
+use App\Repositories\Eloquent\CategoryRepository;
+
+use App\Repositories\Contracts\UserRepositoryInterface;
+use App\Repositories\Eloquent\UserRepository;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -29,6 +40,11 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(
             ResumeRepositoryInterface::class,
             ResumeRepository::class
+        );
+
+        $this->app->bind(
+            UserRepositoryInterface::class,
+            UserRepository::class
         );
 
         $this->app->bind(
@@ -55,6 +71,14 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(
             ApplicationRepositoryInterface::class,
             ApplicationRepository::class
+        );
+        $this->app->bind(
+            JobQuestionRepositoryInterface::class,
+            JobQuestionRepository::class
+        );
+        $this->app->bind(
+            SavedJobRepositoryInterface::class,
+            SavedJobRepository::class
         );
     }
 

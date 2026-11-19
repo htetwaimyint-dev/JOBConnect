@@ -1,4 +1,3 @@
-
 <?php
 
 use Illuminate\Support\Facades\Route;
@@ -11,6 +10,15 @@ Route::prefix('job-seeker')
         // View my applications
         Route::get('/applications', [ApplicationController::class, 'index']);
 
+        // View one application detail
+        Route::get('/applications/{application}', [ApplicationController::class, 'show']);
+
         // Submit a job application
         Route::post('/applications', [ApplicationController::class, 'store']);
+
+        // Withdraw a pending application
+        Route::patch(
+            '/applications/{application}/withdraw',
+            [ApplicationController::class, 'withdraw']
+        );
     });

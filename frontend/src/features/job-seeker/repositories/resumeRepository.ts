@@ -94,4 +94,16 @@ export const resumeRepository = {
     async delete(id: number): Promise<void> {
         await api.delete(`/job-seeker/resumes/${id}`);
     },
+
+    // Download a public resume as an employer
+    async downloadForEmployer(id: number): Promise<Blob> {
+        const response = await api.get(
+            `/employer/resumes/${id}/download`,
+            {
+                responseType: "blob",
+            },
+        );
+
+        return response.data;
+    },
 };

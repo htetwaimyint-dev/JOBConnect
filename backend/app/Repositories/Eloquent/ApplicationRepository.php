@@ -75,11 +75,25 @@ class ApplicationRepository implements ApplicationRepositoryInterface
 
 
     /**
-     * Create a new application.
+     * Create an application with its answers in a database transaction.
      */
-    public function create(array $data): Application
-    {
-        return Application::create($data);
+    public function createWithAnswers(
+        array $applicationData,
+        array $answers
+    ): Application {
+        return DB::transaction(function () use ($applicationData, $answers) {
+            $application = Application::create($applicationData);
+
+            if (!empty($answers)) {
+                $application->answers()->createMany($answers);
+            }
+
+            return $application->fresh([
+                'job.company',
+                'resume',
+                'answers.jobQuestion',
+            ]);
+        });
     }
 
     /**
@@ -94,6 +108,23 @@ class ApplicationRepository implements ApplicationRepositoryInterface
             ->whereHas('job', function ($query) use ($company) {
                 $query->where('company_id', $company->id);
             })
+            ->find($applicationId);
+    }
+
+    /**
+     * Find an application belonging to a Job Seeker.
+     */
+    public function findForJobSeeker(
+        User $jobSeeker,
+        int $applicationId
+    ): ?Application {
+        return Application::query()
+            ->with([
+                'job.company',
+                'resume',
+                'answers.jobQuestion',
+            ])
+            ->where('job_seeker_id', $jobSeeker->id)
             ->find($applicationId);
     }
 

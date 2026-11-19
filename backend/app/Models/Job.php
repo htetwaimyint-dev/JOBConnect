@@ -71,7 +71,7 @@ class Job extends Model
         return $this->hasMany(Application::class, 'job_id');
     }
 
-    // Job → Screening Questions (1:M)
+    // Job → Screening Questions (1:M)//HWM repair 
     public function jobQuestions(): HasMany
     {
         return $this->hasMany(JobQuestion::class, 'job_id');

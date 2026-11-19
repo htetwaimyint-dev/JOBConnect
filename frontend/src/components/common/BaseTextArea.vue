@@ -2,7 +2,6 @@
 import { watch } from "vue";
 import { useEditor, EditorContent } from "@tiptap/vue-3";
 import StarterKit from "@tiptap/starter-kit";
-import Underline from "@tiptap/extension-underline";
 import Placeholder from "@tiptap/extension-placeholder";
 
 const props = withDefaults(
@@ -27,7 +26,6 @@ const editor = useEditor({
 
     extensions: [
         StarterKit,
-        Underline,
         Placeholder.configure({
             placeholder: props.placeholder,
         }),
