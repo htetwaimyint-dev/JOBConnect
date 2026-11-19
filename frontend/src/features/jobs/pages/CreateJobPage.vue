@@ -94,6 +94,8 @@ watch(
                 name: "job-detail",
                 params: { id: job.id },
             });
+        } else if (job && isEditMode.value) {
+            populateForm(job);
         }
     },
     { immediate: true },
