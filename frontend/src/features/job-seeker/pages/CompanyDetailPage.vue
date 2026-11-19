@@ -569,8 +569,9 @@ onMounted(() => {
           </div>
 
           <!-- ================= JOBS TAB ================= -->
-          <div v-if="activeTab === 'jobs'" class="space-y-6">
-            <div class="flex items-center justify-between mb-4">
+          <div v-if="activeTab === 'jobs'" class="block w-full space-y-6">
+            <!-- Header Row -->
+            <div class="flex items-center justify-between">
               <h2 class="text-xl font-bold text-gray-900">
                 All Open Positions
               </h2>
@@ -579,22 +580,106 @@ onMounted(() => {
               </span>
             </div>
 
-            <div
-              v-if="companyJobs.length === 0"
-              class="py-12 text-center text-gray-500"
+            <!-- Search & Filter Bar -->
+            <form
+              @submit.prevent="handleFilterJobs"
+              class="w-full bg-gray-50 p-4 rounded-xl border border-gray-200 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 items-center"
             >
-              No open positions available right now.
+              <!-- Keyword Search -->
+              <div class="relative lg:col-span-4">
+                <Search
+                  class="h-4 w-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2"
+                />
+                <input
+                  v-model="searchKeyword"
+                  type="text"
+                  placeholder="Search job title..."
+                  class="w-full pl-9 pr-3 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+
+              <!-- Location Filter -->
+              <div class="relative lg:col-span-3">
+                <MapPin
+                  class="h-4 w-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2"
+                />
+                <input
+                  v-model="filterLocation"
+                  type="text"
+                  placeholder="City or Country..."
+                  class="w-full pl-9 pr-3 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+
+              <!-- Employment Type Filter -->
+              <div class="lg:col-span-3">
+                <select
+                  v-model="selectedJobType"
+                  class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                >
+                  <option value="">All Job Types</option>
+                  <option value="full_time">Full Time</option>
+                  <option value="part_time">Part Time</option>
+                  <option value="contract">Contract</option>
+                  <option value="internship">Internship</option>
+                </select>
+              </div>
+
+              <!-- Search & Clear Buttons -->
+              <div class="lg:col-span-2 flex items-center gap-2">
+                <button
+                  type="submit"
+                  :disabled="isSearchingJobs"
+                  class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium py-2 px-4 rounded-lg transition-colors disabled:opacity-50"
+                >
+                  {{ isSearchingJobs ? "..." : "Search" }}
+                </button>
+
+                <button
+                  v-if="hasActiveFilters"
+                  type="button"
+                  @click="clearFilters"
+                  title="Clear Filters"
+                  class="p-2 bg-white border border-gray-300 hover:bg-gray-100 text-gray-600 rounded-lg transition-colors shrink-0"
+                >
+                  <X class="h-4 w-4" />
+                </button>
+              </div>
+            </form>
+
+            <!-- Loading State -->
+            <div v-if="isSearchingJobs" class="flex justify-center py-12">
+              <div
+                class="h-8 w-8 animate-spin rounded-full border-4 border-indigo-600 border-t-transparent"
+              ></div>
             </div>
 
-            <!-- 2-Column Grid Card Layout (ပထမပုံအတိုင်း) -->
-            <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Empty State -->
+            <div
+              v-else-if="companyJobs.length === 0"
+              class="py-12 text-center bg-gray-50 rounded-xl border border-dashed border-gray-200"
+            >
+              <p class="text-gray-500 text-sm">
+                No open positions match your search criteria.
+              </p>
+              <button
+                v-if="hasActiveFilters"
+                @click="clearFilters"
+                class="mt-3 text-sm font-semibold text-indigo-600 hover:text-indigo-800 underline"
+              >
+                Clear all filters
+              </button>
+            </div>
+
+            <!-- 2-Column Job Cards Grid -->
+            <div v-else class="w-full grid grid-cols-1 md:grid-cols-2 gap-6">
               <div
                 v-for="(job, index) in companyJobs"
                 :key="job.id"
                 @click="goToJobDetail(job.id)"
                 class="relative bg-white rounded-2xl border border-gray-200 p-6 shadow-sm hover:shadow-md hover:border-indigo-300 transition-all cursor-pointer flex flex-col justify-between"
               >
-                <!-- Top-Right Index Badge (01, 02...) -->
+                <!-- Top-Right Index Badge -->
                 <span
                   class="absolute -top-2.5 -right-2.5 h-7 w-7 rounded-full bg-sky-500 text-white text-xs font-bold flex items-center justify-center shadow"
                 >
@@ -602,9 +687,9 @@ onMounted(() => {
                 </span>
 
                 <div>
-                  <!-- Card Header: Logo + Title + Company Name + Save Button -->
+                  <!-- Card Header -->
                   <div class="flex items-start justify-between gap-3">
-                    <div class="flex items-center gap-3.5">
+                    <div class="flex items-center gap-3.5 min-w-0">
                       <div
                         class="h-12 w-12 rounded-full border border-gray-200 bg-gray-50 overflow-hidden shrink-0 flex items-center justify-center"
                       >
@@ -616,19 +701,18 @@ onMounted(() => {
                         />
                         <Briefcase v-else class="h-5 w-5 text-gray-400" />
                       </div>
-                      <div>
+                      <div class="min-w-0">
                         <h3
-                          class="text-lg font-bold text-gray-900 hover:text-indigo-600 transition-colors line-clamp-1"
+                          class="text-lg font-bold text-gray-900 hover:text-indigo-600 transition-colors truncate"
                         >
                           {{ job.title }}
                         </h3>
-                        <p class="text-sm text-gray-500 font-medium">
+                        <p class="text-sm text-gray-500 font-medium truncate">
                           {{ company.name }}
                         </p>
                       </div>
                     </div>
 
-                    <!-- Save Button -->
                     <button
                       @click.stop
                       class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200 text-xs font-medium text-gray-600 hover:bg-gray-50 hover:text-indigo-600 transition-colors shrink-0"
@@ -638,7 +722,7 @@ onMounted(() => {
                     </button>
                   </div>
 
-                  <!-- Badges (Full Time, Onsite, Vacancies) -->
+                  <!-- Badges -->
                   <div class="flex flex-wrap items-center gap-2 mt-4">
                     <span
                       class="px-3 py-1 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-600 capitalize"
@@ -659,7 +743,7 @@ onMounted(() => {
                     </span>
                   </div>
 
-                  <!-- Location & Salary Info -->
+                  <!-- Location & Salary -->
                   <div class="mt-5 space-y-2.5 text-sm">
                     <div class="flex items-center gap-2 text-gray-600">
                       <MapPin class="h-4 w-4 text-sky-500 shrink-0" />
@@ -680,7 +764,7 @@ onMounted(() => {
                   </div>
                 </div>
 
-                <!-- Card Footer: Posted Date & View Details Button -->
+                <!-- Card Footer -->
                 <div
                   class="mt-6 pt-4 border-t border-gray-100 flex items-center justify-between"
                 >
@@ -693,7 +777,7 @@ onMounted(() => {
 
                   <button
                     @click.stop="goToJobDetail(job.id)"
-                    class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#1e293b] hover:bg-indigo-600 text-white text-xs font-semibold transition-colors"
+                    class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#1e293b] hover:bg-indigo-600 text-white text-xs font-semibold transition-colors shrink-0"
                   >
                     View Details
                     <ArrowRight class="h-3.5 w-3.5" />
