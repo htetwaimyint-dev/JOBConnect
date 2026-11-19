@@ -23,20 +23,20 @@ export const companyRepository = {
 
     return response.data.data;
   },
-  //fetch companies for job seekers
-  // async getCompanyById(id: number): Promise<Company> {
-  //   const response = await api.get<ApiResponse<Company>>(
-  //     `job-seeker/companies/${id}/jobs`,
-  //   );
+  //fetch company details for job seekers
+  async getCompanyById(id: number): Promise<Company> {
+    const response = await api.get<ApiResponse<Company>>(
+      `job-seeker/companies/${id}/jobs`,
+    );
 
-  //   if (!response.data.success || !response.data.data) {
-  //     throw new Error(
-  //       response.data.message || "Failed to fetch company details",
-  //     );
-  //   }
+    if (!response.data.success || !response.data.data) {
+      throw new Error(
+        response.data.message || "Failed to fetch company details",
+      );
+    }
 
-  //   return response.data.data;
-  // },
+    return response.data.data;
+  },
   async getCompanyJobs(
     id: number,
     params?: {
