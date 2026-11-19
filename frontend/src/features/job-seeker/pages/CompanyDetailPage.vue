@@ -78,7 +78,7 @@ const getImageUrl = (path: string | null) => {
   return path.startsWith("http") ? path : `${STORAGE_URL}${path}`;
 };
 
-// Description JSON string ကို စာသားအဖြစ် ပြောင်းရန် (Error ကင်းစေရန် ပြင်ထားပါသည်)
+// Description JSON string parsing and formatting
 const parsedDescription = computed(() => {
   if (!company.value?.description || company.value.description === "[]") {
     return "No description provided by the company.";
@@ -139,10 +139,10 @@ const isSearchingJobs = ref(false);
 // Filter States
 const searchKeyword = ref("");
 const selectedJobType = ref("");
-const selectedWorkplaceType = ref(""); // <-- ထပ်ဖြည့်ပါ
+const selectedWorkplaceType = ref("");
 const filterLocation = ref("");
 
-// စာသားထဲက အထူးသင်္ကေတ (/ , - , space) များကို ဖယ်ရှားပြီး ရှာဖွေနိုင်ရန် Helper
+// Normalize text for smart matching (e.g., "UIUX" -> "UI/UX")
 const normalizeText = (text: string) => {
   return text.toLowerCase().replace(/[^a-z0-9]/g, "");
 };
@@ -157,7 +157,7 @@ const filteredJobs = computed(() => {
       job.title.toLowerCase().includes(keyword.toLowerCase()) ||
       normalizeText(job.title).includes(normalizeText(keyword));
 
-    // 2. Location Search (City သို့မဟုတ် Country)
+    // locaton filter or country filer
     const loc = filterLocation.value.trim().toLowerCase();
     const matchesLocation =
       !loc ||
@@ -182,20 +182,20 @@ const filteredJobs = computed(() => {
   });
 });
 
-// Filter အားလုံးကို ရှင်းလင်းရန် (Clear Button)
+//  (Clear Button)
 const clearFilters = () => {
   searchKeyword.value = "";
   selectedJobType.value = "";
-  selectedWorkplaceType.value = ""; // <-- ထပ်ဖြည့်ပါ
+  selectedWorkplaceType.value = "";
   filterLocation.value = "";
 };
 
-// Filter တစ်ခုခု ရွေးထားခြင်း ရှိ/မရှိ စစ်ဆေးရန်
+// Check if any filter is active
 const hasActiveFilters = computed(() => {
   return Boolean(
     searchKeyword.value.trim() ||
     selectedJobType.value ||
-    selectedWorkplaceType.value || // <-- ထပ်ဖြည့်ပါ
+    selectedWorkplaceType.value ||
     filterLocation.value.trim(),
   );
 });
@@ -269,14 +269,14 @@ onMounted(() => {
                 <Briefcase v-else class="h-10 w-10 text-gray-300" />
               </div>
               <!-- Title & Tagline -->
-              <div class="mb-3">
+              <div class="mb-4">
                 <h1
                   class="text-xl sm:text-2xl md:text-3xl font-extrabold text-white line-clamp-2"
                 >
                   {{ company.name }}
                 </h1>
                 <p
-                  class="text-xs sm:text-sm md:text-base font-medium text-gray-200 mt-1 line-clamp-2"
+                  class="text-xs sm:text-sm md:text-base font-medium text-gray-700 mt-1 line-clamp-2"
                 >
                   {{ company.tagline || "No tagline provided" }}
                 </p>
@@ -689,8 +689,6 @@ onMounted(() => {
                 </button>
               </div>
             </div>
-
-            <!-- ၃။ Filter Bar ၏ အောက်တွင် Empty State နှင့် Job Cards Grid ရှိရပါမည် -->
 
             <!-- Empty State -->
             <div
