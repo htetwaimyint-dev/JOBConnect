@@ -78,6 +78,7 @@ const getImageUrl = (path: string | null) => {
   return path.startsWith("http") ? path : `${STORAGE_URL}${path}`;
 };
 
+// Description JSON string ကို စာသားအဖြစ် ပြောင်းရန် (Error ကင်းစေရန် ပြင်ထားပါသည်)
 const parsedDescription = computed(() => {
   if (!company.value?.description || company.value.description === "[]") {
     return "No description provided by the company.";
@@ -85,14 +86,17 @@ const parsedDescription = computed(() => {
   try {
     const parsed = JSON.parse(company.value.description);
     if (Array.isArray(parsed) && parsed.length > 0) {
-      return parsed.map((item: any) => item.content).join("\n\n");
+      const text = parsed
+        .map((item: any) => item?.content || "")
+        .filter(Boolean)
+        .join("\n\n");
+      return text || "No description provided by the company.";
     }
-    return company.value.description;
+    return String(company.value.description);
   } catch {
-    return company.value.description;
+    return String(company.value.description);
   }
 });
-
 const formatSalary = (job: CompanyJobItem) => {
   if (
     job.salary_type === "negotiable" ||
@@ -130,39 +134,69 @@ const latestPhotos = computed(() => {
 });
 
 // Filter States
-const searchKeyword = ref("");
-const selectedJobType = ref("");
-const filterLocation = ref("");
 const isSearchingJobs = ref(false);
 
-// Backend API call to filter jobs based on the selected criteria
-const handleFilterJobs = async () => {
-  isSearchingJobs.value = true;
-  try {
-    const id = Number(route.params.id);
-    const data = await companyRepository.getCompanyJobs(id, {
-      keyword: searchKeyword.value || undefined,
-      job_type: selectedJobType.value || undefined,
-      location: filterLocation.value || undefined,
-    });
-    companyJobs.value = data.jobs?.data || [];
-  } catch (err: any) {
-    error.value = err.message || "Failed to filter jobs.";
-  } finally {
-    isSearchingJobs.value = false;
-  }
+// Filter States
+const searchKeyword = ref("");
+const selectedJobType = ref("");
+const selectedWorkplaceType = ref(""); // <-- ထပ်ဖြည့်ပါ
+const filterLocation = ref("");
+
+// စာသားထဲက အထူးသင်္ကေတ (/ , - , space) များကို ဖယ်ရှားပြီး ရှာဖွေနိုင်ရန် Helper
+const normalizeText = (text: string) => {
+  return text.toLowerCase().replace(/[^a-z0-9]/g, "");
 };
-// Clear all filters and reset the job list
+
+// Real-time Instant Filter
+const filteredJobs = computed(() => {
+  return companyJobs.value.filter((job) => {
+    // 1. Keyword Search (Smart Match: "UIUX" -> "UI/UX")
+    const keyword = searchKeyword.value.trim();
+    const matchesKeyword =
+      !keyword ||
+      job.title.toLowerCase().includes(keyword.toLowerCase()) ||
+      normalizeText(job.title).includes(normalizeText(keyword));
+
+    // 2. Location Search (City သို့မဟုတ် Country)
+    const loc = filterLocation.value.trim().toLowerCase();
+    const matchesLocation =
+      !loc ||
+      (job.city && job.city.toLowerCase().includes(loc)) ||
+      (job.country && job.country.toLowerCase().includes(loc));
+
+    // 3. Employment Type Filter
+    const matchesJobType =
+      !selectedJobType.value || job.employment_type === selectedJobType.value;
+
+    // 4. Workplace Type Filter (Onsite, Remote, Hybrid)
+    const matchesWorkplaceType =
+      !selectedWorkplaceType.value ||
+      job.workplace_type === selectedWorkplaceType.value;
+
+    return (
+      matchesKeyword &&
+      matchesLocation &&
+      matchesJobType &&
+      matchesWorkplaceType
+    );
+  });
+});
+
+// Filter အားလုံးကို ရှင်းလင်းရန် (Clear Button)
 const clearFilters = () => {
   searchKeyword.value = "";
   selectedJobType.value = "";
+  selectedWorkplaceType.value = ""; // <-- ထပ်ဖြည့်ပါ
   filterLocation.value = "";
-  handleFilterJobs();
 };
-// Computed property to check if any filters are active
+
+// Filter တစ်ခုခု ရွေးထားခြင်း ရှိ/မရှိ စစ်ဆေးရန်
 const hasActiveFilters = computed(() => {
   return Boolean(
-    searchKeyword.value || selectedJobType.value || filterLocation.value,
+    searchKeyword.value.trim() ||
+    selectedJobType.value ||
+    selectedWorkplaceType.value || // <-- ထပ်ဖြည့်ပါ
+    filterLocation.value.trim(),
   );
 });
 
@@ -576,29 +610,28 @@ onMounted(() => {
                 All Open Positions
               </h2>
               <span class="text-sm text-gray-500">
-                Showing {{ companyJobs.length }} jobs
+                Showing {{ filteredJobs.length }} of
+                {{ companyJobs.length }} jobs
               </span>
             </div>
 
-            <!-- Search & Filter Bar -->
-            <form
-              @submit.prevent="handleFilterJobs"
+            <div
               class="w-full bg-gray-50 p-4 rounded-xl border border-gray-200 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 items-center"
             >
-              <!-- Keyword Search -->
-              <div class="relative lg:col-span-4">
+              <!-- 1. Keyword Search (3 columns) -->
+              <div class="relative lg:col-span-3">
                 <Search
                   class="h-4 w-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2"
                 />
                 <input
                   v-model="searchKeyword"
                   type="text"
-                  placeholder="Search job title..."
+                  placeholder="Job title (e.g. UIUX)..."
                   class="w-full pl-9 pr-3 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
               </div>
 
-              <!-- Location Filter -->
+              <!-- 2. Location Filter (3 columns) -->
               <div class="relative lg:col-span-3">
                 <MapPin
                   class="h-4 w-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2"
@@ -611,8 +644,8 @@ onMounted(() => {
                 />
               </div>
 
-              <!-- Employment Type Filter -->
-              <div class="lg:col-span-3">
+              <!-- 3. Employment Type Filter (2 columns) -->
+              <div class="lg:col-span-2">
                 <select
                   v-model="selectedJobType"
                   class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
@@ -625,38 +658,43 @@ onMounted(() => {
                 </select>
               </div>
 
-              <!-- Search & Clear Buttons -->
-              <div class="lg:col-span-2 flex items-center gap-2">
-                <button
-                  type="submit"
-                  :disabled="isSearchingJobs"
-                  class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium py-2 px-4 rounded-lg transition-colors disabled:opacity-50"
+              <!-- 4. Workplace Type Filter (2 columns) -->
+              <div class="lg:col-span-2">
+                <select
+                  v-model="selectedWorkplaceType"
+                  class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 >
-                  {{ isSearchingJobs ? "..." : "Search" }}
-                </button>
+                  <option value="">All Workplaces</option>
+                  <option value="onsite">Onsite</option>
+                  <option value="remote">Remote</option>
+                  <option value="hybrid">Hybrid</option>
+                </select>
+              </div>
 
+              <!-- 5. Clear Button (2 columns) -->
+              <div class="lg:col-span-2">
                 <button
-                  v-if="hasActiveFilters"
                   type="button"
                   @click="clearFilters"
-                  title="Clear Filters"
-                  class="p-2 bg-white border border-gray-300 hover:bg-gray-100 text-gray-600 rounded-lg transition-colors shrink-0"
+                  :disabled="!hasActiveFilters"
+                  :class="[
+                    hasActiveFilters
+                      ? 'bg-red-50 text-red-600 border-red-200 hover:bg-red-100 cursor-pointer'
+                      : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed',
+                    'w-full inline-flex items-center justify-center gap-1.5 text-sm font-medium py-2 px-3 rounded-lg border transition-colors',
+                  ]"
                 >
                   <X class="h-4 w-4" />
+                  Clear
                 </button>
               </div>
-            </form>
-
-            <!-- Loading State -->
-            <div v-if="isSearchingJobs" class="flex justify-center py-12">
-              <div
-                class="h-8 w-8 animate-spin rounded-full border-4 border-indigo-600 border-t-transparent"
-              ></div>
             </div>
+
+            <!-- ၃။ Filter Bar ၏ အောက်တွင် Empty State နှင့် Job Cards Grid ရှိရပါမည် -->
 
             <!-- Empty State -->
             <div
-              v-else-if="companyJobs.length === 0"
+              v-if="filteredJobs.length === 0"
               class="py-12 text-center bg-gray-50 rounded-xl border border-dashed border-gray-200"
             >
               <p class="text-gray-500 text-sm">
@@ -674,7 +712,7 @@ onMounted(() => {
             <!-- 2-Column Job Cards Grid -->
             <div v-else class="w-full grid grid-cols-1 md:grid-cols-2 gap-6">
               <div
-                v-for="(job, index) in companyJobs"
+                v-for="(job, index) in filteredJobs"
                 :key="job.id"
                 @click="goToJobDetail(job.id)"
                 class="relative bg-white rounded-2xl border border-gray-200 p-6 shadow-sm hover:shadow-md hover:border-indigo-300 transition-all cursor-pointer flex flex-col justify-between"
