@@ -28,10 +28,8 @@ const error = ref("");
 // Tabs State
 const activeTab = ref<"about" | "jobs" | "gallery">("about");
 
-// Read More State
+// Read More & Gallery States
 const isDescriptionExpanded = ref(false);
-
-// Gallery View All State
 const isGalleryExpanded = ref(false);
 
 // Mock Jobs Data
@@ -86,17 +84,14 @@ const fetchCompanyDetail = async () => {
 
 const goBack = () => router.back();
 
-// Description Toggle
 const toggleDescription = () => {
   isDescriptionExpanded.value = !isDescriptionExpanded.value;
 };
 
-// Gallery Toggle
 const toggleGallery = () => {
   isGalleryExpanded.value = !isGalleryExpanded.value;
 };
 
-// Computed for Gallery Display (Show 6 first, or all if expanded)
 const displayedGallery = computed(() => {
   if (!company.value?.gallery) return [];
   return isGalleryExpanded.value
@@ -104,12 +99,8 @@ const displayedGallery = computed(() => {
     : company.value.gallery.slice(0, 6);
 });
 
-// နောက်ဆုံးထွက် အလုပ် ၃ ခုကို ယူမယ် (About Tab မှာ ပြဖို့)
-const latestJobs = computed(() => {
-  return companyJobs.value.slice(0, 3);
-});
+const latestJobs = computed(() => companyJobs.value.slice(0, 3));
 
-// နောက်ဆုံးထွက် ပုံ ၅ ပုံကို ယူမယ် (About Tab မှာ ပြဖို့)
 const latestPhotos = computed(() => {
   if (!company.value?.gallery) return [];
   return company.value.gallery.slice(0, 5);
@@ -151,11 +142,12 @@ onMounted(() => {
       >
         <!-- 1. Cover Image & Header Section -->
         <div class="relative w-full">
+          <!-- Cover Image: ပုံကို လင်းလက်စေဖို့ opacity မထည့်တော့ပါဘူး -->
           <div class="h-48 w-full bg-slate-800 sm:h-64 relative">
             <img
               v-if="company.cover_image"
               :src="company.cover_image"
-              class="w-full h-full object-cover opacity-60"
+              class="w-full h-full object-cover"
               alt="Cover"
             />
             <div
@@ -163,11 +155,12 @@ onMounted(() => {
               class="w-full h-full bg-gradient-to-r from-indigo-900 to-slate-900"
             ></div>
 
-            <!-- စာသားတွေ ထင်ရှားအောင် အနက်ရောင် Gradient လေးခံပေးထားတယ် -->
+            <!-- Gradient: အောက်ခြေမှာပဲ အနည်းငယ် မှောင်ပေးထားတယ် (စာသားဖတ်ရလွယ်ဖို့) -->
             <div
-              class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"
+              class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent"
             ></div>
 
+            <!-- Verified Badge -->
             <div class="absolute top-4 right-4 flex items-center gap-2">
               <span
                 v-if="company.verification_status === 'verified'"
@@ -183,6 +176,7 @@ onMounted(() => {
             class="relative px-6 sm:px-8 -mt-16 sm:-mt-20 pb-6 flex flex-col sm:flex-row sm:items-end justify-between gap-4"
           >
             <div class="flex items-end gap-4 sm:gap-6">
+              <!-- Logo -->
               <div
                 class="h-28 w-28 sm:h-32 sm:w-32 rounded-xl border-4 border-white bg-white shadow-md shrink-0 overflow-hidden flex items-center justify-center"
               >
@@ -194,26 +188,19 @@ onMounted(() => {
                 />
                 <Briefcase v-else class="h-10 w-10 text-gray-300" />
               </div>
-              <div class="mb-2">
-                <h1 class="text-2xl sm:text-3xl font-bold text-gray-900">
+              <!-- Title & Tagline -->
+              <div class="mb-5">
+                <h1
+                  class="text-xl sm:text-2xl md:text-3xl font-extrabold text-white line-clamp-2"
+                >
                   {{ company.name }}
                 </h1>
-                <!-- Tagline အရောင်ကို gray-700 (ပိုမှောင်) ပြောင်းထားတယ် -->
                 <p
-                  class="text-sm sm:text-base text-gray-700 font-medium mt-1 line-clamp-1"
+                  class="text-xs sm:text-sm md:text-base font-medium text-black mt-1 line-clamp-2"
                 >
                   {{ company.tagline || "No tagline provided" }}
                 </p>
               </div>
-            </div>
-
-            <!-- Action Button -->
-            <div class="flex gap-2 mb-2">
-              <button
-                class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition-colors shadow-sm"
-              >
-                Submit General Application
-              </button>
             </div>
           </div>
         </div>
@@ -271,7 +258,6 @@ onMounted(() => {
                 About {{ company.name }}
               </h2>
               <div class="relative">
-                <!-- Database က description ကို JSON အနေနဲ့ သိမ်းထားရင် ပြန်ဖြည်ဖို့ လိုနိုင်ပါတယ်။ ဒီမှာ ရိုးရိုး String အနေနဲ့ ပြထားပါတယ်။ -->
                 <p
                   :class="[
                     isDescriptionExpanded ? '' : 'line-clamp-5',
@@ -296,7 +282,7 @@ onMounted(() => {
               </div>
             </div>
 
-            <!-- Full Width Details Section (Database Field များအတိုင်း) -->
+            <!-- Full Width Details Section -->
             <div class="border-t border-gray-100 pt-8">
               <h3 class="text-lg font-bold text-gray-900 mb-5">
                 Company Details
@@ -371,7 +357,7 @@ onMounted(() => {
                   </div>
                 </div>
 
-                <!-- Address (အသစ်ထည့်ထားတယ်) -->
+                <!-- Address -->
                 <div class="flex items-start gap-3">
                   <div class="p-2.5 bg-indigo-50 rounded-lg shrink-0">
                     <MapPin class="h-5 w-5 text-indigo-600" />
@@ -388,7 +374,7 @@ onMounted(() => {
                   </div>
                 </div>
 
-                <!-- Phone (အသစ်ထည့်ထားတယ်) -->
+                <!-- Phone -->
                 <div class="flex items-start gap-3">
                   <div class="p-2.5 bg-indigo-50 rounded-lg shrink-0">
                     <Phone class="h-5 w-5 text-indigo-600" />
@@ -461,7 +447,6 @@ onMounted(() => {
                 </button>
               </div>
 
-              <!-- Latest Jobs List (3 Jobs) -->
               <div class="space-y-3">
                 <div
                   v-for="job in latestJobs"
@@ -514,7 +499,6 @@ onMounted(() => {
                 </button>
               </div>
 
-              <!-- Latest Photos Grid (5 Photos) -->
               <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
                 <div
                   v-for="(img, i) in latestPhotos"
@@ -593,7 +577,6 @@ onMounted(() => {
               </h2>
             </div>
 
-            <!-- Gallery Grid -->
             <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
               <div
                 v-for="(img, i) in displayedGallery"
@@ -607,7 +590,6 @@ onMounted(() => {
                 />
               </div>
 
-              <!-- Empty Placeholder -->
               <div
                 v-if="displayedGallery.length === 0"
                 class="col-span-full py-12 text-center text-gray-500 flex flex-col items-center"
@@ -617,7 +599,6 @@ onMounted(() => {
               </div>
             </div>
 
-            <!-- View All Button -->
             <div
               v-if="company.gallery && company.gallery.length > 6"
               class="mt-8 text-center"
@@ -637,3 +618,4 @@ onMounted(() => {
     </div>
   </div>
 </template>
+n
