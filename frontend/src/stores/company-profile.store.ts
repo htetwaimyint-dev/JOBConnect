@@ -38,6 +38,8 @@ export const useCompanyProfileStore = defineStore("company-profile", () => {
     const successMessage = ref("");
 
     const isEditMode = ref(false);
+    const verificationStatus = ref<Company["verification_status"]>("pending");
+    const rejectionReason = ref<string | null>(null);
 
     const errors = ref<Record<string, string[]>>({});
 
@@ -128,6 +130,9 @@ export const useCompanyProfileStore = defineStore("company-profile", () => {
 
         logoFile.value = null;
         coverFile.value = null;
+
+        verificationStatus.value = company.verification_status;
+        rejectionReason.value = company.rejection_reason;
 
         isEditMode.value = true;
     }
@@ -261,7 +266,8 @@ export const useCompanyProfileStore = defineStore("company-profile", () => {
         successMessage.value = "";
 
         clearErrors();
-
+        verificationStatus.value = "pending";
+        rejectionReason.value = null;
         isEditMode.value = false;
     }
     onScopeDispose(cleanupPreviews);
@@ -279,6 +285,8 @@ export const useCompanyProfileStore = defineStore("company-profile", () => {
         isEditMode,
         hasChanges,
         errors,
+        verificationStatus,
+        rejectionReason,
         populate,
         selectImage,
         addGallery,

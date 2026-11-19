@@ -3,13 +3,14 @@ import CompanyProfilePage from "@/features/employer/pages/CompanyProfilePage.vue
 import EmployerDashboard from "@/features/employer/pages/EmployerDashboard.vue";
 import EmployerSettingsPage from "@/features/employer/pages/EmployerSettingsPage.vue";
 import ApplicantsPage from "@/features/employer/pages/ApplicantsPage.vue";
-import DirectOfferPage from "@/features/employer/pages/DirectOfferPage.vue";
 import JobSeekersPage from "@/features/employer/pages/JobSeekersPage.vue";
 import JobSeekerDetailPage from "@/features/employer/pages/JobSeekerDetailPage.vue";
 import CreateJobPage from "@/features/jobs/pages/CreateJobPage.vue";
 import JobDetail from "@/features/jobs/pages/JobDetail.vue";
 import EmployerLayout from "@/layouts/EmployerLayout.vue";
 import type { RouteRecordRaw } from "vue-router";
+import EmployerCreateJobOfferPage from "@/features/job-offers/pages/EmployerCreateJobOfferPage.vue";
+import EmployerJobOfferPage from "@/features/job-offers/pages/EmployerJobOfferPage.vue";
 
 export const employerRoutes: RouteRecordRaw[] = [
     {
@@ -28,7 +29,8 @@ export const employerRoutes: RouteRecordRaw[] = [
             {
                 path: "jobs",
                 name: "EmployerJobs",
-                component: () => import("@/features/jobs/pages/EmployerJobsPage.vue"),
+                component: () =>
+                    import("@/features/jobs/pages/EmployerJobsPage.vue"),
             },
             {
                 path: "jobs/create",
@@ -63,7 +65,7 @@ export const employerRoutes: RouteRecordRaw[] = [
             {
                 path: "direct-offers",
                 name: "EmployerDirectOffers",
-                component: DirectOfferPage,
+                component: CompanyProfilePage,
             },
             {
                 path: "profile/edit",
@@ -79,6 +81,20 @@ export const employerRoutes: RouteRecordRaw[] = [
                 path: "job-seekers/:id",
                 name: "EmployerJobSeekerDetail",
                 component: JobSeekerDetailPage,
+            },
+            {
+                path: "job-offers/:candidateId",
+                name: "job-offer",
+                component: EmployerCreateJobOfferPage,
+                props: (route) => ({
+                    candidateId: Number(route.params.candidateId),
+                }),
+            },
+
+            {
+                path: "job-offers/",
+                name: "employer-job-offers",
+                component: EmployerJobOfferPage,
             },
         ],
     },

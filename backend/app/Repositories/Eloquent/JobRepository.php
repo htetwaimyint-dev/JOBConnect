@@ -23,16 +23,15 @@ class JobRepository implements JobRepositoryInterface
         int $perPage = 5
     ): LengthAwarePaginator {
         $perPage = $params['perPage'] ?? 10;
+
         return $company->jobs()
             ->with('category')
-
             ->when($params['search'] ?? null, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('title', 'like', "%{$search}%")
                         ->orWhere('description_plain_text', 'like', "%{$search}%");
                 });
             })
-
             ->when($params['category_id'] ?? null, function ($query, $categoryId) {
                 $query->where('category_id', $categoryId);
             })
@@ -44,18 +43,15 @@ class JobRepository implements JobRepositoryInterface
             ->when($params['employment_type'] ?? null, function ($query, $employmentType) {
                 $query->where('employment_type', $employmentType);
             })
-
             ->when($params['workplace_type'] ?? null, function ($query, $workplaceType) {
                 $query->where('workplace_type', $workplaceType);
             })
-
             ->when($params['location'] ?? null, function ($query, $location) {
                 $query->where(function ($q) use ($location) {
                     $q->where('city', 'like', "%{$location}%")
                         ->orWhere('country', 'like', "%{$location}%");
                 });
             })
-
             ->latest()
             ->paginate($perPage);
     }
@@ -102,17 +98,64 @@ class JobRepository implements JobRepositoryInterface
     | Admin Job Approval
     |--------------------------------------------------------------------------
     */
-
-    public function getPendingForAdmin(
-        int $perPage = 5
+    public function getAllJobsForAdmin(
+        int $perPage = 5,
+        ?string $search = null
     ): LengthAwarePaginator {
-        return Job::with([
+        $query = Job::with([
+            'company:id,name,logo,city',
+            'category:id,name',
+        ]);
+
+        if (!empty($search)) {
+            $query->where(function ($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                    ->orWhere('description_plain_text', 'like', "%{$search}%")
+                    ->orWhere('city', 'like', "%{$search}%")
+                    ->orWhere('country', 'like', "%{$search}%")
+                    ->orWhereHas('company', function ($companyQuery) use ($search) {
+                        $companyQuery->where('name', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('category', function ($categoryQuery) use ($search) {
+                        $categoryQuery->where('name', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        return $query->latest()
+            ->paginate($perPage)
+            ->withQueryString();
+    }
+
+    public function getJobsByStatusForAdmin(
+        JobStatus $status,
+        int $perPage = 5,
+        ?string $search = null
+    ): LengthAwarePaginator {
+        $query = Job::with([
             'company:id,name,logo,city',
             'category:id,name',
         ])
-            ->where('status', JobStatus::Pending->value)
-            ->latest()
-            ->paginate($perPage);
+            ->where('status', $status->value);
+
+        if (!empty($search)) {
+            $query->where(function ($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                    ->orWhere('description_plain_text', 'like', "%{$search}%")
+                    ->orWhere('city', 'like', "%{$search}%")
+                    ->orWhere('country', 'like', "%{$search}%")
+                    ->orWhereHas('company', function ($companyQuery) use ($search) {
+                        $companyQuery->where('name', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('category', function ($categoryQuery) use ($search) {
+                        $categoryQuery->where('name', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        return $query->latest()
+            ->paginate($perPage)
+            ->withQueryString();
     }
 
     public function findForAdmin(int $jobId): ?Job
@@ -124,6 +167,7 @@ class JobRepository implements JobRepositoryInterface
             'jobQuestion',
         ])->find($jobId);
     }
+
     /*
     |--------------------------------------------------------------------------
     | Public Job Listing

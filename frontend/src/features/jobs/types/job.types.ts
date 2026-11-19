@@ -56,6 +56,7 @@ export interface Job {
   deadline: string | null;
 
   status: JobStatus;
+  rejection_reason?: string | null;
 
   created_at: string;
   updated_at: string;
@@ -82,7 +83,7 @@ export interface JobFormData {
   job_questions: JobApplicationQuestionForm[];
 }
 
-export type JobDetailMode = "preview" | "public" | "admin";
+export type JobDetailMode = "preview" | "public" | "admin" | "employer";
 
 export type JobFormField = keyof JobFormData;
 

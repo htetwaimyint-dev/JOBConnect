@@ -12,6 +12,7 @@ import {
   Wallet,
   Clock3,
   Globe,
+  Linkedin,
   LoaderCircle,
   AlertCircle,
   CheckCircle2,
@@ -19,6 +20,7 @@ import {
 
 import { useUserStore } from "@/stores/user.store";
 import { profileRepository } from "../repositories/profileRepository";
+import { getImageUrl } from "@/utils/image.utils";
 
 import ProfileForm from "./ProfileForm.vue";
 
@@ -62,7 +64,7 @@ const loadProfile = async () => {
     } else {
       profile.value = await profileRepository.getProfile();
 
-      userStore.setProfilePhoto(profile.value.profile_photo);
+      userStore.setProfilePhoto(getImageUrl(profile.value.profile_photo));
     }
   } catch (error) {
     console.error("Failed to load profile:", error);
@@ -100,7 +102,7 @@ const saveProfile = async (data: UpdateProfileData) => {
   try {
     profile.value = await profileRepository.updateProfile(data);
 
-    userStore.setProfilePhoto(profile.value.profile_photo);
+    userStore.setProfilePhoto(getImageUrl(profile.value.profile_photo));
 
     showForm.value = false;
     successMessage.value = "Your profile has been updated successfully.";
@@ -184,7 +186,7 @@ onMounted(loadProfile);
         >
           <img
             v-if="profile.profile_photo"
-            :src="profile.profile_photo"
+            :src="getImageUrl(profile.profile_photo) ?? ''"
             alt="Profile photo"
             class="h-full w-full object-cover"
           />
@@ -394,7 +396,7 @@ onMounted(loadProfile);
 
       <button
         type="button"
-        class="mt-4 rounded-lg bg-blue-600 px-4 fpy-2 text-sm font-semibold text-white hover:bg-blue-700"
+        class="mt-4 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
         @click="loadProfile"
       >
         Try Again
@@ -419,12 +421,6 @@ onMounted(loadProfile);
   align-items: flex-start;
   gap: 0.75rem;
   min-width: 0;
-  color: #64748b;
-}
-
-.profile-detail > svg {
-  flex-shrink: 0;
-  margin-top: 0.15rem;
   color: #64748b;
 }
 

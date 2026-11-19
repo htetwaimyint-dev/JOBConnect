@@ -2,18 +2,25 @@ import api from "@/services/api";
 
 import type {
     JobApprovalData,
+    JobApprovalFilter,
     JobListParams,
     JobListResponse,
     JobResponse,
 } from "../types/job-approval.types";
 
 const jobApprovalRepository = {
-    async getPendingJobs(
+    async getJobsByStatus(
+        status: JobApprovalFilter,
         params?: JobListParams
     ): Promise<JobListResponse> {
         const response = await api.get<JobListResponse>(
-            "/admin/jobs/pending",
-            { params }
+            "/admin/jobs",
+            {
+                params: {
+                    ...params,
+                    status,
+                },
+            }
         );
 
         return response.data;

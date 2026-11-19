@@ -29,6 +29,10 @@ Route::middleware(['auth:sanctum', 'employer'])
             'update',
         ]);
 
+        Route::get(
+            '/resumes/{resume}/download',
+            [\App\Http\Controllers\Api\V1\Employer\ResumeController::class, 'download']
+        );
         // Employer Jobs
         Route::get('/jobs', [
             CompanyJobController::class,

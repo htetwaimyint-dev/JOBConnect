@@ -16,6 +16,12 @@ export const jobKeys = {
 
     details: () => [...jobKeys.all, "detail"] as const,
 
+    employerDetail: (id: number | string) =>
+        [...jobKeys.details(), "employer", String(id)] as const,
+
+    publicDetail: (id: number | string) =>
+        [...jobKeys.details(), "public", String(id)] as const,
+
     detail: (id: MaybeRefOrGetter<number | string>) =>
         [...jobKeys.details(), id] as const,
 };

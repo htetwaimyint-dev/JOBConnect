@@ -75,34 +75,59 @@ export function useJobs() {
             return response.data;
         },
 
-        onSuccess: (_, variables) => {
+        onSuccess: async (_, variables) => {
+            await Promise.all([
+                queryClient.invalidateQueries({
+                    queryKey: jobKeys.lists(),
+                }),
+
+                queryClient.invalidateQueries({
+                    queryKey: jobKeys.employerDetail(variables.id),
+                }),
+            ]);
+        },
+    });
+
+
+    // Close published employer job
+    const closeJob = useMutation({
+        mutationFn: async (id: number) => {
+            const response = await jobRepository.closeJob(id);
+            return response.data;
+        },
+
+        onSuccess: (_, id) => {
+            // Refresh employer job lists
             queryClient.invalidateQueries({
                 queryKey: jobKeys.lists(),
             });
 
+            // Refresh specific job detail
             queryClient.invalidateQueries({
-                queryKey: jobKeys.detail(variables.id),
+                queryKey: jobKeys.detail(id),
             });
         },
     });
 
     // Delete employer job
-    function deleteJob() {
-        const queryClient = useQueryClient();
+    const deleteJob = useMutation({
+        mutationFn: async (id: number) => {
+            const response = await jobRepository.deleteJob(id);
+            return response.data;
+        },
 
-        return useMutation({
-            mutationFn: async (id: number) => {
-                const response = await jobRepository.deleteJob(id);
-                return response.data;
-            },
+        onSuccess: (_, id) => {
+            // Refresh employer job lists
+            queryClient.invalidateQueries({
+                queryKey: jobKeys.lists(),
+            });
 
-            onSuccess: () => {
-                queryClient.invalidateQueries({
-                    queryKey: jobKeys.lists(),
-                });
-            },
-        });
-    }
+            // Refresh specific job detail
+            queryClient.invalidateQueries({
+                queryKey: jobKeys.detail(id),
+            });
+        },
+    });
 
     // Get job details
     function getJobById(id: MaybeRefOrGetter<number | string>) {
@@ -112,11 +137,11 @@ export function useJobs() {
         const isEmployer = computed(() => authStore.user?.role === "employer");
 
         return useQuery({
-            queryKey: computed(() => [
-                "jobs",
-                isEmployer.value ? "employer" : "public",
-                jobId.value,
-            ]),
+            queryKey: computed(() =>
+                isEmployer.value
+                    ? jobKeys.employerDetail(jobId.value)
+                    : jobKeys.publicDetail(jobId.value),
+            ),
 
             queryFn: async () => {
                 const response = isEmployer.value
@@ -136,6 +161,7 @@ export function useJobs() {
         getJobById,
         createJob,
         updateJob,
+        closeJob,
         deleteJob,
     };
 }
