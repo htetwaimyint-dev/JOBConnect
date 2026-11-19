@@ -1,183 +1,216 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
+import { onMounted, onUnmounted, ref, watch } from "vue";
+
 import {
   Search,
   RefreshCw,
-  Eye,
-  CheckCircle2,
-  XCircle,
+  AlertCircle,
+  X,
   LoaderCircle,
-  BriefcaseBusiness,
 } from "lucide-vue-next";
 
 import jobApprovalRepository from "../repositories/jobApprovalRepository";
+import JobApprovalTable from "../components/jobs/JobApprovalTable.vue";
+import JobApprovalModal from "../components/jobs/JobApprovalModal.vue";
+import JobApprovalDetailModal from "../components/jobs/JobApprovalDetailModal.vue";
+import BasePagination from "@/components/common/BasePagination.vue";
+
 import type { Job } from "../types/job-approval.types";
 
-import JobApprovalModal from "../components/jobs/JobApprovalModal.vue";
-import BasePagination from "@/components/common/BasePagination.vue";
-import JobDetailContent from "@/features/jobs/components/JobDetailContent.vue";
-
-import type { JobFormData } from "@/features/jobs/types/job.types";
-
 type ApprovalAction = "published" | "rejected";
+type ApprovalTab = "all" | "pending" | "published" | "rejected";
 
 const jobs = ref<Job[]>([]);
-const loading = ref(false);
-const errorMessage = ref("");
 
-const search = ref("");
+const loading = ref(false);
+const submitting = ref(false);
+
+const searchQuery = ref("");
+
 const currentPage = ref(1);
-const perPage = ref(10);
 const lastPage = ref(1);
 const total = ref(0);
+const perPage = ref(5);
 
+const activeFilter = ref<ApprovalTab>("all");
+
+const errorMessage = ref("");
+
+// Request control
+let searchTimeout: ReturnType<typeof setTimeout>;
+let requestId = 0;
+
+// Job Details Modal
 const selectedJob = ref<Job | null>(null);
-const showDetails = ref(false);
+const showDetailsModal = ref(false);
 
+// Approval Modal
 const approvalJob = ref<Job | null>(null);
 const approvalAction = ref<ApprovalAction | null>(null);
 const rejectionReason = ref("");
-const submitting = ref(false);
 
-// Convert Admin Job data to the format expected by JobDetailContent.
-const detailJob = computed(() => {
-  const job = selectedJob.value;
+// Filters
+const filters: {
+  label: string;
+  value: ApprovalTab;
+}[] = [
+  { label: "All Jobs", value: "all" },
+  { label: "Pending", value: "pending" },
+  { label: "Approved", value: "published" },
+  { label: "Rejected", value: "rejected" },
+];
 
-  if (!job) return null;
-
-  return {
-    id: job.id,
-    title: job.title,
-
-    category_id: job.category?.id ?? null,
-
-    deadline: job.deadline ?? "",
-
-    employment_type: job.employment_type as JobFormData["employment_type"],
-
-    vacancies: job.vacancies ?? 1,
-
-    gender: (job.gender ?? "any") as JobFormData["gender"],
-
-    workplace_type: job.workplace_type as JobFormData["workplace_type"],
-
-    country: job.country ?? "",
-    city: job.city ?? "",
-
-    salary_type: (job.salary_type ??
-      "negotiable") as JobFormData["salary_type"],
-
-    salary_min: job.salary_min === null ? undefined : Number(job.salary_min),
-
-    salary_max: job.salary_max === null ? undefined : Number(job.salary_max),
-
-    description: job.description ?? "",
-    requirements: job.requirements ?? "",
-    responsibilities: job.responsibilities ?? "",
-
-    submission_status: "pending" as const,
-
-    job_questions: [],
-
-    company: job.company,
-    category: job.category,
+// Status Helpers
+const statusLabel = (status: string | null | undefined) => {
+  const labels: Record<string, string> = {
+    pending: "Pending",
+    published: "Approved",
+    rejected: "Rejected",
+    draft: "Draft",
+    closed: "Closed",
   };
-});
 
-// Client-side search for the currently loaded page.
-const filteredJobs = computed(() => {
-  const keyword = search.value.trim().toLowerCase();
+  return labels[status ?? ""] ?? status ?? "Unknown";
+};
 
-  if (!keyword) return jobs.value;
+const statusClass = (status: string | null | undefined) => {
+  const classes: Record<string, string> = {
+    pending: "bg-amber-50 text-amber-700 ring-amber-200",
+    published: "bg-emerald-50 text-emerald-700 ring-emerald-200",
+    rejected: "bg-red-50 text-red-700 ring-red-200",
+    draft: "bg-slate-100 text-slate-600 ring-slate-200",
+    closed: "bg-gray-100 text-gray-600 ring-gray-200",
+  };
 
-  return jobs.value.filter((job) =>
-    [job.title, job.company?.name, job.category?.name, job.city]
-      .filter(Boolean)
-      .some((value) => String(value).toLowerCase().includes(keyword)),
-  );
-});
+  return classes[status ?? ""] ?? "bg-slate-100 text-slate-600 ring-slate-200";
+};
 
-async function fetchPendingJobs() {
+// Fetch Jobs
+const fetchJobs = async (page = 1) => {
+  const currentRequestId = ++requestId;
+
   loading.value = true;
   errorMessage.value = "";
 
   try {
-    const response = await jobApprovalRepository.getPendingJobs({
-      page: currentPage.value,
-      per_page: perPage.value,
-    });
+    const response = await jobApprovalRepository.getJobsByStatus(
+      activeFilter.value,
+      {
+        search: searchQuery.value.trim(),
+        page,
+        per_page: perPage.value,
+      },
+    );
+
+    // Ignore outdated responses
+    if (currentRequestId !== requestId) return;
 
     jobs.value = response.data;
-
-    if (response.meta) {
-      currentPage.value = response.meta.current_page;
-      lastPage.value = response.meta.last_page;
-      total.value = response.meta.total;
-    } else {
-      lastPage.value = 1;
-      total.value = jobs.value.length;
-    }
+    currentPage.value = response.meta.current_page;
+    lastPage.value = response.meta.last_page;
+    total.value = response.meta.total;
   } catch (error: any) {
-    console.error("Failed to load pending jobs:", error);
+    if (currentRequestId !== requestId) return;
+
+    console.error("Failed to fetch jobs:", error);
 
     errorMessage.value =
-      error.response?.data?.message ?? "Unable to load pending jobs.";
+      error.response?.data?.message ?? "Failed to load jobs.";
   } finally {
-    loading.value = false;
+    if (currentRequestId === requestId) {
+      loading.value = false;
+    }
   }
-}
+};
 
-async function viewJob(job: Job) {
+// Backend Search with Debounce
+watch(searchQuery, () => {
+  clearTimeout(searchTimeout);
+
+  searchTimeout = setTimeout(() => {
+    currentPage.value = 1;
+    fetchJobs(1);
+  }, 500);
+});
+
+// Filter
+const changeFilter = (status: ApprovalTab) => {
+  if (activeFilter.value === status) return;
+
+  activeFilter.value = status;
+  searchQuery.value = "";
+  currentPage.value = 1;
+
+  clearTimeout(searchTimeout);
+  fetchJobs(1);
+};
+
+// Pagination
+const goToPage = (page: number) => {
+  if (page < 1 || page > lastPage.value || loading.value) return;
+
+  fetchJobs(page);
+};
+
+const changePerPage = (value: number) => {
+  perPage.value = value;
+  currentPage.value = 1;
+  fetchJobs(1);
+};
+
+// Refresh
+const refreshJobs = () => {
+  if (loading.value) return;
+
+  clearTimeout(searchTimeout);
+  fetchJobs(currentPage.value);
+};
+
+// Job Details
+const openDetails = async (job: Job) => {
   errorMessage.value = "";
 
   try {
     const response = await jobApprovalRepository.getJobById(job.id);
 
     selectedJob.value = response.data;
-    showDetails.value = true;
+    showDetailsModal.value = true;
   } catch (error: any) {
     console.error("Failed to load job details:", error);
 
     errorMessage.value =
       error.response?.data?.message ?? "Unable to load job details.";
   }
-}
+};
 
-function changePage(page: number) {
-  if (page < 1 || page > lastPage.value) return;
+const closeDetails = () => {
+  showDetailsModal.value = false;
+  selectedJob.value = null;
+};
 
-  currentPage.value = page;
-  fetchPendingJobs();
-}
-
-function changePerPage(value: number) {
-  perPage.value = value;
-  currentPage.value = 1;
-  fetchPendingJobs();
-}
-
-function openApproval(action: ApprovalAction) {
-  if (!selectedJob.value) return;
-
-  approvalJob.value = selectedJob.value;
+// Approval Dialog
+const openApprovalDialog = (job: Job, action: ApprovalAction) => {
+  errorMessage.value = "";
+  approvalJob.value = job;
   approvalAction.value = action;
   rejectionReason.value = "";
+};
 
-  showDetails.value = false;
-}
-
-function closeApproval() {
+// Close Approval Dialog
+const closeApprovalDialog = () => {
   if (submitting.value) return;
 
   approvalJob.value = null;
   approvalAction.value = null;
   rejectionReason.value = "";
-}
+};
 
-async function confirmApproval() {
+// Confirm Approval / Rejection
+const confirmApproval = async () => {
   if (!approvalJob.value || !approvalAction.value) return;
 
   if (approvalAction.value === "rejected" && !rejectionReason.value.trim()) {
+    errorMessage.value = "Please provide a rejection reason.";
     return;
   }
 
@@ -203,262 +236,193 @@ async function confirmApproval() {
     approvalJob.value = null;
     approvalAction.value = null;
     rejectionReason.value = "";
-    selectedJob.value = null;
 
-    await fetchPendingJobs();
+    selectedJob.value = null;
+    showDetailsModal.value = false;
+
+    // Move to previous page if current page only had one record
+    const nextPage =
+      jobs.value.length === 1 && currentPage.value > 1
+        ? currentPage.value - 1
+        : currentPage.value;
+
+    await fetchJobs(nextPage);
   } catch (error: any) {
-    console.error("Failed to update job approval:", error);
+    console.error("Failed to update job:", error);
 
     errorMessage.value =
-      error.response?.data?.message ?? "Unable to update job approval.";
+      error.response?.data?.message ??
+      "Unable to update job status. Please try again.";
   } finally {
     submitting.value = false;
   }
-}
+};
 
-function formatDate(date: string | null) {
-  if (!date) return "—";
+// Initial Load
+onMounted(() => {
+  fetchJobs(1);
+});
 
-  return new Date(date).toLocaleDateString();
-}
-
-onMounted(fetchPendingJobs);
+// Cleanup
+onUnmounted(() => {
+  clearTimeout(searchTimeout);
+  requestId++;
+});
 </script>
 
 <template>
   <div class="space-y-6">
     <!-- Page Header -->
     <div
-      class="flex flex-col justify-between gap-4 sm:flex-row sm:items-center"
+      class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
     >
-      <div>
+      <div class="min-w-0">
         <h1 class="text-2xl font-bold text-slate-800">Job Approval</h1>
 
         <p class="mt-1 text-sm text-slate-500">
-          Review and manage pending job applications.
+          Manage and review job listings submitted by employers.
         </p>
       </div>
 
       <button
         type="button"
-        @click="fetchPendingJobs"
+        @click="refreshJobs"
         :disabled="loading"
-        class="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
+        class="mr-auto flex items-center justify-center gap-2 self-end rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-slate-50 disabled:opacity-50 sm:self-auto"
       >
-        <RefreshCw :size="16" :class="{ 'animate-spin': loading }" />
+        <RefreshCw :size="14" :class="{ 'animate-spin': loading }" />
         Refresh
       </button>
     </div>
 
-    <!-- Summary -->
-    <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-      <div class="flex items-center gap-4">
-        <div class="rounded-lg bg-blue-50 p-3 text-blue-600">
-          <BriefcaseBusiness :size="24" />
-        </div>
-
-        <div>
-          <p class="text-sm text-slate-500">Pending Jobs</p>
-
-          <p class="text-2xl font-bold text-slate-800">
-            {{ total }}
-          </p>
-        </div>
-      </div>
-    </div>
-
-    <!-- Search -->
-    <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-      <div class="relative max-w-md">
-        <Search
-          :size="18"
-          class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-        />
-
-        <input
-          v-model="search"
-          type="text"
-          placeholder="Search job title, company, category..."
-          class="w-full rounded-lg border border-slate-200 py-2.5 pl-10 pr-4 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-        />
-      </div>
-    </div>
-
-    <!-- Error -->
+    <!-- Error Message -->
     <div
       v-if="errorMessage"
-      class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600"
+      class="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700"
     >
-      {{ errorMessage }}
+      <AlertCircle :size="18" class="mt-0.5 shrink-0" />
+
+      <p class="flex-1">
+        {{ errorMessage }}
+      </p>
+
+      <button
+        type="button"
+        @click="errorMessage = ''"
+        class="text-red-500 hover:text-red-700"
+      >
+        <X :size="18" />
+      </button>
     </div>
 
-    <!-- Jobs Table -->
+    <!-- Job Approval Table -->
     <div
       class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm"
     >
-      <div class="border-b border-slate-200 px-5 py-4">
-        <h2 class="font-semibold text-slate-800">Pending Job Listings</h2>
+      <!-- Filters, Search, Table and Pagination -->
+      <div class="space-y-5 p-5">
+        <!-- Filter Tabs -->
+        <div class="flex flex-wrap gap-2">
+          <button
+            v-for="filter in filters"
+            :key="filter.value"
+            type="button"
+            @click="changeFilter(filter.value)"
+            :disabled="loading"
+            class="rounded-xl border px-4 py-2.5 text-sm font-semibold transition disabled:opacity-50"
+            :class="
+              activeFilter === filter.value
+                ? 'border-blue-600 bg-blue-600 text-white shadow-sm'
+                : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+            "
+          >
+            {{ filter.label }}
+          </button>
+        </div>
+
+        <!-- Search -->
+        <div class="relative max-w-xl">
+          <Search
+            :size="18"
+            class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+          />
+
+          <input
+            v-model="searchQuery"
+            type="text"
+            placeholder="Search job, company, category..."
+            class="w-full rounded-xl border border-slate-200 bg-slate-50 py-3 pl-10 pr-4 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100"
+          />
+        </div>
       </div>
 
+      <!-- Loading -->
       <div
         v-if="loading"
         class="flex items-center justify-center gap-2 py-16 text-sm text-slate-500"
       >
         <LoaderCircle :size="20" class="animate-spin" />
-        Loading pending jobs...
+        Loading jobs...
       </div>
 
-      <div v-else-if="filteredJobs.length === 0" class="py-16 text-center">
-        <BriefcaseBusiness :size="36" class="mx-auto mb-3 text-slate-300" />
+      <!-- Empty State -->
+      <div v-else-if="jobs.length === 0" class="py-16 text-center">
+        <div
+          class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-400"
+        >
+          <Search :size="22" />
+        </div>
 
-        <p class="font-medium text-slate-700">No pending jobs found</p>
+        <p class="font-medium text-slate-700">No jobs found</p>
 
         <p class="mt-1 text-sm text-slate-500">
-          There are no jobs matching your search.
+          {{
+            searchQuery
+              ? "No jobs match your search."
+              : "There are no job listings at the moment."
+          }}
         </p>
       </div>
 
-      <div v-else class="overflow-x-auto">
-        <table class="w-full text-left text-sm">
-          <thead class="bg-slate-50 text-xs uppercase text-slate-500">
-            <tr>
-              <th class="px-5 py-4 font-semibold">Job</th>
-              <th class="px-5 py-4 font-semibold">Company</th>
-              <th class="px-5 py-4 font-semibold">Category</th>
-              <th class="px-5 py-4 font-semibold">Posted Date</th>
-              <th class="px-5 py-4 font-semibold">Status</th>
-              <th class="px-5 py-4 text-center font-semibold">Action</th>
-            </tr>
-          </thead>
-
-          <tbody class="divide-y divide-slate-100">
-            <tr
-              v-for="job in filteredJobs"
-              :key="job.id"
-              class="transition hover:bg-slate-50"
-            >
-              <td class="px-5 py-4">
-                <p class="font-semibold text-slate-800">
-                  {{ job.title }}
-                </p>
-
-                <p class="mt-1 text-xs text-slate-500">
-                  {{ job.city || "Location not specified" }}
-                </p>
-              </td>
-
-              <td class="px-5 py-4 text-slate-600">
-                {{ job.company?.name || "—" }}
-              </td>
-
-              <td class="px-5 py-4 text-slate-600">
-                {{ job.category?.name || "—" }}
-              </td>
-
-              <td class="px-5 py-4 text-slate-600">
-                {{ formatDate(job.created_at) }}
-              </td>
-
-              <td class="px-5 py-4">
-                <span
-                  class="rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700"
-                >
-                  Pending
-                </span>
-              </td>
-
-              <td class="px-5 py-4 text-center">
-                <button
-                  type="button"
-                  @click="viewJob(job)"
-                  class="inline-flex items-center gap-2 rounded-lg border border-blue-200 px-3 py-2 text-xs font-medium text-blue-600 transition hover:bg-blue-50"
-                >
-                  <Eye :size="15" />
-                  View Details
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+      <!-- Jobs Table Component -->
+      <div v-else>
+        <JobApprovalTable
+          :jobs="jobs"
+          @view="openDetails"
+          @approve="openApprovalDialog($event, 'published')"
+          @reject="openApprovalDialog($event, 'rejected')"
+        />
       </div>
 
-      <!-- Common Pagination -->
+      <!-- Pagination -->
       <BasePagination
         :current-page="currentPage"
         :last-page="lastPage"
         :total="total"
         :per-page="perPage"
         :loading="loading"
-        @change="changePage"
+        @change="goToPage"
         @update:per-page="changePerPage"
       />
     </div>
 
-    <!-- Job Details Modal -->
-    <div
-      v-if="showDetails && selectedJob && detailJob"
-      class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4"
-      @click.self="showDetails = false"
-    >
-      <div
-        class="max-h-[90vh] w-full max-w-6xl overflow-y-auto rounded-2xl bg-white shadow-xl"
-      >
-        <!-- Modal Header -->
-        <div
-          class="sticky top-0 z-20 flex items-center justify-between border-b border-slate-200 bg-white px-6 py-4"
-        >
-          <h2 class="text-lg font-bold text-slate-800">Job Details</h2>
+    <!-- Job Approval Detail Modal -->
+    <JobApprovalDetailModal
+      :job="showDetailsModal ? selectedJob : null"
+      :status-class="statusClass"
+      :status-label="statusLabel"
+      @close="closeDetails"
+      @approve="openApprovalDialog($event, 'published')"
+      @reject="openApprovalDialog($event, 'rejected')"
+    />
 
-          <button
-            type="button"
-            @click="showDetails = false"
-            class="rounded-lg p-2 text-slate-500 transition hover:bg-slate-100"
-          >
-            <XCircle :size="20" />
-          </button>
-        </div>
-
-        <div class="space-y-6 p-6">
-          <!-- Reusable Job Detail Content -->
-          <JobDetailContent
-            :job="detailJob"
-            mode="admin"
-            :category-name="selectedJob.category?.name ?? undefined"
-          />
-
-          <!-- Approval Actions -->
-          <div
-            class="flex flex-col gap-3 border-t border-slate-200 pt-5 sm:flex-row sm:justify-end"
-          >
-            <button
-              type="button"
-              @click="openApproval('rejected')"
-              class="inline-flex items-center justify-center gap-2 rounded-lg border border-red-200 px-4 py-2.5 text-sm font-medium text-red-600 transition hover:bg-red-50"
-            >
-              <XCircle :size="17" />
-              Reject Job
-            </button>
-
-            <button
-              type="button"
-              @click="openApproval('published')"
-              class="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-blue-700"
-            >
-              <CheckCircle2 :size="17" />
-              Approve Job
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Approval Confirmation Modal -->
+    <!-- Approval Modal -->
     <JobApprovalModal
       :job="approvalJob"
       :action="approvalAction"
       :rejection-reason="rejectionReason"
       :submitting="submitting"
-      @close="closeApproval"
+      @close="closeApprovalDialog"
       @confirm="confirmApproval"
       @update:rejection-reason="rejectionReason = $event"
     />

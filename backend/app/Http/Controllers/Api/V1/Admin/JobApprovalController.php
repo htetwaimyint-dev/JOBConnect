@@ -22,16 +22,41 @@ class JobApprovalController extends Controller
     /**
      * Display pending jobs.
      */
-
     public function index(): JsonResponse
     {
-        $perPage = request()->integer('per_page', 10);
+        $perPage = request()->integer('per_page', 5);
+        $statusValue = request()->query('status', 'all');
+        $search = trim(request()->query('search', ''));
 
-        $jobs = $this->jobService->getPendingJobsForAdmin($perPage);
+        if ($statusValue === 'all') {
+            $jobs = $this->jobService->getAllJobsForAdmin(
+                $perPage,
+                $search ?: null
+            );
+        } else {
+            $status = JobStatus::tryFrom($statusValue);
+
+            if (!$status || !in_array($status, [
+                JobStatus::Pending,
+                JobStatus::Published,
+                JobStatus::Rejected,
+            ], true)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid job status.',
+                ], 422);
+            }
+
+            $jobs = $this->jobService->getJobsByStatusForAdmin(
+                $status,
+                $perPage,
+                $search ?: null
+            );
+        }
 
         return response()->json([
             'success' => true,
-            'message' => 'Pending jobs retrieved successfully.',
+            'message' => 'Jobs retrieved successfully.',
             'data' => JobResource::collection($jobs)->resolve(),
             'meta' => [
                 'current_page' => $jobs->currentPage(),
