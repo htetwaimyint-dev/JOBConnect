@@ -55,4 +55,12 @@ interface JobRepositoryInterface
     public function findPublishedJob(
         int $jobId
     ): ?Job;
+
+
+      // Public Job Listing(for Job Seeker)
+    public function getPublishedJobsByCompany(
+        int $companyId, 
+        array $filters = [], 
+        int $perPage = 10
+        ): LengthAwarePaginator;
 }

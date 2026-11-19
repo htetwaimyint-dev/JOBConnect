@@ -44,6 +44,10 @@ Route::middleware(['auth:sanctum', 'job-seeker'])
             [SavedJobController::class, 'index']
         );
 
+        // Company Jobs (to view jobs posted by a specific company)
+        Route::get('/companies/{companyId}/jobs', [CompanyProfileViewController::class, 'companyJobs']);
+
+
         Route::post(
             '/saved-jobs',
             [SavedJobController::class, 'store']

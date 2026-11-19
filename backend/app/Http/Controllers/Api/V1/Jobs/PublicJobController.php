@@ -40,4 +40,16 @@ class PublicJobController extends Controller
 
         return new JobResource($job);
     }
+
+    // Display jobs posted by a specific employee (employer).
+    public function employeeJobs(
+    int $employeeId
+    ): AnonymousResourceCollection {
+        $jobs = $this->jobService->getEmployeeJobs(
+            $employeeId,
+            10
+        );
+
+        return JobResource::collection($jobs);
+    }
 }

@@ -28,10 +28,9 @@ interface JobSeekerParams {
 const getJobSeekers = async (
   params: JobSeekerParams = {},
 ): Promise<JobSeekerResponse> => {
-  const response = await api.get<JobSeekerResponse>(
-    "/employer/job-seekers",
-    { params },
-  );
+  const response = await api.get<JobSeekerResponse>("/employer/job-seekers", {
+    params,
+  });
 
   return response.data;
 };

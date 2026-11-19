@@ -55,4 +55,5 @@ class PublicJobService
                 'sort_order',
             ]);
     }
+
 }

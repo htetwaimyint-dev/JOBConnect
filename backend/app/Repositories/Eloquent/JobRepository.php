@@ -215,4 +215,35 @@ class JobRepository implements JobRepositoryInterface
             ->whereKey($jobId)
             ->first();
     }
+
+   
+// for Job Seeker to view published jobs posted by a specific company
+    public function getPublishedJobsByCompany(int $companyId, array $filters = [], int $perPage = 10): LengthAwarePaginator
+    {
+        $query = Job::query()
+            ->where('company_id', $companyId)
+            ->where('status', JobStatus::Published) 
+            ->latest();
+
+        // Keyword filter
+        if (!empty($filters['keyword'])) {
+            $query->where('title', 'like', '%' . $filters['keyword'] . '%');
+        }
+
+        // Employment type filter
+        if (!empty($filters['job_type'])) {
+            $query->where('employment_type', $filters['job_type']);
+        }
+
+        // Location filter
+        if (!empty($filters['location'])) {
+            $location = $filters['location'];
+            $query->where(function ($q) use ($location) {
+                $q->where('city', 'like', "%{$location}%")
+                  ->orWhere('country', 'like', "%{$location}%");
+            });
+        }
+
+        return $query->paginate($perPage);
+    }
 }

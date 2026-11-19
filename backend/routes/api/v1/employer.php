@@ -71,4 +71,6 @@ Route::middleware(['auth:sanctum', 'employer'])
             ResumeController::class,
             'download',
         ]);
+
+        
     });
