@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from "@tanstack/vue-query";
 
 import jobRepository from "../repositories/jobRepository";
@@ -23,6 +24,28 @@ export function useJobs() {
 
             queryFn: async () => {
                 const response = await jobRepository.getJobs(
+                    currentParams.value,
+                );
+
+                return response.data;
+            },
+        });
+    }
+
+    // Get employer's own jobs with search and filters
+    function getJobsByCompany(params: MaybeRefOrGetter<JobListParams> = {}) {
+        const currentParams = computed(() => ({
+            page: 1,
+            ...toValue(params),
+        }));
+
+        return useQuery({
+            queryKey: computed(() =>
+                jobKeys.employerList(currentParams.value),
+            ),
+
+            queryFn: async () => {
+                const response = await jobRepository.getJobsByCompany(
                     currentParams.value,
                 );
 
@@ -77,25 +100,6 @@ export function useJobs() {
                 queryClient.invalidateQueries({
                     queryKey: jobKeys.lists(),
                 });
-            },
-        });
-    }
-
-    function getJobsByCompany(params: MaybeRefOrGetter<JobListParams> = {}) {
-        const currentParams = computed(() => ({
-            page: 1,
-            ...toValue(params),
-        }));
-
-        return useQuery({
-            queryKey: computed(() => jobKeys.list(currentParams.value)),
-
-            queryFn: async () => {
-                const response = await jobRepository.getJobsByCompany(
-                    currentParams.value,
-                );
-
-                return response.data;
             },
         });
     }

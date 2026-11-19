@@ -37,6 +37,10 @@ class JobRepository implements JobRepositoryInterface
                 $query->where('category_id', $categoryId);
             })
 
+            ->when($params['status'] ?? null, function ($query, $status) {
+                $query->where('status', $status);
+            })
+
             ->when($params['employment_type'] ?? null, function ($query, $employmentType) {
                 $query->where('employment_type', $employmentType);
             })

@@ -6,8 +6,13 @@ export const jobKeys = {
 
     lists: () => [...jobKeys.all, "list"] as const,
 
+    // Public job list
     list: (params: JobListParams | undefined) =>
-        [...jobKeys.lists(), params] as const,
+        [...jobKeys.lists(), "public", params] as const,
+
+    // Employer's own job list
+    employerList: (params: JobListParams | undefined) =>
+        [...jobKeys.lists(), "employer", params] as const,
 
     details: () => [...jobKeys.all, "detail"] as const,
 

@@ -29,13 +29,23 @@ const pageTitle = computed(() =>
     isEditMode.value ? "Edit Job" : "Create Job",
 );
 
+
+
 const { createJob, getJobById, updateJob } = useJobs();
+
+
 
 const {
     data: existingJob,
     isLoading: jobLoading,
     isError: jobLoadingError,
 } = getJobById(computed(() => jobId.value?.toString() ?? ""));
+
+const isEditingLocked = computed(
+    () =>
+        existingJob.value?.status === "published" ||
+        existingJob.value?.status === "closed",
+);
 // ----------------------------------------
 // Form state
 // ----------------------------------------
@@ -43,7 +53,7 @@ const {
 watch(
     existingJob,
     (job) => {
-        if (job && isEditMode.value) {
+        if (job && isEditMode.value && !isEditingLocked.value) {
             populateForm(job);
         }
     },
@@ -216,6 +226,19 @@ function closePreview() {
 
             <button type="button" class="rounded-lg bg-gray-900 px-5 py-2.5 text-white" @click="router.back()">
                 Go Back
+            </button>
+        </div>
+
+        <div v-else-if="isEditMode && isEditingLocked" class="flex min-h-96 flex-col items-center justify-center gap-3">
+            <h2 class="text-xl font-bold">Editing Not Allowed</h2>
+
+            <p class="text-sm text-gray-500">
+                Published or closed jobs cannot be edited.
+            </p>
+
+            <button type="button" class="rounded-lg bg-gray-900 px-5 py-2.5 text-white"
+                @click="router.push('/employer/jobs')">
+                Back to My Jobs
             </button>
         </div>
 

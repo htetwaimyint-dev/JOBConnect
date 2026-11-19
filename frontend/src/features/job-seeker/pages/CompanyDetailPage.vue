@@ -56,59 +56,36 @@ onMounted(() => {
   <div class="min-h-screen bg-slate-50 py-8 px-4 sm:px-6 lg:px-8">
     <div class="mx-auto max-w-5xl">
       <!-- Back Button -->
-      <button
-        @click="goBack"
-        class="mb-6 flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors"
-      >
+      <button @click="goBack"
+        class="mb-6 flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors">
         <ArrowLeft class="h-4 w-4" />
         Back to Companies
       </button>
 
       <!-- Loading State -->
       <div v-if="loading" class="flex justify-center py-20">
-        <div
-          class="h-10 w-10 animate-spin rounded-full border-4 border-blue-600 border-t-transparent"
-        ></div>
+        <div class="h-10 w-10 animate-spin rounded-full border-4 border-blue-600 border-t-transparent"></div>
       </div>
 
       <!-- Error State -->
-      <div
-        v-else-if="error"
-        class="rounded-xl bg-red-50 p-6 text-center text-red-600"
-      >
+      <div v-else-if="error" class="rounded-xl bg-red-50 p-6 text-center text-red-600">
         {{ error }}
       </div>
 
       <!-- Company Detail Content -->
-      <div
-        v-else-if="company"
-        class="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm"
-      >
+      <div v-else-if="company" class="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
         <!-- Cover Image -->
         <div class="relative h-48 w-full bg-slate-200 sm:h-64">
-          <img
-            v-if="company.cover_image"
-            :src="company.cover_image"
-            class="h-full w-full object-cover"
-            alt="Cover"
-          />
-          <div
-            class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"
-          ></div>
+          <img v-if="company.cover_image" :src="company.cover_image" class="h-full w-full object-cover" alt="Cover" />
+          <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
         </div>
 
         <!-- Profile Header (Logo & Name) -->
         <div class="relative px-6 pb-6 pt-0 sm:px-10">
           <div class="-mt-12 mb-4 flex items-end justify-between">
             <div
-              class="flex h-24 w-24 items-center justify-center overflow-hidden rounded-xl border-4 border-white bg-white shadow-md"
-            >
-              <img
-                v-if="company.logo"
-                :src="company.logo"
-                alt="Logo"
-                class="h-full w-full object-contain p-2"
-              />
+              class="flex h-24 w-24 items-center justify-center overflow-hidden rounded-xl border-4 border-white bg-white shadow-md">
+              <img v-if="company.logo" :src="company.logo" alt="Logo" class="h-full w-full object-contain p-2" />
             </div>
           </div>
 
@@ -142,21 +119,14 @@ onMounted(() => {
               <div v-if="company.gallery && company.gallery.length > 0">
                 <h2 class="text-lg font-bold text-gray-900 mb-4">Gallery</h2>
                 <div class="grid grid-cols-2 gap-4">
-                  <img
-                    v-for="(img, i) in company.gallery"
-                    :key="i"
-                    :src="img"
-                    class="rounded-lg object-cover h-40 w-full"
-                    alt="Gallery Image"
-                  />
+                  <img v-for="(img, i) in company.gallery" :key="i" :src="img"
+                    class="rounded-lg object-cover h-40 w-full" alt="Gallery Image" />
                 </div>
               </div>
             </div>
 
             <!-- Right Column: Quick Info -->
-            <div
-              class="space-y-4 rounded-xl border border-gray-100 bg-gray-50 p-5"
-            >
+            <div class="space-y-4 rounded-xl border border-gray-100 bg-gray-50 p-5">
               <h3 class="text-base font-bold text-gray-900">Company Details</h3>
 
               <div class="flex items-start gap-3 text-sm text-gray-600">
@@ -195,11 +165,8 @@ onMounted(() => {
                 <Globe class="h-5 w-5 shrink-0 text-gray-400" />
                 <div>
                   <p class="font-medium text-gray-900">Website</p>
-                  <a
-                    :href="company.website"
-                    target="_blank"
-                    class="text-blue-600 hover:underline truncate block"
-                  >
+                  <a :href="company.website ?? undefined" target="_blank"
+                    class="text-blue-600 hover:underline truncate block">
                     {{
                       company.website
                         ? company.website.replace("https://", "")
