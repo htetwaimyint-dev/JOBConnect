@@ -102,12 +102,13 @@ async function handleSaveJob() {
                 </div>
 
                 <BaseButton
-                    class="w-full bg-gray-900 px-5 py-2.5 text-[15px]! font-semibold text-white hover:bg-gray-700">
+                    class="w-full bg-gray-900 px-5 py-2.5 text-[15px]! font-semibold text-white hover:bg-gray-700"
+                    @click="handleClick">
                     Back to Editing
                 </BaseButton>
             </div>
 
-            <div v-else>
+            <div v-else-if="mode === 'employer'">
                 <BaseButton
                     class="w-full bg-gray-900 px-5 py-2.5 text-[15px]! font-semibold text-white hover:bg-gray-700"
                     @click="handleClick">
@@ -117,8 +118,8 @@ async function handleSaveJob() {
         </div>
 
         <!-- Public / Job Seeker Application Section -->
-        <div v-else class="space-y-4">
-
+        <!-- Public / Job Seeker Application Section -->
+        <div v-else-if="mode === 'public'" class="space-y-4">
 
             <!-- Save Job Button -->
             <BaseButton v-if="mode === 'public' && (!authStore.isAuthenticated || isJobSeeker)" :disabled="isSaving"

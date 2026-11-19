@@ -50,11 +50,23 @@ const isEditingLocked = computed(
 // Form state
 // ----------------------------------------
 
+// Prevent editing published or closed jobs
 watch(
     existingJob,
     (job) => {
-        if (job && isEditMode.value && !isEditingLocked.value) {
-            populateForm(job);
+        if (
+            job &&
+            isEditMode.value &&
+            (job.status === "published" || job.status === "closed")
+        ) {
+            window.alert(
+                "This job cannot be edited because it is published or closed.",
+            );
+
+            router.replace({
+                name: "job-detail",
+                params: { id: job.id },
+            });
         }
     },
     { immediate: true },
