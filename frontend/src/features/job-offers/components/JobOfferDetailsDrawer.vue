@@ -1,5 +1,13 @@
 <script setup lang="ts">
 import type { JobOffer, JobOfferStatus } from "../types/jobOffer.types";
+import {
+    formatDate,
+    formatEmploymentType,
+    formatWorkplaceType,
+    formatStatus,
+    formatMoney,
+    getInitials,
+} from "../utils/jobOfferFormatters";
 
 defineProps<{
     offer: JobOffer | null;
@@ -16,16 +24,6 @@ const emit = defineEmits<{
     reject: [offer: JobOffer];
 }>();
 
-function formatStatus(status: JobOfferStatus) {
-    return {
-        pending: "Pending",
-        accepted: "Accepted",
-        rejected: "Declined",
-        expired: "Expired",
-        withdrawn: "Withdrawn",
-    }[status];
-}
-
 function statusClass(status: JobOfferStatus) {
     return {
         pending: "bg-amber-50 text-amber-700 border-amber-200",
@@ -35,253 +33,301 @@ function statusClass(status: JobOfferStatus) {
         withdrawn: "bg-slate-100 text-slate-500 border-slate-200",
     }[status];
 }
-
-function formatDate(value?: string | null) {
-    if (!value) return "—";
-    const date = new Date(value.replace(" ", "T"));
-    return Number.isNaN(date.getTime())
-        ? value
-        : new Intl.DateTimeFormat(undefined, {
-              day: "2-digit",
-              month: "short",
-              year: "numeric",
-          }).format(date);
-}
-
-function formatMoney(value: number | string | null, currencyLabel = "") {
-    if (value === null || value === "") return "Not specified";
-    const amount = Number(value);
-    if (!Number.isFinite(amount)) return String(value);
-    return `${currencyLabel ? `${currencyLabel} ` : ""}${new Intl.NumberFormat().format(amount)}`;
-}
-
-function formatLabel(value?: string | null) {
-    if (!value) return "—";
-    const labels: Record<string, string> = {
-        full_time: "Full-time",
-        part_time: "Part-time",
-        contract: "Contract",
-        internship: "Internship",
-        onsite: "On-site",
-        remote: "Remote",
-        hybrid: "Hybrid",
-    };
-    return labels[value] ?? value.replaceAll("_", " ");
-}
-
-function initials(value?: string | null) {
-    return (value ?? "?")
-        .trim()
-        .split(/\s+/)
-        .slice(0, 2)
-        .map((part) => part.charAt(0))
-        .join("")
-        .toUpperCase();
-}
 </script>
 
 <template>
     <Transition name="fade">
         <div
             v-if="offer"
-            class="fixed inset-0 z-40 bg-slate-900/35"
+            class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex justify-end"
             @click.self="emit('close')"
         >
             <Transition name="slide">
                 <aside
                     v-if="offer"
-                    class="absolute inset-y-0 right-0 flex w-full max-w-xl flex-col bg-white shadow-2xl"
+                    class="bg-white w-full max-w-lg h-full shadow-2xl border-l border-slate-200 flex flex-col justify-between overflow-y-auto"
                 >
-                    <header
-                        class="flex items-start justify-between border-b border-slate-200 px-6 py-5"
+                    <div
+                        class="flex-1 overflow-y-auto scrollbar-none [&::-webkit-scrollbar]:hidden"
                     >
-                        <div>
-                            <p
-                                class="text-xs font-semibold uppercase tracking-wider text-indigo-600"
-                            >
-                                Offer details
-                            </p>
-                            <h2 class="mt-1 text-lg font-bold text-slate-900">
-                                {{ offer.job?.title || "Job offer" }}
-                            </h2>
-                            <p class="mt-1 text-xs text-slate-500">
-                                Offer #{{ offer.id }}
-                            </p>
-                        </div>
-                        <button
-                            type="button"
-                            aria-label="Close details"
-                            class="rounded-lg p-2 text-slate-400 hover:bg-slate-100"
-                            @click="emit('close')"
+                        <div
+                            class="flex flex-col flex-1 space-y-4 overflow-y-auto p-6 pb-0"
                         >
-                            ✕
-                        </button>
-                    </header>
-
-                    <div class="flex-1 space-y-6 overflow-y-auto p-6">
-                        <div class="flex items-center gap-3">
                             <div
-                                class="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-indigo-600 font-bold text-white"
+                                class="flex items-center justify-between border-b border-slate-100 pb-4"
                             >
-                                {{
-                                    initials(
-                                        mode === "employer"
-                                            ? offer.job_seeker?.name
-                                            : offer.company?.name,
-                                    )
-                                }}
+                                <div class="flex items-center gap-2">
+                                    <span
+                                        v-if="mode === 'employer'"
+                                        class="px-2.5 py-0.5 rounded-md text-[11px] font-bold uppercase tracking-wider bg-indigo-50 text-indigo-700 border border-indigo-100"
+                                    >
+                                        Offer #205</span
+                                    ><span class="text-xs text-slate-400"
+                                        >Direct Invitation</span
+                                    >
+                                </div>
+                                <div class="flex items-center gap-1">
+                                    <RouterLink
+                                        v-if="offer.job?.id"
+                                        :to="`/jobs/${offer.job.id}`"
+                                        class="inline-flex items-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-1 text-xs font-semibold text-indigo-700 transition hover:border-indigo-300 hover:bg-indigo-100"
+                                    >
+                                        <svg
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            class="h-4 w-4"
+                                            fill="none"
+                                            viewBox="0 0 24 24"
+                                            stroke="currentColor"
+                                            stroke-width="2"
+                                        >
+                                            <path
+                                                stroke-linecap="round"
+                                                stroke-linejoin="round"
+                                                d="M15 10l4.5-4.5M19.5 5.5H15m4.5 0V10M10 5H6.5A1.5 1.5 0 005 6.5v11A1.5 1.5 0 006.5 19h11a1.5 1.5 0 001.5-1.5V14"
+                                            />
+                                        </svg>
+
+                                        View Job Details
+                                    </RouterLink>
+                                    <button
+                                        type="button"
+                                        aria-label="Close details"
+                                        class="w-8 h-8 flex items-center justify-center rounded-full text-slate-400 hover:bg-slate-100 transition-colors"
+                                        @click="emit('close')"
+                                    >
+                                        ✕
+                                    </button>
+                                </div>
                             </div>
-                            <div class="min-w-0">
-                                <p class="font-semibold text-slate-900">
-                                    {{
-                                        mode === "employer"
-                                            ? offer.job_seeker?.name ||
-                                              "Candidate"
-                                            : offer.company?.name || "Company"
-                                    }}
-                                </p>
-                                <p class="text-sm text-slate-500">
-                                    {{
-                                        mode === "employer"
-                                            ? offer.job_seeker?.profile
-                                                  ?.professional_title ||
-                                              "Job seeker"
-                                            : "Employer"
-                                    }}
-                                </p>
-                            </div>
-                            <span
-                                class="ml-auto rounded-full border px-2.5 py-1 text-xs font-semibold"
-                                :class="statusClass(offer.status)"
+                            <div
+                                class="flex items-center justify-between gap-4 bg-slate-50/80 p-4 rounded-2xl border border-slate-200/80"
                             >
-                                {{ formatStatus(offer.status) }}
-                            </span>
+                                <div class="flex items-center gap-3.5 min-w-0">
+                                    <div
+                                        class="w-12 h-12 rounded-full text-white font-bold text-sm flex items-center justify-center shrink-0 shadow-xs bg-indigo-600"
+                                    >
+                                        {{
+                                            getInitials(
+                                                mode === "employer"
+                                                    ? offer.job_seeker?.name
+                                                    : offer.company?.name,
+                                            )
+                                        }}
+                                    </div>
+                                    <div class="min-w-0">
+                                        <h3
+                                            class="font-bold text-base text-slate-900 truncate"
+                                        >
+                                            {{
+                                                mode === "employer"
+                                                    ? offer.job_seeker?.name ||
+                                                      "Candidate"
+                                                    : offer.company?.name ||
+                                                      "Company"
+                                            }}
+                                        </h3>
+                                        <p
+                                            class="text-xs text-slate-600 truncate"
+                                        >
+                                            {{
+                                                mode === "employer"
+                                                    ? offer.job_seeker?.profile
+                                                          ?.professional_title ||
+                                                      "Job seeker"
+                                                    : "Employer"
+                                            }}
+                                        </p>
+                                        <p
+                                            class="text-[11px] text-slate-400 mt-0.5"
+                                        >
+                                            {{
+                                                mode === "employer"
+                                                    ? offer.job_seeker?.email ||
+                                                      ""
+                                                    : ""
+                                            }}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            <section>
+                                <div class="mt-6 space-y-3">
+                                    <h4
+                                        class="text-xs font-bold uppercase tracking-wider text-slate-400"
+                                    >
+                                        Offer Terms &amp; Timeline
+                                    </h4>
+                                    <div
+                                        class="bg-white rounded-2xl border border-slate-200 divide-y divide-slate-100 text-sm"
+                                    >
+                                        <div
+                                            class="px-4 py-3 flex items-center justify-between"
+                                        >
+                                            <span
+                                                class="text-slate-500 text-xs font-medium"
+                                                >Current Status</span
+                                            ><span
+                                                class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold border capitalize bg-amber-50 text-amber-700 border-amber-200"
+                                                ><span
+                                                    class="w-1.5 h-1.5 rounded-full bg-amber-500"
+                                                ></span>
+                                                {{
+                                                    formatStatus(offer.status)
+                                                }}</span
+                                            >
+                                        </div>
+                                        <div
+                                            class="px-4 py-3 flex items-center justify-between gap-4"
+                                        >
+                                            <span
+                                                class="text-slate-500 text-xs font-medium"
+                                                >Target Position</span
+                                            ><span
+                                                class="font-semibold text-slate-900 text-right"
+                                                >{{ offer.job?.title }}</span
+                                            >
+                                        </div>
+                                        <div
+                                            class="px-4 py-3 flex items-center justify-between"
+                                        >
+                                            <span
+                                                class="text-slate-500 text-xs font-medium"
+                                                >Work Arrangement</span
+                                            ><span
+                                                class="text-slate-700 text-xs font-medium"
+                                                >{{
+                                                    formatEmploymentType(
+                                                        offer.job
+                                                            ?.employment_type,
+                                                    )
+                                                }}
+                                                •
+                                                {{
+                                                    formatWorkplaceType(
+                                                        offer.job
+                                                            ?.workplace_type,
+                                                    )
+                                                }}</span
+                                            >
+                                        </div>
+                                        <div
+                                            class="px-4 py-3 flex items-center justify-between"
+                                        >
+                                            <span
+                                                class="text-slate-500 text-xs font-medium"
+                                                >Salary Offered</span
+                                            ><span
+                                                class="font-bold text-emerald-700"
+                                                >{{
+                                                    formatMoney(
+                                                        offer.salary_offered,
+                                                        "$",
+                                                    )
+                                                }}</span
+                                            >
+                                        </div>
+                                        <div
+                                            class="px-4 py-3 flex items-center justify-between"
+                                        >
+                                            <span
+                                                class="text-slate-500 text-xs font-medium"
+                                                >{{
+                                                    mode === "employer"
+                                                        ? "Sent date"
+                                                        : "Received date"
+                                                }}</span
+                                            ><span
+                                                class="text-slate-700 text-xs font-medium"
+                                                >{{
+                                                    formatDate(offer.created_at)
+                                                }}</span
+                                            >
+                                        </div>
+                                        <div
+                                            class="px-4 py-3 flex items-center justify-between"
+                                        >
+                                            <span
+                                                class="text-slate-500 text-xs font-medium"
+                                                >Expires At</span
+                                            ><span
+                                                class="text-xs font-medium text-amber-600"
+                                                >{{
+                                                    formatDate(offer.expires_at)
+                                                }}</span
+                                            >
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <section>
+                                <div class="mt-6">
+                                    <h4
+                                        class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2"
+                                    >
+                                        Pitch Message (`offer_details`)
+                                    </h4>
+                                    <div
+                                        class="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 text-sm text-slate-700 whitespace-pre-line leading-relaxed"
+                                    >
+                                        {{
+                                            offer.offer_details ||
+                                            "No additional details were provided."
+                                        }}
+                                    </div>
+                                </div>
+                            </section>
+
+                            <!-- <section v-if="offer.responded_at">
+                                <h3 class="text-sm font-bold text-slate-900">
+                                    Response date
+                                </h3>
+                                <p class="mt-1 text-sm text-slate-600">
+                                    {{ formatDate(offer.responded_at) }}
+                                </p>
+                            </section> -->
                         </div>
-
-                        <section class="grid grid-cols-2 gap-3">
-                            <div class="rounded-xl bg-slate-50 p-4">
-                                <p class="text-xs text-slate-500">
-                                    Salary offered
-                                </p>
-                                <p class="mt-1 font-bold text-slate-900">
-                                    {{
-                                        formatMoney(
-                                            offer.salary_offered,
-                                            currencyLabel,
-                                        )
-                                    }}
-                                </p>
-                            </div>
-                            <div class="rounded-xl bg-slate-50 p-4">
-                                <p class="text-xs text-slate-500">
-                                    Employment type
-                                </p>
-                                <p class="mt-1 font-bold text-slate-900">
-                                    {{
-                                        formatLabel(offer.job?.employment_type)
-                                    }}
-                                </p>
-                            </div>
-                            <div class="rounded-xl bg-slate-50 p-4">
-                                <p class="text-xs text-slate-500">Workplace</p>
-                                <p class="mt-1 font-bold text-slate-900">
-                                    {{ formatLabel(offer.job?.workplace_type) }}
-                                </p>
-                            </div>
-                            <div class="rounded-xl bg-slate-50 p-4">
-                                <p class="text-xs text-slate-500">Location</p>
-                                <p class="mt-1 font-bold text-slate-900">
-                                    {{
-                                        [offer.job?.city, offer.job?.country]
-                                            .filter(Boolean)
-                                            .join(", ") || "—"
-                                    }}
-                                </p>
-                            </div>
-                            <div class="rounded-xl bg-slate-50 p-4">
-                                <p class="text-xs text-slate-500">
-                                    {{
-                                        mode === "employer"
-                                            ? "Sent date"
-                                            : "Received date"
-                                    }}
-                                </p>
-                                <p class="mt-1 font-bold text-slate-900">
-                                    {{ formatDate(offer.created_at) }}
-                                </p>
-                            </div>
-                            <div class="rounded-xl bg-slate-50 p-4">
-                                <p class="text-xs text-slate-500">Expires</p>
-                                <p class="mt-1 font-bold text-slate-900">
-                                    {{ formatDate(offer.expires_at) }}
-                                </p>
-                            </div>
-                        </section>
-
-                        <section>
-                            <h3 class="text-sm font-bold text-slate-900">
-                                Offer note
-                            </h3>
-                            <p
-                                class="mt-2 whitespace-pre-wrap rounded-xl border border-slate-200 bg-white p-4 text-sm leading-6 text-slate-600"
-                            >
-                                {{
-                                    offer.offer_details ||
-                                    "No additional details were provided."
-                                }}
-                            </p>
-                        </section>
-
-                        <section v-if="offer.responded_at">
-                            <h3 class="text-sm font-bold text-slate-900">
-                                Response date
-                            </h3>
-                            <p class="mt-1 text-sm text-slate-600">
-                                {{ formatDate(offer.responded_at) }}
-                            </p>
-                        </section>
-                    </div>
-
-                    <footer
-                        v-if="offer.status === 'pending'"
-                        class="border-t border-slate-200 p-5"
-                    >
-                        <template v-if="mode === 'employer'">
+                        <div
+                            v-if="mode === 'employer'"
+                            class="mt-5 p-6 bg-slate-50 border-t border-slate-200 flex items-center justify-between gap-3"
+                        >
                             <button
-                                type="button"
                                 :disabled="withdrawing"
-                                class="w-full rounded-xl border border-rose-200 px-4 py-2.5 text-sm font-semibold text-rose-600 hover:bg-rose-50 disabled:opacity-50"
+                                class="px-4 py-2.5 rounded-xl border border-rose-200 bg-white hover:bg-rose-50 text-rose-600 text-xs font-semibold transition"
                                 @click="emit('withdraw', offer)"
                             >
                                 {{
                                     withdrawing
                                         ? "Withdrawing…"
                                         : "Withdraw offer"
-                                }}
+                                }}</button
+                            ><button
+                                class="ml-auto px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold transition"
+                                @click="emit('close')"
+                            >
+                                Close
                             </button>
-                        </template>
+                        </div>
 
-                        <template v-else>
-                            <div class="flex gap-3">
-                                <button
-                                    type="button"
-                                    :disabled="responding"
-                                    class="flex-1 rounded-xl border border-rose-200 px-4 py-2.5 text-sm font-semibold text-rose-600 hover:bg-rose-50 disabled:opacity-50"
-                                    @click="emit('reject', offer)"
-                                >
-                                    Decline
-                                </button>
-                                <button
-                                    type="button"
-                                    :disabled="responding"
-                                    class="flex-1 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50"
-                                    @click="emit('accept', offer)"
-                                >
-                                    Accept offer
-                                </button>
-                            </div>
-                        </template>
-                    </footer>
+                        <div v-else class="flex gap-3 py-6 px-6">
+                            <button
+                                type="button"
+                                :disabled="responding"
+                                class="flex-1 rounded-xl border border-rose-200 px-4 py-2.5 text-sm font-semibold text-rose-600 hover:bg-rose-50 disabled:opacity-50"
+                                @click="emit('reject', offer)"
+                            >
+                                Decline
+                            </button>
+                            <button
+                                type="button"
+                                :disabled="responding"
+                                class="flex-1 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50"
+                                @click="emit('accept', offer)"
+                            >
+                                Accept offer
+                            </button>
+                        </div>
+                    </div>
                 </aside>
             </Transition>
         </div>

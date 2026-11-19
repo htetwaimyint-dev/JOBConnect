@@ -115,7 +115,7 @@ async function refreshOffers() {
                 class="flex flex-col justify-between gap-4 sm:flex-row sm:items-center"
             >
                 <div>
-                    <nav
+                    <!-- <nav
                         class="mb-1 flex items-center gap-1.5 text-xs font-medium text-slate-500"
                     >
                         <span>Job Seeker Dashboard</span>
@@ -123,7 +123,7 @@ async function refreshOffers() {
                         <span class="font-semibold text-indigo-600"
                             >Job Offers</span
                         >
-                    </nav>
+                    </nav> -->
                     <h1
                         class="text-2xl font-bold tracking-tight text-slate-900"
                     >

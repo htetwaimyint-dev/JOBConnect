@@ -204,7 +204,7 @@ async function refreshOffers() {
                 class="flex flex-col justify-between gap-4 sm:flex-row sm:items-center"
             >
                 <div>
-                    <nav
+                    <!-- <nav
                         class="mb-1 flex items-center gap-1.5 text-xs font-medium text-slate-500"
                     >
                         <span>Employer Dashboard</span>
@@ -214,7 +214,7 @@ async function refreshOffers() {
                         <span class="font-semibold text-indigo-600"
                             >Direct Job Offers</span
                         >
-                    </nav>
+                    </nav> -->
                     <h1
                         class="text-2xl font-bold tracking-tight text-slate-900"
                     >
@@ -236,13 +236,13 @@ async function refreshOffers() {
                 </button>
             </header>
 
-            <div
+            <!-- <div
                 v-if="!Number(candidateId)"
                 class="mt-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800"
             >
                 You can review your sent offers here. To create a new offer,
                 open this page from a candidate's profile.
-            </div>
+            </div> -->
 
             <div
                 v-if="offersQuery.isError.value"

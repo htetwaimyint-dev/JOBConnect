@@ -1,5 +1,13 @@
 <script setup lang="ts">
 import type { JobOffer, JobOfferStatus } from "../types/jobOffer.types";
+import {
+    formatEmploymentType,
+    formatWorkplaceType,
+    getInitials,
+    formatMoney,
+    formatDate,
+    formatStatus,
+} from "../utils/jobOfferFormatters";
 
 defineProps<{
     offers: JobOffer[];
@@ -13,16 +21,6 @@ const emit = defineEmits<{
     refresh: [];
 }>();
 
-function formatStatus(status: JobOfferStatus) {
-    return {
-        pending: "Pending",
-        accepted: "Accepted",
-        rejected: "Declined",
-        expired: "Expired",
-        withdrawn: "Withdrawn",
-    }[status];
-}
-
 function statusClass(status: JobOfferStatus) {
     return {
         pending: "bg-amber-50 text-amber-700 border-amber-200",
@@ -31,25 +29,6 @@ function statusClass(status: JobOfferStatus) {
         expired: "bg-slate-100 text-slate-600 border-slate-200",
         withdrawn: "bg-slate-100 text-slate-500 border-slate-200",
     }[status];
-}
-
-function formatDate(value?: string | null) {
-    if (!value) return "—";
-    const date = new Date(value.replace(" ", "T"));
-    return Number.isNaN(date.getTime())
-        ? value
-        : new Intl.DateTimeFormat(undefined, {
-              day: "2-digit",
-              month: "short",
-              year: "numeric",
-          }).format(date);
-}
-
-function formatMoney(value: number | string | null, currencyLabel = "") {
-    if (value === null || value === "") return "Not specified";
-    const amount = Number(value);
-    if (!Number.isFinite(amount)) return String(value);
-    return `${currencyLabel ? `${currencyLabel} ` : ""}${new Intl.NumberFormat().format(amount)}`;
 }
 </script>
 
@@ -130,30 +109,125 @@ function formatMoney(value: number | string | null, currencyLabel = "") {
                         class="hover:bg-slate-50/70"
                     >
                         <td class="px-5 py-4">
-                            <p class="font-semibold text-slate-900">
-                                {{
-                                    mode === "employer"
-                                        ? offer.job_seeker?.name || "Candidate"
-                                        : offer.company?.name || "Company"
-                                }}
-                            </p>
-                            <p class="mt-0.5 text-xs text-slate-500">
-                                {{
-                                    mode === "employer"
-                                        ? offer.job_seeker?.profile
-                                              ?.professional_title ||
-                                          "Job seeker"
-                                        : "Employer"
-                                }}
-                            </p>
+                            <div class="flex items-center gap-3.5">
+                                <div v-if="mode === 'jobseeker'">
+                                    <img
+                                        v-if="offer.company?.logo"
+                                        :src="offer.company?.logo"
+                                        :alt="offer.company?.name || 'Company'"
+                                        class="h-10 w-10 rounded-full object-cover"
+                                    />
+
+                                    <div
+                                        v-else
+                                        class="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-indigo-600 text-xs font-bold text-white"
+                                    >
+                                        {{
+                                            getInitials(
+                                                offer.company?.name ||
+                                                    "Company",
+                                            )
+                                        }}
+                                    </div>
+                                </div>
+                                <div v-else>
+                                    <img
+                                        v-if="
+                                            offer.job_seeker?.profile
+                                                ?.profile_photo
+                                        "
+                                        :src="
+                                            offer.job_seeker.profile
+                                                .profile_photo
+                                        "
+                                        :alt="
+                                            offer.job_seeker?.name ||
+                                            'Candidate'
+                                        "
+                                        class="h-10 w-10 rounded-full object-cover"
+                                    />
+
+                                    <div
+                                        v-else
+                                        class="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-indigo-600 text-xs font-bold text-white"
+                                    >
+                                        {{
+                                            getInitials(
+                                                offer.job_seeker?.name ||
+                                                    "Candidate",
+                                            )
+                                        }}
+                                    </div>
+                                </div>
+                                <div class="mt-0.5">
+                                    <p class="font-semibold text-slate-900">
+                                        {{
+                                            mode === "employer"
+                                                ? offer.job_seeker?.name ||
+                                                  "Candidate"
+                                                : offer.company?.name ||
+                                                  "Company"
+                                        }}
+                                    </p>
+                                    <p class="mt-0.5 text-xs text-slate-500">
+                                        {{
+                                            mode === "employer"
+                                                ? offer.job_seeker?.profile
+                                                      ?.professional_title ||
+                                                  "Job seeker"
+                                                : "Employer"
+                                        }}
+                                    </p>
+                                </div>
+                            </div>
                         </td>
-                        <td class="px-5 py-4 font-medium text-slate-700">
-                            {{ offer.job?.title || "Job offer" }}
+
+                        <td class="px-5 py-4">
+                            <p class="font-medium text-slate-800">
+                                {{ offer.job?.title || "Job offer" }}
+                            </p>
+
+                            <div class="mt-1 flex items-center gap-2">
+                                <span
+                                    v-if="offer.job?.employment_type"
+                                    class="rounded-md border border-indigo-100 bg-indigo-50 px-2 py-0.5 text-[11px] font-medium text-indigo-700"
+                                >
+                                    {{
+                                        formatEmploymentType(
+                                            offer.job.employment_type,
+                                        )
+                                    }}
+                                </span>
+
+                                <span
+                                    v-if="offer.job?.workplace_type"
+                                    class="text-xs text-slate-500"
+                                >
+                                    {{
+                                        formatWorkplaceType(
+                                            offer.job.workplace_type,
+                                        )
+                                    }}
+                                </span>
+
+                                <span
+                                    v-if="offer.job?.city || offer.job?.country"
+                                    class="text-xs text-slate-500"
+                                >
+                                    ⌖
+                                    {{
+                                        [offer.job?.city, offer.job?.country]
+                                            .filter(Boolean)
+                                            .join(", ")
+                                    }}
+                                </span>
+                            </div>
                         </td>
-                        <td class="whitespace-nowrap px-5 py-4 text-slate-700">
-                            {{
-                                formatMoney(offer.salary_offered, currencyLabel)
-                            }}
+
+                        <td
+                            class="font-semibold whitespace-nowrap px-5 py-4 text-slate-700"
+                        >
+                            {{ formatMoney(offer.salary_offered, "$") }}
                         </td>
                         <td class="px-5 py-4">
                             <span
@@ -166,7 +240,12 @@ function formatMoney(value: number | string | null, currencyLabel = "") {
                         <td
                             class="whitespace-nowrap px-5 py-4 text-xs text-slate-600"
                         >
-                            <p>{{ formatDate(offer.created_at) }}</p>
+                            <p>
+                                Sent:
+                                <span class="font-semibold">{{
+                                    formatDate(offer.created_at)
+                                }}</span>
+                            </p>
                             <p class="mt-1 text-slate-400">
                                 {{
                                     offer.status === "pending"
@@ -180,13 +259,6 @@ function formatMoney(value: number | string | null, currencyLabel = "") {
                         <td class="px-5 py-4">
                             <div class="flex items-center justify-end gap-2">
                                 <button
-                                    type="button"
-                                    class="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:border-indigo-200 hover:text-indigo-700"
-                                    @click="emit('view', offer)"
-                                >
-                                    View
-                                </button>
-                                <button
                                     v-if="
                                         mode === 'employer' &&
                                         offer.status === 'pending'
@@ -196,6 +268,13 @@ function formatMoney(value: number | string | null, currencyLabel = "") {
                                     @click="emit('withdraw', offer)"
                                 >
                                     Withdraw
+                                </button>
+                                <button
+                                    type="button"
+                                    class="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:border-indigo-200 hover:text-indigo-700"
+                                    @click="emit('view', offer)"
+                                >
+                                    View
                                 </button>
                             </div>
                         </td>

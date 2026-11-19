@@ -83,7 +83,7 @@ export function formatMoney(
 
     if (!Number.isFinite(amount)) return String(value);
 
-    return `${currencyLabel ? `${currencyLabel} ` : ""}${new Intl.NumberFormat().format(amount)}`;
+    return `${currencyLabel ? `${currencyLabel}` : ""}${new Intl.NumberFormat().format(amount)}`;
 }
 
 export function getInitials(name?: string | null): string {
