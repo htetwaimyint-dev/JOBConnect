@@ -56,6 +56,7 @@ export interface Job {
     deadline: string | null;
 
     status: JobStatus;
+    rejection_reason?: string | null;
 
     created_at: string;
     updated_at: string;
