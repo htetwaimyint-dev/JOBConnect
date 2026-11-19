@@ -27,7 +27,7 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
         //User Management
         Route::get('/companies', [UserManagementController::class, 'companies']);
         Route::get('/job-seekers', [UserManagementController::class, 'jobSeekers']);
-       
+
         Route::delete('/companies/{id}', [UserManagementController::class, 'deleteCompany']);
         Route::delete('/job-seekers/{id}', [UserManagementController::class, 'deleteJobSeeker']);
 
@@ -47,17 +47,25 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
             'update'
         ]);
 
-        // Job Approval Management
+        // Get all jobs (supports status filtering)
+        Route::get('/jobs', [
+            JobApprovalController::class,
+            'index'
+        ]);
+
+        // Get pending jobs
         Route::get('/jobs/pending', [
             JobApprovalController::class,
             'index'
         ]);
 
+        // Get job detail
         Route::get('/jobs/{jobId}', [
             JobApprovalController::class,
             'show'
         ]);
 
+        // Approve / Reject job
         Route::patch('/jobs/{jobId}/approval', [
             JobApprovalController::class,
             'update'

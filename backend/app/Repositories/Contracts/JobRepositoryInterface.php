@@ -5,6 +5,7 @@ namespace App\Repositories\Contracts;
 use App\Models\Company;
 use App\Models\Job;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use App\Enums\JobStatus;
 
 interface JobRepositoryInterface
 {
@@ -36,8 +37,19 @@ interface JobRepositoryInterface
 
     // Admin Job Approval
 
-    public function getPendingForAdmin(
-        int $perPage = 10
+    // public function getPendingForAdmin(
+    //     int $perPage = 5
+    // ): LengthAwarePaginator;
+
+    public function getAllJobsForAdmin(
+        int $perPage = 5,
+        ?string $search = null
+    ): LengthAwarePaginator;
+
+    public function getJobsByStatusForAdmin(
+        JobStatus $status,
+        int $perPage = 5,
+        ?string $search = null
     ): LengthAwarePaginator;
 
     public function findForAdmin(

@@ -261,9 +261,10 @@ const emit = defineEmits<{
                   type="button"
                   @click="emit('openDetails', company)"
                   title="View company details"
-                  class="rounded-lg p-2 text-blue-600 transition hover:bg-blue-50"
+                  class="inline-flex items-center justify-center gap-1.5 rounded-lg border border-blue-200 px-3 py-2 text-xs font-medium text-blue-600 transition hover:bg-blue-50"
                 >
-                  <Eye :size="18" />
+                  <Eye :size="15" />
+                  <span>View</span>
                 </button>
 
                 <button
@@ -271,9 +272,9 @@ const emit = defineEmits<{
                   type="button"
                   @click="emit('openApproval', company, 'verified')"
                   title="Approve company"
-                  class="rounded-lg p-2 text-emerald-600 transition hover:bg-emerald-50"
+                  class="rounded-lg p-2 text-emerald-600 transition hover:bg-emerald-50 border border-blue-200"
                 >
-                  <CheckCircle2 :size="18" />
+                  <CheckCircle2 :size="16" />
                 </button>
 
                 <button
@@ -281,9 +282,9 @@ const emit = defineEmits<{
                   type="button"
                   @click="emit('openApproval', company, 'rejected')"
                   title="Reject company"
-                  class="rounded-lg p-2 text-red-500 transition hover:bg-red-50"
+                  class="rounded-lg p-2 text-red-500 transition hover:bg-red-50 border border-blue-200"
                 >
-                  <XCircle :size="18" />
+                  <XCircle :size="16" />
                 </button>
               </div>
             </td>

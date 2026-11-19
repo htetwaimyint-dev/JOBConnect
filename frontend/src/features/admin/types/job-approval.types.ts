@@ -1,4 +1,4 @@
-export type JobStatus = 
+export type JobStatus =
     | "draft"
     | "pending"
     | "published"
@@ -6,6 +6,13 @@ export type JobStatus =
     | "closed";
 
 export type JobStatusFilter = "all" | JobStatus;
+
+export type JobApprovalStatus =
+    | "pending"
+    | "published"
+    | "rejected";
+
+export type JobApprovalFilter = "all" | JobApprovalStatus;
 
 export interface JobCompany {
     id: number;
