@@ -72,7 +72,7 @@ class Job extends Model
     }
 
     // Job → Screening Questions (1:M)//HWM repair 
-    public function jobQuestions(): HasMany
+    public function jobQuestion(): HasMany
     {
         return $this->hasMany(JobQuestion::class, 'job_id');
     }

@@ -1,3 +1,4 @@
+
 import api from "@/services/api";
 
 import type {
@@ -6,7 +7,16 @@ import type {
     JobListParams,
     JobListResponse,
 } from "../types/job.types";
-import { toValue, type MaybeRefOrGetter } from "vue";
+
+const cleanParams = (params?: JobListParams) => {
+    const cleaned = { ...params };
+
+    if (cleaned.status === "all") {
+        delete cleaned.status;
+    }
+
+    return cleaned;
+};
 
 const jobRepository = {
     createJob(data: JobFormData) {
@@ -15,13 +25,13 @@ const jobRepository = {
 
     getJobs(params?: JobListParams) {
         return api.get<JobListResponse>("/jobs", {
-            params,
+            params: cleanParams(params),
         });
     },
 
     getJobsByCompany(params?: JobListParams) {
         return api.get<JobListResponse>("/employer/jobs", {
-            params,
+            params: cleanParams(params),
         });
     },
 
@@ -35,6 +45,10 @@ const jobRepository = {
 
     updateJob(id: number, data: JobFormData) {
         return api.put(`/employer/jobs/${id}`, data);
+    },
+
+    closeJob(id: number) {
+        return api.patch(`/employer/jobs/${id}/close`);
     },
 
     deleteJob(id: number) {

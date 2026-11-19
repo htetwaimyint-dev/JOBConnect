@@ -84,12 +84,12 @@ class ApplicationService
      */
     public function submitApplication(array $data): Application
     {
-        $job = Job::with('jobQuestions')->findOrFail($data['job_id']);
+        $job = Job::with('jobQuestion')->findOrFail($data['job_id']);
 
         $answers = $data['answers'] ?? [];
 
         // Get all question IDs belonging to this job.
-        $jobQuestionIds = $job->jobQuestions
+        $jobQuestionIds = $job->jobQuestion
             ->pluck('id')
             ->map(fn($id) => (int) $id)
             ->all();
@@ -113,7 +113,7 @@ class ApplicationService
         }
 
         // Get all required question IDs.
-        $requiredQuestionIds = $job->jobQuestions
+        $requiredQuestionIds = $job->jobQuestion
             ->where('is_required', true)
             ->pluck('id')
             ->map(fn($id) => (int) $id)

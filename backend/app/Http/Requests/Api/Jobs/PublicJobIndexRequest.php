@@ -58,6 +58,17 @@ class PublicJobIndexRequest extends FormRequest
                 'max:255',
             ],
 
+            'status' => [
+                'nullable',
+                Rule::in([
+                    'draft',
+                    'pending',
+                    'published',
+                    'rejected',
+                    'closed',
+                ]),
+            ],
+
             'page' => [
                 'nullable',
                 'integer',
