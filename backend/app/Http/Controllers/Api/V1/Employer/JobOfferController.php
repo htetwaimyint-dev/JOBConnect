@@ -9,11 +9,9 @@ use App\Http\Resources\Api\JobOffers\JobOfferCandidateResource;
 use App\Http\Resources\Api\JobOffers\JobOfferCompanyResource;
 use App\Http\Resources\Api\JobOffers\JobOfferResource;
 use App\Models\Company;
-use App\Models\JobOffer;
 use App\Services\JobOffers\JobOfferService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Validation\ValidationException;
 
 class JobOfferController extends Controller
 {
@@ -37,6 +35,18 @@ class JobOfferController extends Controller
         ]);
     }
 
+    public function index(Request $request): JsonResponse
+    {
+        $company = $this->currentCompany($request);
+        $offers = $this->jobOfferService->getOffersForEmployer($company);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Employer job offers retrieved successfully.',
+            'data' => JobOfferResource::collection($offers)->resolve($request),
+        ]);
+    }
+
     public function store(StoreJobOfferRequest $request): JsonResponse
     {
         $company = $this->currentCompany($request);
@@ -50,6 +60,18 @@ class JobOfferController extends Controller
         ], 201);
     }
 
+    public function withdraw(Request $request, int $jobOfferId): JsonResponse
+    {
+        $company = $this->currentCompany($request);
+        $offer = $this->jobOfferService->withdrawOffer($company, $jobOfferId);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Job offer withdrawn successfully.',
+            'data' => (new JobOfferResource($offer))->resolve($request),
+        ]);
+    }
+
     private function currentCompany(Request $request): Company
     {
         $company = $request->user()?->company;
@@ -57,23 +79,5 @@ class JobOfferController extends Controller
         abort_unless($company instanceof Company, 403, 'Your employer account is not linked to a company.');
 
         return $company;
-    }
-
-    public function withdraw(JobOffer $jobOffer)
-    {
-        if ($jobOffer->status !== 'pending') {
-            return response()->json([
-                'message' => 'Only pending offers can be withdrawn.',
-            ], 422);
-        }
-
-        $jobOffer->update([
-            'status' => 'withdrawn',
-        ]);
-
-        return response()->json([
-            'message' => 'Job offer withdrawn successfully.',
-            'data' => $jobOffer->fresh(),
-        ]);
     }
 }

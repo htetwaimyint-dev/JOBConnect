@@ -20,6 +20,10 @@ interface JobOfferRepositoryInterface
 
     public function create(array $data): JobOffer;
 
+    public function getForCompany(int $companyId): Collection;
+
+    public function findForCompanyForUpdate(int $companyId, int $offerId): ?JobOffer;
+
     public function getForJobSeeker(int $jobSeekerId): Collection;
 
     public function expirePendingForJobSeeker(int $jobSeekerId): int;

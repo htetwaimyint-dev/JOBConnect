@@ -85,6 +85,33 @@ class JobOfferService
         ]));
     }
 
+    public function getOffersForEmployer(Company $company): Collection
+    {
+        return $this->jobOfferRepository->getForCompany($company->id);
+    }
+
+    public function withdrawOffer(Company $company, int $offerId): JobOffer
+    {
+        return DB::transaction(function () use ($company, $offerId) {
+            $offer = $this->jobOfferRepository->findForCompanyForUpdate(
+                $company->id,
+                $offerId,
+            );
+
+            if (!$offer) {
+                throw (new ModelNotFoundException())->setModel(JobOffer::class, [$offerId]);
+            }
+
+            if ($offer->status !== 'pending') {
+                throw ValidationException::withMessages([
+                    'status' => 'Only pending offers can be withdrawn.',
+                ]);
+            }
+
+            return $this->jobOfferRepository->updateStatus($offer, 'withdrawn');
+        });
+    }
+
     public function getOffersForJobSeeker(int $jobSeekerId): Collection
     {
         $this->jobOfferRepository->expirePendingForJobSeeker($jobSeekerId);

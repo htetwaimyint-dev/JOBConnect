@@ -43,6 +43,8 @@ const counts = computed(() => ({
     rejected: props.offers.filter((offer) => offer.status === "rejected")
         .length,
     expired: props.offers.filter((offer) => offer.status === "expired").length,
+    withdrawn: props.offers.filter((offer) => offer.status === "expired")
+        .length,
 }));
 
 const filteredOffers = computed(() =>

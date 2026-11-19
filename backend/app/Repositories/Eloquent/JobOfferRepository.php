@@ -67,6 +67,30 @@ class JobOfferRepository implements JobOfferRepositoryInterface
         return $this->loadOfferRelations($offer);
     }
 
+    public function getForCompany(int $companyId): Collection
+    {
+        return JobOffer::query()
+            ->with([
+                'job:id,title,employment_type,workplace_type,country,city',
+                'company:id,name,logo',
+                'jobSeeker.jobSeekerProfile',
+                'jobSeeker.skills',
+                'jobSeeker.experiences',
+            ])
+            ->where('company_id', $companyId)
+            ->latest('created_at')
+            ->get();
+    }
+
+    public function findForCompanyForUpdate(int $companyId, int $offerId): ?JobOffer
+    {
+        return JobOffer::query()
+            ->where('company_id', $companyId)
+            ->whereKey($offerId)
+            ->lockForUpdate()
+            ->first();
+    }
+
     public function getForJobSeeker(int $jobSeekerId): Collection
     {
         return JobOffer::query()
@@ -116,6 +140,8 @@ class JobOfferRepository implements JobOfferRepositoryInterface
             'job:id,title,employment_type,workplace_type,country,city',
             'company:id,name,logo',
             'jobSeeker.jobSeekerProfile',
+            'jobSeeker.skills',
+            'jobSeeker.experiences',
         ]);
     }
 

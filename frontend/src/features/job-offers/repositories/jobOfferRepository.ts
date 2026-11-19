@@ -20,19 +20,25 @@ export interface EmployerJobOfferContext {
     jobs: EmployerOfferJob[];
 }
 
-export interface SendJobOfferPayload extends CreateJobOfferPayload {
-    job_seeker_id: number;
-}
-
 const jobOfferRepository = {
+    getEmployerOffers() {
+        return api.get<ApiResponse<JobOffer[]>>("employer/job-offers");
+    },
+
     getEmployerContext(jobSeekerId: number | string) {
         return api.get<ApiResponse<EmployerJobOfferContext>>(
             `employer/job-offers/context/${jobSeekerId}`,
         );
     },
 
-    create(payload: SendJobOfferPayload) {
+    create(payload: CreateJobOfferPayload) {
         return api.post<ApiResponse<JobOffer>>("employer/job-offers", payload);
+    },
+
+    withdraw(offerId: number) {
+        return api.delete<ApiResponse<JobOffer>>(
+            `employer/job-offers/${offerId}/withdraw`,
+        );
     },
 
     getMyOffers() {
@@ -44,10 +50,6 @@ const jobOfferRepository = {
             `job-seeker/job-offers/${offerId}/response`,
             payload,
         );
-    },
-
-    withdraw(offerId: number) {
-        return api.delete(`/job-offers/${offerId}/withdraw`);
     },
 };
 

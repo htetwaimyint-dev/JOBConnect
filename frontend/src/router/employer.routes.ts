@@ -9,6 +9,7 @@ import EmployerLayout from "@/layouts/EmployerLayout.vue";
 import type { RouteRecordRaw } from "vue-router";
 import JobDetail from "@/features/jobs/pages/JobDetail.vue";
 import EmployerCreateJobOfferPage from "@/features/job-offers/pages/EmployerCreateJobOfferPage.vue";
+import EmployerJobOfferPage from "@/features/job-offers/pages/EmployerJobOfferPage.vue";
 
 export const employerRoutes: RouteRecordRaw[] = [
     {
@@ -70,12 +71,18 @@ export const employerRoutes: RouteRecordRaw[] = [
                 component: JobDetail,
             },
             {
-                path: "/employer/job-offer/:candidateId",
+                path: "job-offers/:candidateId",
                 name: "job-offer",
                 component: EmployerCreateJobOfferPage,
                 props: (route) => ({
                     candidateId: Number(route.params.candidateId),
                 }),
+            },
+
+            {
+                path: "job-offers/",
+                name: "employer-job-offers",
+                component: EmployerJobOfferPage,
             },
         ],
     },

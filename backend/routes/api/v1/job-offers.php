@@ -8,6 +8,11 @@ Route::middleware(['auth:sanctum', 'employer'])
     ->prefix('employer/job-offers')
     ->group(function () {
         Route::get(
+            '/',
+            [EmployerJobOfferController::class, 'index']
+        );
+
+        Route::get(
             '/context/{jobSeekerId}',
             [EmployerJobOfferController::class, 'context']
         );
@@ -15,6 +20,11 @@ Route::middleware(['auth:sanctum', 'employer'])
         Route::post(
             '/',
             [EmployerJobOfferController::class, 'store']
+        );
+
+        Route::delete(
+            '/{jobOfferId}/withdraw',
+            [EmployerJobOfferController::class, 'withdraw']
         );
     });
 

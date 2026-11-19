@@ -60,10 +60,9 @@ export const jobseekerRoutes: RouteRecordRaw[] = [
                 meta: { title: "Interviews" },
             },
             {
-                path: "offers",
-                name: "JobSeekerOffers",
+                path: "job-offers",
+                name: "job-seeker-offers",
                 component: JobSeekerOffersPage,
-                meta: { title: "Job Offers" },
             },
             {
                 path: "settings",
