@@ -75,14 +75,16 @@ export function useJobs() {
             return response.data;
         },
 
-        onSuccess: (_, variables) => {
-            queryClient.invalidateQueries({
-                queryKey: jobKeys.lists(),
-            });
+        onSuccess: async (_, variables) => {
+            await Promise.all([
+                queryClient.invalidateQueries({
+                    queryKey: jobKeys.lists(),
+                }),
 
-            queryClient.invalidateQueries({
-                queryKey: jobKeys.detail(variables.id),
-            });
+                queryClient.invalidateQueries({
+                    queryKey: jobKeys.employerDetail(variables.id),
+                }),
+            ]);
         },
     });
 
@@ -135,11 +137,11 @@ export function useJobs() {
         const isEmployer = computed(() => authStore.user?.role === "employer");
 
         return useQuery({
-            queryKey: computed(() => [
-                "jobs",
-                isEmployer.value ? "employer" : "public",
-                jobId.value,
-            ]),
+            queryKey: computed(() =>
+                isEmployer.value
+                    ? jobKeys.employerDetail(jobId.value)
+                    : jobKeys.publicDetail(jobId.value),
+            ),
 
             queryFn: async () => {
                 const response = isEmployer.value
