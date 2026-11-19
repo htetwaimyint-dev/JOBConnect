@@ -82,7 +82,7 @@ export interface JobFormData {
     job_questions: JobApplicationQuestionForm[];
 }
 
-export type JobDetailMode = "preview" | "public" | "admin";
+export type JobDetailMode = "preview" | "public" | "admin" | "employer";
 
 export type JobFormField = keyof JobFormData;
 
