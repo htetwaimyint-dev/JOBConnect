@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 
-import { Building2, Clock3, RefreshCw, AlertCircle, X } from "lucide-vue-next";
+import { RefreshCw, AlertCircle, X } from "lucide-vue-next";
 
 import CompanyTable from "../components/company/CompanyTable.vue";
 import CompanyDetailsModal from "../components/company/CompanyDetailsModal.vue";
