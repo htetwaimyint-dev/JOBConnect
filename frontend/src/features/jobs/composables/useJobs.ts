@@ -86,23 +86,46 @@ export function useJobs() {
         },
     });
 
+
+    // Close published employer job
+    const closeJob = useMutation({
+        mutationFn: async (id: number) => {
+            const response = await jobRepository.closeJob(id);
+            return response.data;
+        },
+
+        onSuccess: (_, id) => {
+            // Refresh employer job lists
+            queryClient.invalidateQueries({
+                queryKey: jobKeys.lists(),
+            });
+
+            // Refresh specific job detail
+            queryClient.invalidateQueries({
+                queryKey: jobKeys.detail(id),
+            });
+        },
+    });
+
     // Delete employer job
-    function deleteJob() {
-        const queryClient = useQueryClient();
+    const deleteJob = useMutation({
+        mutationFn: async (id: number) => {
+            const response = await jobRepository.deleteJob(id);
+            return response.data;
+        },
 
-        return useMutation({
-            mutationFn: async (id: number) => {
-                const response = await jobRepository.deleteJob(id);
-                return response.data;
-            },
+        onSuccess: (_, id) => {
+            // Refresh employer job lists
+            queryClient.invalidateQueries({
+                queryKey: jobKeys.lists(),
+            });
 
-            onSuccess: () => {
-                queryClient.invalidateQueries({
-                    queryKey: jobKeys.lists(),
-                });
-            },
-        });
-    }
+            // Refresh specific job detail
+            queryClient.invalidateQueries({
+                queryKey: jobKeys.detail(id),
+            });
+        },
+    });
 
     // Get job details
     function getJobById(id: MaybeRefOrGetter<number | string>) {
@@ -136,6 +159,7 @@ export function useJobs() {
         getJobById,
         createJob,
         updateJob,
+        closeJob,
         deleteJob,
     };
 }
