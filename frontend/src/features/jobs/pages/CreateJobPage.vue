@@ -143,16 +143,20 @@ async function submitJob(status: SubmissionStatus) {
     }
 
     try {
+        let createdJobId: number | string = "";
         if (isEditMode.value && jobId.value) {
             await updateJob.mutateAsync({
                 id: jobId.value,
                 data: { ...form },
             });
-        } else {
-            await createJob.mutateAsync({ ...form });
-        }
 
-        router.push({ name: "job-detail" });
+            router.push({ name: "job-detail", params: { id: jobId.value } });
+        } else {
+            const response = await createJob.mutateAsync({ ...form });
+            createdJobId = response?.data?.id || response?.id;
+
+            router.push({ name: "job-detail", params: { id: createdJobId } });
+        }
     } catch (error) {
         if (axios.isAxiosError(error)) {
             if (error.response?.status === 422) {

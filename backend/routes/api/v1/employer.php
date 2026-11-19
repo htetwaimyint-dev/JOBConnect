@@ -27,4 +27,3 @@ Route::middleware(['auth:sanctum', 'employer'])
             [\App\Http\Controllers\Api\V1\Employer\ResumeController::class, 'download']
         );
     });
-

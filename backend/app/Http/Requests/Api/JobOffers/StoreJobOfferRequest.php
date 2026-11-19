@@ -2,28 +2,24 @@
 
 namespace App\Http\Requests\Api\JobOffers;
 
-use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreJobOfferRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
-        return false;
+        // The route is protected by auth:sanctum and the existing employer middleware.
+        return true;
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, ValidationRule|array<mixed>|string>
-     */
     public function rules(): array
     {
         return [
-            //
+            'job_seeker_id' => ['required', 'integer', 'exists:users,id'],
+            'job_id' => ['required', 'integer', 'exists:jobs,id'],
+            'salary_offered' => ['required', 'numeric', 'gt:0'],
+            'offer_details' => ['nullable', 'string', 'max:5000'],
+            'expires_at' => ['required', 'date', 'after:now'],
         ];
     }
 }

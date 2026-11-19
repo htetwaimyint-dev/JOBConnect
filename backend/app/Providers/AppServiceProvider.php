@@ -29,7 +29,9 @@ use App\Repositories\Contracts\SavedJobRepositoryInterface;
 use App\Repositories\Eloquent\SavedJobRepository;
 
 use App\Repositories\Contracts\CategoryRepositoryInterface;
+use App\Repositories\Contracts\JobOfferRepositoryInterface;
 use App\Repositories\Eloquent\CategoryRepository;
+use App\Repositories\Eloquent\JobOfferRepository;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -72,6 +74,10 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(
             SavedJobRepositoryInterface::class,
             SavedJobRepository::class
+        );
+        $this->app->bind(
+            JobOfferRepositoryInterface::class,
+            JobOfferRepository::class
         );
     }
 

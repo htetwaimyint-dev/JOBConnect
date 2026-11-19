@@ -18,7 +18,6 @@ const variants = ["outline", "soft", "ghost"] as const;
 const sizes = ["sm", "md", "lg"] as const;
 
 const selectedFruit = ref<string | number | null>("apple");
-const selectedCountry = ref<string | number | null>(null);
 </script>
 
 <template>
