@@ -5,7 +5,6 @@ import {
   UserCheck,
   UserX,
   Search,
-  Plus,
   Eye,
   RotateCcw,
   Trash2,
@@ -112,7 +111,7 @@ const clearSearch = () => {
 <template>
   <div class="min-h-screen bg-slate-50 p-6 sm:p-8">
     <div class="mx-auto max-w-7xl">
-      <!-- 1. Header Section -->
+      <!-- 1. Header Section (Add Button ကို ဖျက်ထားပါတယ်) -->
       <div
         class="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-center"
       >
@@ -122,16 +121,11 @@ const clearSearch = () => {
             Manage website users, roles and permissions.
           </p>
         </div>
-        <button
-          class="flex items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-indigo-700"
-        >
-          <Plus class="h-4 w-4" />
-          Add New User
-        </button>
       </div>
 
-      <!-- 2. Stats Cards -->
+      <!-- 2. Stats Cards (% စာသားများကို ဖျက်ထားပါတယ်) -->
       <div class="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <!-- Total -->
         <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
           <div class="flex items-center gap-4">
             <div
@@ -140,17 +134,15 @@ const clearSearch = () => {
               <Users class="h-6 w-6" />
             </div>
             <div>
-              <p class="text-sm font-medium text-slate-500">Total Users</p>
+              <p class="text-sm font-medium text-slate-500">Total Employers</p>
               <h3 class="text-2xl font-bold text-slate-900">
                 {{ stats.total }}
               </h3>
-              <p class="text-xs text-green-600 font-medium mt-1">
-                ▲ +12% from last month
-              </p>
             </div>
           </div>
         </div>
 
+        <!-- Active -->
         <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
           <div class="flex items-center gap-4">
             <div
@@ -159,17 +151,15 @@ const clearSearch = () => {
               <UserCheck class="h-6 w-6" />
             </div>
             <div>
-              <p class="text-sm font-medium text-slate-500">Active Users</p>
+              <p class="text-sm font-medium text-slate-500">Active Employers</p>
               <h3 class="text-2xl font-bold text-slate-900">
                 {{ stats.active }}
               </h3>
-              <p class="text-xs text-green-600 font-medium mt-1">
-                ▲ +8% from last month
-              </p>
             </div>
           </div>
         </div>
 
+        <!-- Suspended -->
         <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
           <div class="flex items-center gap-4">
             <div
@@ -178,13 +168,12 @@ const clearSearch = () => {
               <UserX class="h-6 w-6" />
             </div>
             <div>
-              <p class="text-sm font-medium text-slate-500">Suspended Users</p>
+              <p class="text-sm font-medium text-slate-500">
+                Suspended Employers
+              </p>
               <h3 class="text-2xl font-bold text-slate-900">
                 {{ stats.suspended }}
               </h3>
-              <p class="text-xs text-red-500 font-medium mt-1">
-                ▼ -4% from last month
-              </p>
             </div>
           </div>
         </div>
@@ -192,7 +181,7 @@ const clearSearch = () => {
 
       <!-- 3. Main Table Container -->
       <div class="rounded-xl border border-slate-200 bg-white shadow-sm">
-        <!-- Toolbar -->
+        <!-- Toolbar (Search & Filter) -->
         <div
           class="border-b border-slate-200 p-5 flex flex-col sm:flex-row gap-4 justify-between items-center bg-white rounded-t-xl"
         >
@@ -204,13 +193,14 @@ const clearSearch = () => {
             <input
               v-model="searchQuery"
               type="text"
-              placeholder="Search users by name, email..."
+              placeholder="Search employer by name, email..."
               class="w-full rounded-lg border border-slate-300 py-2 pl-9 pr-10 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
             />
             <button
               v-if="searchQuery"
               @click="clearSearch"
               class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+              title="Clear search"
             >
               <X class="h-4 w-4" />
             </button>
@@ -237,7 +227,7 @@ const clearSearch = () => {
             >
               <tr>
                 <th class="px-6 py-4 font-medium">No.</th>
-                <th class="px-6 py-4 font-medium">Name</th>
+                <th class="px-6 py-4 font-medium">Employer Name</th>
                 <th class="px-6 py-4 font-medium">Email</th>
                 <th class="px-6 py-4 font-medium">Company</th>
                 <th class="px-6 py-4 font-medium text-center">Job Count</th>
@@ -280,7 +270,6 @@ const clearSearch = () => {
                 <!-- Company (Logo + Name + View Button) -->
                 <td class="px-6 py-4">
                   <div class="flex items-center gap-3">
-                    <!-- Company Logo လေး ထည့်ထားတယ် -->
                     <img
                       :src="user.companyLogo"
                       alt="Company Logo"
@@ -326,7 +315,6 @@ const clearSearch = () => {
 
                 <!-- Actions (Soft Delete / Restore) -->
                 <td class="px-6 py-4 text-right">
-                  <!-- Restore Button -->
                   <button
                     v-if="user.isDeleted"
                     @click="toggleDelete(user)"
@@ -335,7 +323,6 @@ const clearSearch = () => {
                     <RotateCcw class="h-3.5 w-3.5" /> Restore
                   </button>
 
-                  <!-- Delete Button -->
                   <button
                     v-else
                     @click="toggleDelete(user)"
