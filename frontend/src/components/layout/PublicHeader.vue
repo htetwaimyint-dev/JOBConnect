@@ -109,7 +109,7 @@ const navigationLinks = computed(() => {
             { label: "Applications", path: "/jobseeker/applications" },
             { label: "Interviews", path: "/jobseeker/interviews" },
             { label: "Company Profile", path: "/jobseeker/companyProfile" },
-            { label: "Job Offers", path: "/jobseeker/offers" },
+            { label: "Job Offers", path: "/jobseeker/job-offers" },
         ];
     }
 
