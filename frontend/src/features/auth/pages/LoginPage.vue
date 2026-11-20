@@ -10,6 +10,8 @@ import BaseAlert from "@/components/common/BaseAlert.vue";
 
 import type { LoginData } from "../types/auth.types.ts";
 
+import { companyRepository } from "@/features/employer/repositories/companyRepository";
+
 const authStore = useAuthStore();
 const router = useRouter();
 
@@ -30,7 +32,13 @@ const handleLogin = async (data: LoginData) => {
     } else if (role === "admin") {
       router.push("/admin/dashboard");
     } else if (role === "employer") {
-      router.push("/employer/dashboard");
+      const company = await companyRepository.getCompanyProfileForForm();
+
+      if (!company) {
+        router.push("/employer/profile/create"); // No company yet → Create Company Form
+      } else {
+        router.push("/employer/dashboard"); // Company exists → Employer Dashboard
+      }
     } else {
       errorMessage.value = "Invalid user role";
     }
