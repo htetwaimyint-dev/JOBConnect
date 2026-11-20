@@ -7,7 +7,6 @@ import CompanyBasicInfoForm from "../components/CompanyBasicInfoForm.vue";
 import CompanyOverviewForm from "../components/CompanyOverviewForm.vue";
 import CompanyBrandingForm from "../components/CompanyBrandingForm.vue";
 import CompanyGalleryForm from "../components/CompanyGalleryForm.vue";
-import CompanyRejectionModal from "../components/CompanyRejectionModal.vue";
 
 import { useCompanyProfile } from "@/features/employer/composables/useUpdateCompanyProfile.ts";
 import { useCompanyProfileStore } from "@/stores/company-profile.store.ts";
@@ -28,43 +27,6 @@ const tabs = ["Overview", "Description", "Gallery"];
 
 const route = useRoute();
 const router = useRouter();
-
-// --------------------------------------------------
-// Company Rejection Modal
-// --------------------------------------------------
-
-const showRejectionModal = ref(false);
-
-// Show modal when company verification is rejected
-watch(
-  company,
-  (companyData) => {
-    console.log("Company Data:", companyData);
-    console.log("Verification Status:", companyData?.verification_status);
-    console.log("Rejection Reason:", companyData?.rejection_reason);
-
-    showRejectionModal.value =
-      companyData?.verification_status === "rejected" &&
-      !!companyData.rejection_reason?.trim();
-  },
-  { immediate: true },
-);
-
-// Close modal
-function closeRejectionModal() {
-  showRejectionModal.value = false;
-}
-
-// Edit company profile
-function editCompanyProfile() {
-  showRejectionModal.value = false;
-  activeTab.value = "Overview";
-
-  window.scrollTo({
-    top: 0,
-    behavior: "smooth",
-  });
-}
 
 // --------------------------------------------------
 // Handle tabs from query parameters
@@ -101,7 +63,7 @@ function goToProfile() {
         :is-pending="isPending"
         :is-edit-mode="store.isEditMode"
         :is-submitting="mutation.isPending.value"
-        @reset="store.reset"
+        @cancel="goToProfile"
         @viewProfile="goToProfile"
       />
 
@@ -206,13 +168,5 @@ function goToProfile() {
         </div>
       </main>
     </form>
-
-    <!-- Company Rejection Modal -->
-    <CompanyRejectionModal
-      v-if="showRejectionModal && company?.rejection_reason"
-      :reason="company.rejection_reason"
-      @close="closeRejectionModal"
-      @edit="editCompanyProfile"
-    />
   </div>
 </template>

@@ -68,6 +68,11 @@ export const employerRoutes: RouteRecordRaw[] = [
                 component: CompanyProfilePage,
             },
             {
+                path: "profile/create",
+                name: "employer.company-profile.create",
+                component: CompanyProfileForm,
+            },
+            {
                 path: "profile/edit",
                 name: "employer.company-profile.edit",
                 component: CompanyProfileForm,

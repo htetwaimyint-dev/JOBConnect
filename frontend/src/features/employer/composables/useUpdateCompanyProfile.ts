@@ -53,10 +53,10 @@ export function useCompanyProfile() {
             store.clearErrors();
 
             // Update the cached profile immediately.
-            queryClient.setQueryData(["company", "profile"], company);
+            queryClient.setQueryData(["company", "profile", userId.value], company);
 
             await queryClient.invalidateQueries({
-                queryKey: ["company", "profile"],
+                queryKey: ["company", "profile", userId.value],
             });
         },
 
