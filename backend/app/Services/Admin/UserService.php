@@ -14,13 +14,35 @@ class UserService
         protected UserRepositoryInterface $userRepository
     ) {}
 
-    public function getCompanies(?string $search = null, int $perPage = 10): LengthAwarePaginator
-    {
+    // Get Companies
+    public function getCompanies(
+        ?string $search = null,
+        ?string $status = null,
+        int $perPage = 10
+    ): LengthAwarePaginator {
+
         return $this->userRepository->getUsersByRole(
             UserRole::EMPLOYER,
             $search,
+            $status,
             $perPage
         );
+    }
+
+    public function getCompanyStats(): array
+    {
+        return [
+            'total' => User::withTrashed()
+                ->where('role', UserRole::EMPLOYER->value)
+                ->count(),
+
+            'active' => User::where('role', UserRole::EMPLOYER->value)
+                ->count(),
+
+            'suspended' => User::onlyTrashed()
+                ->where('role', UserRole::EMPLOYER->value)
+                ->count(),
+        ];
     }
 
     public function getJobSeekers(?string $search = null, int $perPage = 10): LengthAwarePaginator

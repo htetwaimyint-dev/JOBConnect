@@ -1,13 +1,26 @@
 import api from "@/services/api";
 
 export const adminRepository = {
-  async getCompanies(page = 1) {
-    const res = await api.get(`/admin/companies?page=${page}`);
+  async getCompanies(
+    params: {
+      page?: number;
+      search?: string;
+      status?: string;
+      per_page?: number;
+    } = {},
+  ) {
+    const res = await api.get("/admin/companies", {
+      params: {
+        page: params.page ?? 1,
+        search: params.search,
+        status: params.status,
+        per_page: params.per_page ?? 10,
+      },
+    });
+
     return res.data;
   },
-  async deleteCompany(id: number) {
-    return await api.delete(`/admin/companies/${id}`);
-  },
+
   async suspendCompany(id: number) {
     return await api.patch(`/admin/companies/${id}/suspend`);
   },

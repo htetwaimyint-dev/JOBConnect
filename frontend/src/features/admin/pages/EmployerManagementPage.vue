@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
 import { Eye, Trash2, RotateCcw } from "lucide-vue-next";
 
 import UserStatsCards from "../components/users/UserStatsCards.vue";
@@ -27,6 +27,12 @@ const selectedEmployer = ref<Employer | null>(null);
 const loading = ref(false);
 const deletingId = ref<number | null>(null);
 
+const stats = ref({
+  total: 0,
+  active: 0,
+  suspended: 0,
+});
+
 // ================================
 // Fetch Companies
 // ================================
@@ -34,14 +40,17 @@ async function fetchCompanies(page = 1) {
   loading.value = true;
 
   try {
-    const response = await adminRepository.getCompanies(page);
+    const response = await adminRepository.getCompanies({
+      page: page,
+      search: searchQuery.value.trim(),
+      status: selectedStatus.value,
+      per_page: perPage.value,
+    });
 
     console.log("API Response:", response);
 
     // Support Axios response or extracted response.data
     const paginatedData = response.data?.data ? response.data : response;
-
-    console.log("Paginated Data:", paginatedData);
 
     const employerData = paginatedData.data;
 
@@ -53,7 +62,7 @@ async function fetchCompanies(page = 1) {
 
     users.value = employerData.map((user: any) => ({
       ...user,
-      isDeleted: user.status === "suspended",
+      isDeleted: user.deleted_at !== null,
     }));
 
     currentPage.value = paginatedData.meta?.current_page ?? page;

@@ -16,18 +16,29 @@ class UserManagementController extends Controller
     ) {}
 
     // GET /api/v1/admin/users/companies
-    public function companies(Request $request): JsonResponse
-    {
-        $users = $this->userService->getCompanies(
-            $request->query('search'),
-            $request->integer('per_page', 10)
-        );
+   public function companies(Request $request): JsonResponse
+{
+    $request->validate([
+        'search' => ['nullable', 'string', 'max:255'],
+        'status' => ['nullable', 'in:Active,Suspended,All Statuses'],
+        'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
+    ]);
 
-        return UserResource::collection($users)
-            ->response()
-            ->setStatusCode(200);
-    }
+    $users = $this->userService->getCompanies(
+        $request->query('search'),
+        $request->query('status'),
+        $request->integer('per_page', 10)
+    );
+    
+    $stats = $this->userService->getCompanyStats();
 
+    return UserResource::collection($users)
+        ->additional([
+            'stats' => $stats,
+        ])
+        ->response()
+        ->setStatusCode(200);
+}
     // GET /api/v1/admin/users/job-seekers
     public function jobSeekers(Request $request): JsonResponse
     {
@@ -41,16 +52,7 @@ class UserManagementController extends Controller
             ->setStatusCode(200);
     }
 
-    // DELETE /api/v1/admin/companies/{id}
-    // public function deleteCompany(int $id): JsonResponse
-    // {
-    //     try {
-    //         $this->userService->deleteCompany($id);
-    //         return response()->json(['message' => 'Company suspended successfully.'], 200);
-    //     } catch (Exception $e) {
-    //         return response()->json(['message' => $e->getMessage()], $e->getCode() ?: 500);
-    //     }
-    // }
+   
     // PATCH /api/v1/admin/companies/{id}/suspend
 public function suspendCompany(int $id): JsonResponse
 {
