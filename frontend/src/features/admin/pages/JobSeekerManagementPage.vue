@@ -190,6 +190,7 @@ function getProfileImage(path?: string | null): string {
                 <th class="px-5 py-3.5">No.</th>
                 <th class="px-5 py-3.5">Job Seeker</th>
                 <th class="px-5 py-3.5">Email</th>
+                <th class="px-5 py-3.5 text-center">Resume Count</th>
                 <th class="px-5 py-3.5 text-center">Status</th>
                 <th class="px-5 py-3.5 text-right">Actions</th>
               </tr>
@@ -199,7 +200,7 @@ function getProfileImage(path?: string | null): string {
             <tbody class="divide-y divide-slate-100">
               <!-- Loading -->
               <tr v-if="loading">
-                <td colspan="5" class="px-5 py-12 text-center text-slate-500">
+                <td colspan="6" class="px-5 py-12 text-center text-slate-500">
                   Loading job seekers...
                 </td>
               </tr>
@@ -257,6 +258,15 @@ function getProfileImage(path?: string | null): string {
                 <!-- Email -->
                 <td class="px-5 py-4">
                   {{ user.email }}
+                </td>
+
+                <!-- Resume Count -->
+                <td class="px-5 py-4 text-center">
+                  <span
+                    class="inline-flex min-w-8 items-center justify-center rounded-full bg-indigo-50 px-2.5 py-1 text-sm font-semibold text-indigo-700"
+                  >
+                    {{ user.resume_count ?? 0 }}
+                  </span>
                 </td>
 
                 <!-- Status -->
