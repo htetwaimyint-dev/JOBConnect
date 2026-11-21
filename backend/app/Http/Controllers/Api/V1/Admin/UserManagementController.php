@@ -42,15 +42,48 @@ class UserManagementController extends Controller
     }
 
     // DELETE /api/v1/admin/companies/{id}
-    public function deleteCompany(int $id): JsonResponse
-    {
-        try {
-            $this->userService->deleteCompany($id);
-            return response()->json(['message' => 'Company suspended successfully.'], 200);
-        } catch (Exception $e) {
-            return response()->json(['message' => $e->getMessage()], $e->getCode() ?: 500);
-        }
+    // public function deleteCompany(int $id): JsonResponse
+    // {
+    //     try {
+    //         $this->userService->deleteCompany($id);
+    //         return response()->json(['message' => 'Company suspended successfully.'], 200);
+    //     } catch (Exception $e) {
+    //         return response()->json(['message' => $e->getMessage()], $e->getCode() ?: 500);
+    //     }
+    // }
+    // PATCH /api/v1/admin/companies/{id}/suspend
+public function suspendCompany(int $id): JsonResponse
+{
+    try {
+        $this->userService->suspendEmployer($id);
+
+        return response()->json([
+            'message' => 'Employer suspended successfully.'
+        ], 200);
+
+    } catch (Exception $e) {
+        return response()->json([
+            'message' => $e->getMessage()
+        ], $e->getCode() ?: 500);
     }
+}
+
+// PATCH /api/v1/admin/companies/{id}/restore
+public function restoreCompany(int $id): JsonResponse
+{
+    try {
+        $this->userService->restoreEmployer($id);
+
+        return response()->json([
+            'message' => 'Employer restored successfully.'
+        ], 200);
+
+    } catch (Exception $e) {
+        return response()->json([
+            'message' => $e->getMessage()
+        ], $e->getCode() ?: 500);
+    }
+}
 
     // DELETE /api/v1/admin/job-seekers/{id}
     public function deleteJobSeeker(int $id): JsonResponse

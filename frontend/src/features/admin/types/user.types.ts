@@ -1,32 +1,26 @@
-export interface Company {
+export type UserStatus = "active" | "suspended";
+export interface BaseUser {
   id: number;
   name: string;
   email: string;
-  role: string;
-  status: string;
-  email_verified_at: string | null;
-  created_at: string;
-  company: string | null;
-  index?: number;
+  role: "Employer" | "Job Seeker";
+  logo: string;
+  isDeleted: boolean;
+  joinedDate: string;
+}
+export interface Employer extends BaseUser {
+  role: "Employer";
+  company: string;
+  companyLogo: string;
+  jobCount: number;
+}
+export interface JobSeeker extends BaseUser {
+  role: "Job Seeker";
+  profileTitle: string;
+  profileUrl?: string;
 }
 
-export interface JobSeeker {
-  id: number;
-  name: string;
-  email: string;
-  role: string;
-  status: string;
-  email_verified_at: string | null;
-  created_at: string;
-  profile: string | null;
-  index?: number;
-}
-
-export interface PaginationMeta {
-  current_page: number;
-  from: number;
-  last_page: number;
-  per_page: number;
-  to: number;
-  total: number;
-}
+export type UserManagementStatusFilter =
+  | "All Statuses"
+  | "Active"
+  | "Suspended";

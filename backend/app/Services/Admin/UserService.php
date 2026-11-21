@@ -32,17 +32,6 @@ class UserService
         );
     }
 
-    // DELETE /admin/companies/{id}
-    public function deleteCompany(int $id): void
-    {
-        $company = User::where('id', $id)->where('role', 'employer')->first();
-
-        if (!$company) {
-            throw new Exception("Company not found", 404);
-        }
-
-        $company->delete(); 
-    }
 
     // DELETE /admin/job-seekers/{id}
     public function deleteJobSeeker(int $id): void
@@ -56,4 +45,19 @@ class UserService
         $jobSeeker->delete(); 
     }
 
+    public function suspendEmployer(int $id): User
+    {
+        return $this->userRepository->updateEmployerStatus(
+            $id,
+            'suspended'
+        );
+    }
+
+    public function restoreEmployer(int $id): User
+    {
+        return $this->userRepository->updateEmployerStatus(
+            $id,
+            'active'
+        );
+    }
 }

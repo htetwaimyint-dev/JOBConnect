@@ -14,6 +14,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -86,6 +87,17 @@ class User extends Authenticatable
         return $this->hasMany(Application::class, 'job_seeker_id');
     }
 
+    public function jobs(): HasManyThrough
+    {
+        return $this->hasManyThrough(
+            Job::class,
+            Company::class,
+            'employer_id', 
+            'company_id',  
+            'id',          
+            'id'           
+        );
+    }
     // Job Seeker → Job Offers (1:M)
     public function jobOffers(): HasMany
     {

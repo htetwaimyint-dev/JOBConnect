@@ -8,6 +8,13 @@ export const adminRepository = {
   async deleteCompany(id: number) {
     return await api.delete(`/admin/companies/${id}`);
   },
+  async suspendCompany(id: number) {
+    return await api.patch(`/admin/companies/${id}/suspend`);
+  },
+
+  async restoreCompany(id: number) {
+    return await api.patch(`/admin/companies/${id}/restore`);
+  },
 
   async getJobSeekers(page = 1) {
     const res = await api.get(`/admin/job-seekers?page=${page}`);

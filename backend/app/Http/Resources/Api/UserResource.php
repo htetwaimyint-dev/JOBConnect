@@ -24,6 +24,7 @@ class UserResource extends JsonResource
             'created_at' => $this->created_at?->toDateTimeString(),
             // Include related details depending on role
             'company' => $this->whenLoaded('company'),
+            'jobs_count' => $this->whenCounted('jobs'), 
             'profile' => $this->whenLoaded('jobSeekerProfile'),
         ];
     }

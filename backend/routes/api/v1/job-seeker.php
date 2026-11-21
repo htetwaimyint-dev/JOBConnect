@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\V1\Jobs\SavedJobController;
 
 Route::get('job-seeker/companies', [CompanyProfileViewController::class, 'index']);
 
+
 Route::middleware(['auth:sanctum', 'job-seeker'])
     ->prefix('job-seeker')
     ->group(function () {
@@ -37,7 +38,7 @@ Route::middleware(['auth:sanctum', 'job-seeker'])
         Route::apiResource('/skills', UserSkillController::class)
             ->except(['show']);
 
-        Route::get('/companies/{id}', [CompanyProfileViewController::class, 'show']);
+     
         // Saved Jobs
         Route::get(
             '/saved-jobs',
@@ -54,3 +55,7 @@ Route::middleware(['auth:sanctum', 'job-seeker'])
             [SavedJobController::class, 'destroy']
         );
     });
+
+    Route::middleware(['auth:sanctum', 'role:admin,job_seeker'])->group(function () {
+    Route::get('job-seeker/companies/{id}', [CompanyProfileViewController::class, 'show']);
+});
