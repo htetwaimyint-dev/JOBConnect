@@ -30,20 +30,23 @@ class UserService
     }
 
     public function getCompanyStats(): array
-    {
-        return [
-            'total' => User::withTrashed()
-                ->where('role', UserRole::EMPLOYER->value)
-                ->count(),
+{
+    return [
+        'total' => User::withTrashed()
+            ->where('role', 'employer')
+            ->count(),
 
-            'active' => User::where('role', UserRole::EMPLOYER->value)
-                ->count(),
+        'active' => User::withTrashed()
+            ->where('role', 'employer')
+            ->where('status', 'active')
+            ->count(),
 
-            'suspended' => User::onlyTrashed()
-                ->where('role', UserRole::EMPLOYER->value)
-                ->count(),
-        ];
-    }
+        'suspended' => User::withTrashed()
+            ->where('role', 'employer')
+            ->where('status', 'suspended')
+            ->count(),
+    ];
+}
 
     public function getJobSeekers(?string $search = null, int $perPage = 10): LengthAwarePaginator
     {

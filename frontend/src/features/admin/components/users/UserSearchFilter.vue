@@ -13,7 +13,7 @@ const status = defineModel<string>("status", { required: true });
       /><input
         v-model="search"
         type="search"
-        :placeholder="'Search by name or email...'"
+        :placeholder="'Search by name or email and company'"
         class="w-full rounded-lg border border-slate-300 py-2 pl-9 pr-10 text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
       /><button
         v-if="search"

@@ -27,12 +27,6 @@ const selectedEmployer = ref<Employer | null>(null);
 const loading = ref(false);
 const deletingId = ref<number | null>(null);
 
-const stats = ref({
-  total: 0,
-  active: 0,
-  suspended: 0,
-});
-
 // ================================
 // Fetch Companies
 // ================================
@@ -62,13 +56,16 @@ async function fetchCompanies(page = 1) {
 
     users.value = employerData.map((user: any) => ({
       ...user,
-      isDeleted: user.deleted_at !== null,
+      isDeleted: user.status === "suspended" || user.deleted_at != null,
     }));
 
     currentPage.value = paginatedData.meta?.current_page ?? page;
     lastPage.value = paginatedData.meta?.last_page ?? 1;
     total.value = paginatedData.meta?.total ?? users.value.length;
     perPage.value = paginatedData.meta?.per_page ?? 10;
+
+    // Global Stats from Backend
+    stats.value = paginatedData.stats;
   } catch (error) {
     console.error("Failed to fetch companies:", error);
   } finally {
@@ -115,11 +112,11 @@ function changePerPage(value: number) {
 // ================================
 // Statistics
 // ================================
-const stats = computed(() => ({
-  total: total.value,
-  active: users.value.filter((user) => !user.isDeleted).length,
-  suspended: users.value.filter((user) => user.isDeleted).length,
-}));
+const stats = ref({
+  total: 0,
+  active: 0,
+  suspended: 0,
+});
 
 // ================================
 // Suspend Employer
