@@ -1,6 +1,7 @@
 import api from "@/services/api";
 
 export const adminRepository = {
+  // Company Management
   async getCompanies(
     params: {
       page?: number;
@@ -29,11 +30,33 @@ export const adminRepository = {
     return await api.patch(`/admin/companies/${id}/restore`);
   },
 
-  async getJobSeekers(page = 1) {
-    const res = await api.get(`/admin/job-seekers?page=${page}`);
+  // Job Seeker Management
+
+  async getJobSeekers(
+    params: {
+      page?: number;
+      search?: string;
+      status?: string;
+      per_page?: number;
+    } = {},
+  ) {
+    const res = await api.get("/admin/job-seekers", {
+      params: {
+        page: params.page ?? 1,
+        search: params.search,
+        status: params.status,
+        per_page: params.per_page ?? 10,
+      },
+    });
+
     return res.data;
   },
-  async deleteJobSeeker(id: number) {
-    return await api.delete(`/admin/job-seekers/${id}`);
+
+  async suspendJobSeeker(id: number) {
+    return await api.patch(`/admin/job-seekers/${id}/suspend`);
+  },
+
+  async restoreJobSeeker(id: number) {
+    return await api.patch(`/admin/job-seekers/${id}/restore`);
   },
 };

@@ -39,19 +39,6 @@ class UserManagementController extends Controller
         ->response()
         ->setStatusCode(200);
 }
-    // GET /api/v1/admin/users/job-seekers
-    public function jobSeekers(Request $request): JsonResponse
-    {
-        $users = $this->userService->getJobSeekers(
-            $request->query('search'),
-            $request->integer('per_page', 10)
-        );
-
-        return UserResource::collection($users)
-            ->response()
-            ->setStatusCode(200);
-    }
-
    
     // PATCH /api/v1/admin/companies/{id}/suspend
 public function suspendCompany(int $id): JsonResponse
@@ -87,15 +74,61 @@ public function restoreCompany(int $id): JsonResponse
     }
 }
 
-    // DELETE /api/v1/admin/job-seekers/{id}
-    public function deleteJobSeeker(int $id): JsonResponse
-    {
-        try {
-            $this->userService->deleteJobSeeker($id);
-            return response()->json(['message' => 'Job Seeker suspended successfully.'], 200);
-        } catch (Exception $e) {
-            return response()->json(['message' => $e->getMessage()], $e->getCode() ?: 500);
-        }
-    }
+public function jobSeekers(Request $request): JsonResponse
+{
+    $request->validate([
+        'search' => ['nullable', 'string', 'max:255'],
+        'status' => ['nullable', 'in:Active,Suspended,All Statuses'],
+        'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
+    ]);
 
+    $users = $this->userService->getJobSeekers(
+        $request->query('search'),
+        $request->query('status'),
+        $request->integer('per_page', 5)
+    );
+
+    $stats = $this->userService->getJobSeekerStats();
+
+    return UserResource::collection($users)
+        ->additional([
+            'stats' => $stats,
+        ])
+        ->response()
+        ->setStatusCode(200);
+}
+
+// PATCH /api/v1/admin/job-seekers/{id}/suspend
+public function suspendJobSeeker(int $id): JsonResponse
+{
+    try {
+        $this->userService->suspendJobSeeker($id);
+
+        return response()->json([
+            'message' => 'Job Seeker suspended successfully.'
+        ], 200);
+
+    } catch (Exception $e) {
+        return response()->json([
+            'message' => $e->getMessage()
+        ], $e->getCode() ?: 500);
+    }
+}
+
+// PATCH /api/v1/admin/job-seekers/{id}/restore
+public function restoreJobSeeker(int $id): JsonResponse
+{
+    try {
+        $this->userService->restoreJobSeeker($id);
+
+        return response()->json([
+            'message' => 'Job Seeker restored successfully.'
+        ], 200);
+
+    } catch (Exception $e) {
+        return response()->json([
+            'message' => $e->getMessage()
+        ], $e->getCode() ?: 500);
+    }
+}
 }

@@ -25,7 +25,8 @@ public function getUsersByRole(
         $query->with('company')
               ->withCount('jobs');
     } elseif ($role === UserRole::JOB_SEEKER) {
-        $query->with('jobSeekerProfile');
+        $query->with('jobSeekerProfile')
+              ->withCount('resumes');
     }
 
     // Search
@@ -77,6 +78,33 @@ public function getUsersByRole(
 
         $user->status = 'suspended';
         $user->save();
+
+    } elseif ($status === 'active') {
+
+        $user->restore();
+
+        $user->status = 'active';
+        $user->save();
+    }
+
+    return $user;
+}
+
+public function updateJobSeekerStatus(
+    int $id,
+    string $status
+): User {
+
+    $user = User::withTrashed()
+        ->where('role', UserRole::JOB_SEEKER->value)
+        ->findOrFail($id);
+
+    if ($status === 'suspended') {
+
+        $user->status = 'suspended';
+        $user->save();
+
+        $user->delete();
 
     } elseif ($status === 'active') {
 

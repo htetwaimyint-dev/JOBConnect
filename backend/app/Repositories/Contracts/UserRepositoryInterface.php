@@ -14,8 +14,14 @@ interface UserRepositoryInterface
         ?string $status = null,
         int $perPage = 10
     ): LengthAwarePaginator;
+    
     public function updateEmployerStatus(
         int $id,
         string $status
     ): User;
+
+    public function updateJobSeekerStatus(
+    int $id,
+    string $status
+): User;
 }
