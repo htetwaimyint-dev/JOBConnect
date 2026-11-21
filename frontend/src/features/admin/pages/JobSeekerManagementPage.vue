@@ -51,7 +51,7 @@ async function fetchJobSeekers(page = 1) {
     // Laravel Resource Collection response
     users.value = (response.data ?? []).map((user: JobSeeker) => ({
       ...user,
-      isDeleted: user.status === "suspended" || user.deleted_at !== null,
+      isDeleted: user.status === "suspended" || !!user.deleted_at,
     }));
 
     // Backend pagination information
