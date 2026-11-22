@@ -23,7 +23,14 @@ export const companyRepository = {
 
     return response.data.data;
   },
-  //fetch company details for job seekers
+
+  //show jobs of companies ( for jobseeker )
+  async getCompanyJobs(id: number) {
+    const response = await api.get(`/job-seeker/companies/${id}/jobs`);
+
+    return response.data;
+  },
+
   async getCompanyById(id: number): Promise<Company> {
     const response = await api.get<ApiResponse<Company>>(
       `job-seeker/companies/${id}`,
@@ -37,7 +44,8 @@ export const companyRepository = {
 
     return response.data.data;
   },
-  async getCompanyJobs(
+  //fetch company details for job seekers
+  async getCompanyDetails(
     id: number,
     params?: {
       page?: number;

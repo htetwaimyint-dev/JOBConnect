@@ -182,11 +182,13 @@ class CompanyService
         );
     }
 
+    //get compaines for job seeker
     public function getCompanies(?string $search): Collection
     {
         return $this->companyRepository->getAll($search);
     }
 
+    //company details for job seeker
     public function getCompanyById(int $id): Company
     {
         $company = $this->companyRepository->findById($id);
@@ -196,5 +198,11 @@ class CompanyService
         }
 
         return $company;
+    }
+
+    //jobs of company (for jobseeker)
+    public function getCompanyWithJobs(int $companyId): ?Company
+    {
+        return $this->companyRepository->getCompanyWithJobs($companyId);
     }
 }

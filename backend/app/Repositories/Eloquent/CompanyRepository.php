@@ -1,7 +1,6 @@
 <?php
 
 namespace App\Repositories\Eloquent;
-
 use App\Models\Company;
 use App\Models\User;
 use App\Repositories\Contracts\CompanyRepositoryInterface;
@@ -36,6 +35,7 @@ class CompanyRepository implements CompanyRepositoryInterface
         });
     }
 
+    //get companies (for jobseeker)
     public function getAll(?string $search): Collection
     {
         $query = Company::query();
@@ -51,8 +51,20 @@ class CompanyRepository implements CompanyRepositoryInterface
         return $query->latest()->get();
     }
 
+    //company details(for jobseeker)
     public function findById(int $id): ?Company
     {
         return Company::find($id);
+    }
+
+    //  //get company's jobs (for jobseeker)
+    public function getCompanyWithJobs(int $companyId): ?Company
+    {
+        return Company::with([
+            'jobs' => function ($query) {
+                $query->where('status', 'published')
+                    ->latest();
+            }
+        ])->find($companyId);
     }
 }

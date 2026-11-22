@@ -56,6 +56,8 @@ Route::middleware(['auth:sanctum', 'job-seeker'])
         );
     });
 
+    //allow admin and jobseeker
     Route::middleware(['auth:sanctum', 'role:admin,job_seeker'])->group(function () {
     Route::get('job-seeker/companies/{id}', [CompanyProfileViewController::class, 'show']);
+    Route::get('job-seeker/companies/{id}/jobs', [CompanyProfileViewController::class, 'showjobs']);
 });
