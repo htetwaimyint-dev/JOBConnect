@@ -34,8 +34,8 @@ export function useSavedJobs() {
   });
 
   // Check whether a job is saved
-  function isSaved(jobId: number) {
-    return computed(() => savedJobIds.value.includes(jobId));
+  function isSaved(jobId: number): boolean {
+    return savedJobIds.value.includes(jobId);
   }
 
   // Save job

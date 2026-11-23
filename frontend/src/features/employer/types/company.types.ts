@@ -73,3 +73,10 @@ export interface CompanyDetailResponse {
   company: Company;
   jobs: CompanyJobsPagination;
 }
+
+export interface CompanyJobFilters {
+  keyword?: string;
+  location?: string;
+  employment_type?: string;
+  workplace_type?: string;
+}

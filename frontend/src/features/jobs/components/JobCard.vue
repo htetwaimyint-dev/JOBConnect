@@ -16,7 +16,7 @@ const authStore = useAuthStore();
 const { isSaved, toggleSavedJob, saveMutation, removeMutation, isJobSeeker } =
   useSavedJobs();
 
-const saved = isSaved(props.job.id);
+const saved = computed(() => isSaved(props.job.id));
 
 const isSaving = computed(
   () => saveMutation.isPending.value || removeMutation.isPending.value,

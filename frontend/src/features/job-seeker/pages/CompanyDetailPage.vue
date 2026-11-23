@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from "vue";
+import { ref, onMounted, computed, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import {
   MapPin,
@@ -97,9 +97,6 @@ const fetchCompanyDetail = async () => {
     company.value = companyData.company;
     // Fetch Company Jobs
     const data = await companyRepository.getCompanyJobs(id);
-
-    console.log("Company Jobs Response:", data);
-    console.log("Jobs:", data.jobs);
 
     companyJobs.value = data.jobs ?? [];
   } catch (err: any) {
@@ -249,7 +246,7 @@ onMounted(() => {
         @click="goBack"
         class="mb-4 text-sm font-medium text-gray-500 hover:text-indigo-600 transition-colors"
       >
-        &larr; Back to Companies
+        &larr; Back
       </button>
 
       <!-- Loading & Error States -->
