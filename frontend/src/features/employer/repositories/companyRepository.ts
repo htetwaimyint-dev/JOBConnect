@@ -1,7 +1,7 @@
 import api from "@/services/api";
 import type {
   Company,
-  CompanyDetailResponse,
+  CompanyJobFilters,
 } from "@/features/employer/types/company.types";
 
 interface ApiResponse<T> {
@@ -25,8 +25,10 @@ export const companyRepository = {
   },
 
   //show jobs of companies ( for jobseeker )
-  async getCompanyJobs(id: number) {
-    const response = await api.get(`/job-seeker/companies/${id}/jobs`);
+  async getCompanyJobs(companyId: number, filters: CompanyJobFilters = {}) {
+    const response = await api.get(`job-seeker/companies/${companyId}/jobs`, {
+      params: filters,
+    });
 
     return response.data;
   },

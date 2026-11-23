@@ -20,4 +20,9 @@ interface CompanyRepositoryInterface
         User $user,
         array $data
     ): Company;
+
+    public function getCompanyJobs(
+    int $companyId,
+    array $filters = []
+    ): Collection;
 }

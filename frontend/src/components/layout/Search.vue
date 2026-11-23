@@ -30,19 +30,31 @@ defineEmits<{
     </div>
 
     <!-- Search Bar -->
+
     <div class="relative w-full max-w-md mx-auto lg:mx-0">
       <Search
         class="absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400"
       />
+
       <input
         :value="searchQuery"
         @input="
           $emit('update:searchQuery', ($event.target as HTMLInputElement).value)
         "
-        type="text"
+        type="search"
         :placeholder="searchPlaceholder || 'Search...'"
-        class="w-full rounded-xl border border-gray-300 py-3 pl-11 pr-4 text-sm focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-500/10 transition-shadow"
+        class="w-full rounded-xl border border-gray-300 py-3 pl-11 pr-10 text-sm outline-none transition-shadow focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-500/10"
       />
+
+      <button
+        v-if="searchQuery"
+        type="button"
+        class="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 transition-colors hover:text-gray-700"
+        aria-label="Clear search"
+        @click="$emit('update:searchQuery', '')"
+      >
+        <X class="h-4 w-4" />
+      </button>
     </div>
   </div>
 </template>

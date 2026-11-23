@@ -86,6 +86,64 @@ const activeTab = ref<"about" | "jobs" | "gallery">("about");
 const isDescriptionExpanded = ref(false);
 const isGalleryExpanded = ref(false);
 
+//filter states
+const searchKeyword = ref("");
+const filterLocation = ref("");
+const selectedJobType = ref("");
+const selectedWorkplaceType = ref("");
+
+const isSearchingJobs = ref(false);
+
+// Fetch Company Jobs
+const fetchCompanyJobs = async () => {
+  try {
+    isSearchingJobs.value = true;
+
+    const id = Number(route.params.id);
+
+    const data = await companyRepository.getCompanyJobs(id, {
+      keyword: searchKeyword.value.trim() || undefined,
+      location: filterLocation.value.trim() || undefined,
+      employment_type: selectedJobType.value || undefined,
+      workplace_type: selectedWorkplaceType.value || undefined,
+    });
+
+    console.log("Company Jobs API Response:", data);
+    console.log("Jobs:", data.jobs);
+
+    companyJobs.value = data.jobs ?? [];
+
+    console.log("companyJobs ref:", companyJobs.value);
+
+    companyJobs.value = data.jobs ?? [];
+  } catch (error) {
+    console.error("Failed to fetch company jobs:", error);
+  } finally {
+    isSearchingJobs.value = false;
+  }
+};
+
+let searchTimer: ReturnType<typeof setTimeout>;
+
+watch(
+  [searchKeyword, filterLocation, selectedJobType, selectedWorkplaceType],
+  () => {
+    clearTimeout(searchTimer);
+
+    searchTimer = setTimeout(() => {
+      fetchCompanyJobs();
+    }, 400);
+  },
+);
+
+//clear
+const clearFilters = () => {
+  searchKeyword.value = "";
+  selectedJobType.value = "";
+  selectedWorkplaceType.value = "";
+  filterLocation.value = "";
+};
+
 // Fetch company detail & jobs
 const fetchCompanyDetail = async () => {
   loading.value = true;
@@ -96,9 +154,7 @@ const fetchCompanyDetail = async () => {
     const companyData = await companyRepository.getCompanyDetails(id);
     company.value = companyData.company;
     // Fetch Company Jobs
-    const data = await companyRepository.getCompanyJobs(id);
-
-    companyJobs.value = data.jobs ?? [];
+    await fetchCompanyJobs();
   } catch (err: any) {
     error.value = err.message || "Failed to load company details.";
   } finally {
@@ -159,70 +215,14 @@ const displayedGallery = computed(() => {
   return isGalleryExpanded.value ? urls : urls.slice(0, 6);
 });
 
-const latestJobs = computed(() => companyJobs.value.slice(0, 3));
+const latestJobs = computed(() => companyJobs.value.slice(0, 4));
 
 const latestPhotos = computed(() => {
   if (!company.value?.gallery) return [];
   return company.value.gallery.slice(0, 5).map((img) => getImageUrl(img));
 });
 
-// Filter States
-const isSearchingJobs = ref(false);
-
-// Filter States
-const searchKeyword = ref("");
-const selectedJobType = ref("");
-const selectedWorkplaceType = ref("");
-const filterLocation = ref("");
-
-// Normalize text for smart matching (e.g., "UIUX" -> "UI/UX")
-const normalizeText = (text: string) => {
-  return text.toLowerCase().replace(/[^a-z0-9]/g, "");
-};
-
-// Real-time Instant Filter
-const filteredJobs = computed(() => {
-  return companyJobs.value.filter((job) => {
-    // 1. Keyword Search (Smart Match: "UIUX" -> "UI/UX")
-    const keyword = searchKeyword.value.trim();
-    const matchesKeyword =
-      !keyword ||
-      job.title.toLowerCase().includes(keyword.toLowerCase()) ||
-      normalizeText(job.title).includes(normalizeText(keyword));
-
-    // locaton filter or country filer
-    const loc = filterLocation.value.trim().toLowerCase();
-    const matchesLocation =
-      !loc ||
-      (job.city && job.city.toLowerCase().includes(loc)) ||
-      (job.country && job.country.toLowerCase().includes(loc));
-
-    // 3. Employment Type Filter
-    const matchesJobType =
-      !selectedJobType.value || job.employment_type === selectedJobType.value;
-
-    // 4. Workplace Type Filter (Onsite, Remote, Hybrid)
-    const matchesWorkplaceType =
-      !selectedWorkplaceType.value ||
-      job.workplace_type === selectedWorkplaceType.value;
-
-    return (
-      matchesKeyword &&
-      matchesLocation &&
-      matchesJobType &&
-      matchesWorkplaceType
-    );
-  });
-});
-
-//  (Clear Button)
-const clearFilters = () => {
-  searchKeyword.value = "";
-  selectedJobType.value = "";
-  selectedWorkplaceType.value = "";
-  filterLocation.value = "";
-};
-
+const filteredJobs = computed(() => companyJobs.value);
 // Check if any filter is active
 const hasActiveFilters = computed(() => {
   return Boolean(

@@ -205,4 +205,15 @@ class CompanyService
     {
         return $this->companyRepository->getCompanyWithJobs($companyId);
     }
+
+     //for filter and serarching (for jobseeker to filter or search one company's jobs)
+    public function getCompanyJobs(
+    int $companyId,
+    array $filters = []
+    ): Collection {
+        return $this->companyRepository->getCompanyJobs(
+            $companyId,
+            $filters
+        );
+    }
 }
