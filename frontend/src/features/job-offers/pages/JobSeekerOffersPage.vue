@@ -19,7 +19,7 @@ const { getMyOffers, respondToJobOffer } = useJobOffers();
 
 const offersQuery = getMyOffers();
 const offers = computed<JobOffer[]>(() => offersQuery.data.value ?? []);
-const loading = computed(() => offersQuery.isLoading.value);
+const loading = computed(() => offersQuery.isFetching.value);
 const responding = computed(() => respondToJobOffer.isPending.value);
 
 const statusFilter = ref<JobOfferFilter>("all");

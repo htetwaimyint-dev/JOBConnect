@@ -66,6 +66,7 @@ const savingInterviewer = computed(
     () =>
         createInterviewer.isPending.value || updateInterviewer.isPending.value,
 );
+const loading = computed(() => query.isFetching.value);
 
 function clearFilters() {
     Object.assign(filters, {
@@ -211,6 +212,7 @@ async function removeInterviewer(id: number) {
                     <InterviewCalendar
                         :interviews="interviews"
                         :current-date="currentDate"
+                        :loading="loading"
                         @select="selected = $event"
                         @add-schedule="openScheduleModal"
                         ><div

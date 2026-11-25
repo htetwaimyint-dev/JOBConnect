@@ -3,7 +3,11 @@ import { computed } from "vue";
 import type { Interview } from "../types/interview.types";
 import InterviewCard from "./InterviewCard.vue";
 
-const props = defineProps<{ interviews: Interview[]; currentDate: Date }>();
+const props = defineProps<{
+    interviews: Interview[];
+    currentDate: Date;
+    loading: boolean;
+}>();
 const emit = defineEmits<{
     select: [interview: Interview];
     addSchedule: [slot: { date: Date; hour: number }];
@@ -39,7 +43,10 @@ function interviewsForHour(date: Date, hour: number) {
 </script>
 
 <template>
-    <div class="flex h-full min-h-0 flex-col overflow-hidden">
+    <div v-if="loading" class="p-10 text-center text-sm text-slate-500">
+        Loading…
+    </div>
+    <div v-else class="flex h-full min-h-0 flex-col overflow-hidden">
         <div
             class="calendar-scrollbar shrink-0 overflow-x-auto border-b border-slate-200 bg-slate-50/80"
         >
