@@ -1,15 +1,21 @@
+
 import type { RouteRecordRaw } from "vue-router";
+
 import CompanyProfileForm from "@/features/employer/pages/CompanyProfileForm.vue";
 import CompanyProfilePage from "@/features/employer/pages/CompanyProfilePage.vue";
 import EmployerDashboard from "@/features/employer/pages/EmployerDashboard.vue";
 import ApplicantsPage from "@/features/employer/pages/ApplicantsPage.vue";
 import JobSeekersPage from "@/features/employer/pages/JobSeekersPage.vue";
 import JobSeekerDetailPage from "@/features/employer/pages/JobSeekerDetailPage.vue";
+
 import CreateJobPage from "@/features/jobs/pages/CreateJobPage.vue";
 import JobDetail from "@/features/jobs/pages/JobDetail.vue";
+
 import EmployerLayout from "@/layouts/EmployerLayout.vue";
+
 import EmployerCreateJobOfferPage from "@/features/job-offers/pages/EmployerCreateJobOfferPage.vue";
 import EmployerJobOfferPage from "@/features/job-offers/pages/EmployerJobOfferPage.vue";
+
 import SettingsPage from "@/components/common/SettingsPage.vue";
 
 export const employerRoutes: RouteRecordRaw[] = [
@@ -43,8 +49,10 @@ export const employerRoutes: RouteRecordRaw[] = [
                 component: CreateJobPage,
             },
             {
+                // Employer Job Detail
+                // URL: /employer/jobs/:id
                 path: "jobs/:id",
-                name: "job-detail",
+                name: "EmployerJobDetail",
                 component: JobDetail,
             },
             {
@@ -95,13 +103,11 @@ export const employerRoutes: RouteRecordRaw[] = [
                     candidateId: Number(route.params.candidateId),
                 }),
             },
-
             {
                 path: "job-offers",
                 name: "employer-job-offers",
                 component: EmployerJobOfferPage,
             },
-
             {
                 path: "interviews",
                 name: "employer.interviews",

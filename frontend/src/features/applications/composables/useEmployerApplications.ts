@@ -189,8 +189,10 @@ export function useEmployerApplications() {
             if (
                 selectedApplication.value?.id === applicationId
             ) {
-                selectedApplication.value.ai_evaluation =
-                    response.data.result;
+                selectedApplication.value.ai_evaluation = {
+                    ...response.data.result,
+                    analysis_id: response.data.analysis_id,
+                };
             }
 
             return true;

@@ -18,16 +18,17 @@ class AiAnalysis extends Model
         'requested_by',
         'analysis_type',
         'input_data',
+        'input_hash',
         'result',
         'provider',
         'model',
         'status',
     ];
-
     protected function casts(): array
     {
         return [
             'input_data' => 'array',
+            'input_hash' => 'string',
             'result' => 'array',
         ];
     }

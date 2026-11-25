@@ -132,7 +132,7 @@ export const useCompanyProfileStore = defineStore("company-profile", () => {
         coverFile.value = null;
 
         verificationStatus.value = company.verification_status;
-        rejectionReason.value = company.rejection_reason;
+        rejectionReason.value = company.rejection_reason ?? null;
 
         isEditMode.value = true;
     }

@@ -35,18 +35,21 @@ class ApplicationResource extends JsonResource
                 'file_type' => $this->resume?->file_type,
             ],
 
-            'ai_evaluation' => $this->whenLoaded(
-                'latestSuccessfulAiAnalysis',
+            // Return only the AI evaluation matching current input data.
+            'ai_evaluation' => $this->when(
+                $this->resource->relationLoaded('currentAiEvaluation'),
                 function () {
-                    $analysis = $this->latestSuccessfulAiAnalysis;
+                    $analysis = $this->resource->getRelation(
+                        'currentAiEvaluation'
+                    );
 
                     if (! $analysis) {
                         return null;
                     }
 
                     return [
+                        ...($analysis->result ?? []),
                         'analysis_id' => $analysis->id,
-                        ...$analysis->result,
                     ];
                 }
             ),

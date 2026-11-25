@@ -59,6 +59,12 @@ class ApplicationController extends Controller
                 $validated['search'] ?? null
             );
 
+        // Attach only AI evaluations matching current applicant data.
+        $applications->through(function ($application) {
+            return $this->applicationService
+                ->attachCurrentAiEvaluation($application);
+        });
+
         return ApplicationResource::collection($applications)
             ->additional([
                 'success' => true,
@@ -81,6 +87,11 @@ class ApplicationController extends Controller
 
         $applications = $this->applicationService
             ->getCompanyJobApplications($company, $jobId, $perPage);
+
+        $applications->through(function ($application) {
+            return $this->applicationService
+                ->attachCurrentAiEvaluation($application);
+        });
 
         return ApplicationResource::collection($applications)
             ->additional([
@@ -121,6 +132,9 @@ class ApplicationController extends Controller
             $application = $this->applicationService
                 ->findCompanyApplication($company, $applicationId);
         }
+        // Attach AI evaluation matching current applicant data.
+        $application = $this->applicationService
+            ->attachCurrentAiEvaluation($application);
 
         return response()->json([
             'success' => true,
@@ -153,6 +167,9 @@ class ApplicationController extends Controller
 
         $updatedApplication = $this->applicationService
             ->updateApplicationStatus($application, $data);
+
+        $updatedApplication = $this->applicationService
+            ->attachCurrentAiEvaluation($updatedApplication);
 
         return response()->json([
             'success' => true,
