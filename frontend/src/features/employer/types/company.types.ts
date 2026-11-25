@@ -24,6 +24,7 @@ export interface Company {
 
   verification_status: "pending" | "verified" | "rejected";
   verified_at: string | null;
+  rejection_reason?: string | null;
 
   created_at: string | null;
   updated_at: string | null;

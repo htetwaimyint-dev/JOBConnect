@@ -49,7 +49,7 @@ const {
 
 const saved = computed(() => {
     if ("id" in props.job) {
-        return isSaved(props.job.id).value;
+        return isSaved(props.job.id);
     }
 
     return false;
