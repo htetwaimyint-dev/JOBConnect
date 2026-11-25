@@ -9,6 +9,8 @@ import {
     formatStatus,
 } from "../utils/jobOfferFormatters";
 
+import { RefreshCw } from "lucide-vue-next";
+
 defineProps<{
     offers: JobOffer[];
     mode: "employer" | "jobseeker";
@@ -53,11 +55,17 @@ function statusClass(status: JobOfferStatus) {
                     }}
                 </p>
             </div>
+
             <button
                 type="button"
-                class="rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50"
+                :disabled="loading"
                 @click="emit('refresh')"
+                class="inline-flex w-fit items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 disabled:opacity-50"
             >
+                <RefreshCw
+                    class="h-4 w-4"
+                    :class="{ 'animate-spin': loading }"
+                />
                 Refresh
             </button>
         </div>

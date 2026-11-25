@@ -144,7 +144,7 @@ const handleLogoError = (jobId: number) => {
 
                     <div class="min-w-0 flex-1">
                         <h4
-                            class="line-clamp-2 break-words text-sm font-bold leading-5 text-slate-800 transition group-hover:text-blue-700"
+                            class="line-clamp-2 wrap-break-word text-sm font-bold leading-5 text-slate-800 transition group-hover:text-blue-700"
                         >
                             {{ job.title }}
                         </h4>

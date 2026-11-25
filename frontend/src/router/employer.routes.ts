@@ -97,9 +97,22 @@ export const employerRoutes: RouteRecordRaw[] = [
             },
 
             {
-                path: "job-offers/",
+                path: "job-offers",
                 name: "employer-job-offers",
                 component: EmployerJobOfferPage,
+            },
+
+            {
+                path: "interviews",
+                name: "employer.interviews",
+                component: () =>
+                    import("@/features/interviews/pages/InterviewListPage.vue"),
+            },
+            {
+                path: "interviews/schedule",
+                name: "employer.interviews.schedule",
+                component: () =>
+                    import("@/features/interviews/pages/ScheduleInterviewPage.vue"),
             },
         ],
     },
