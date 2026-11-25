@@ -1,7 +1,7 @@
 import type { RouteRecordRaw } from "vue-router";
 
 import AdminLayout from "@/layouts/AdminLayout.vue";
-
+import SettingsPage from "@/components/common/SettingsPage.vue";
 import Dashboard from "@/features/admin/pages/Dashboard.vue";
 import EmployerManagementPage from "@/features/admin/pages/EmployerManagementPage.vue";
 import JobSeekerManagementPage from "@/features/admin/pages/JobSeekerManagementPage.vue";
@@ -9,8 +9,6 @@ import CompanyApprovalPage from "@/features/admin/pages/CompanyApprovalPage.vue"
 import JobApprovalPage from "@/features/admin/pages/JobApprovalPage.vue";
 import CategoriesPage from "@/features/admin/pages/CategoriesPage.vue";
 import ReportsPage from "@/features/admin/pages/ReportsPage.vue";
-import AdminSettingsPage from "@/features/admin/pages/AdminSettingsPage.vue";
-import CompanyDetailPage from "@/features/job-seeker/pages/CompanyDetailPage.vue";
 
 export const adminRoutes: RouteRecordRaw[] = [
   {
@@ -61,7 +59,7 @@ export const adminRoutes: RouteRecordRaw[] = [
       {
         path: "settings",
         name: "AdminSettings",
-        component: AdminSettingsPage,
+        component: SettingsPage,
       },
       {
         path: "companies/:id",

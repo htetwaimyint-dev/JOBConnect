@@ -174,9 +174,10 @@ const formatDate = (date: string | null | undefined) => {
           <div>
             <h4 class="mb-2 font-semibold text-slate-900">Job Description</h4>
 
-            <p class="whitespace-pre-line text-sm leading-7 text-slate-600">
-              {{ job.description || "No job description provided." }}
-            </p>
+            <div
+              class="whitespace-pre-line text-sm leading-7 text-slate-600"
+              v-html="job.description || 'No job description provided.'"
+            ></div>
           </div>
 
           <!-- Job Information -->

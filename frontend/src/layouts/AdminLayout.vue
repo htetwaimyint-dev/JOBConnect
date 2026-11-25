@@ -4,6 +4,7 @@ import { useUiStore } from "@/stores/ui.store";
 
 import AppHeader from "@/components/layout/AppHeader.vue";
 import AppSidebar from "@/components/layout/AppSidebar.vue";
+import AppPageContainer from "@/components/layout/AppPageContainer.vue";
 
 const uiStore = useUiStore();
 </script>
@@ -28,11 +29,9 @@ const uiStore = useUiStore();
       <AppHeader />
 
       <!-- Page Content -->
-      <main class="w-full min-w-0 p-4 sm:p-6 lg:p-8">
-        <div class="mx-auto w-full min-w-0 max-w-[1600px]">
-          <RouterView />
-        </div>
-      </main>
+      <AppPageContainer>
+        <RouterView />
+      </AppPageContainer>
     </div>
   </div>
 </template>

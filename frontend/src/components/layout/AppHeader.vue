@@ -8,14 +8,11 @@ import DashboardHeader from "./DashboardHeader.vue";
 const route = useRoute();
 
 const isDashboard = computed(() => {
-    return (
-        //route.path.startsWith("/jobseeker") ||
-        route.path.startsWith("/employer") || route.path.startsWith("/admin")
-    );
+  return route.path.startsWith("/employer") || route.path.startsWith("/admin");
 });
 </script>
 
 <template>
-    <DashboardHeader v-if="isDashboard" />
-    <PublicHeader v-else />
+  <DashboardHeader v-if="isDashboard" />
+  <PublicHeader v-else />
 </template>

@@ -1,22 +1,22 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import { useRoute, useRouter, RouterLink } from "vue-router";
+
 import { useUiStore } from "@/stores/ui.store";
 import { useAuthStore } from "@/stores/auth.store";
 
 import {
-  LayoutDashboard,
+  BriefcaseBusiness,
   UserRound,
   Search,
   Bookmark,
   FileText,
   CalendarDays,
+  LayoutDashboard,
   Gift,
   Settings,
   LogOut,
   X,
-  Sparkles,
-  ChevronRight,
 } from "lucide-vue-next";
 
 const route = useRoute();
@@ -25,6 +25,7 @@ const router = useRouter();
 const uiStore = useUiStore();
 const authStore = useAuthStore();
 
+// Workspace navigation
 const workspaceItems = [
   {
     label: "Dashboard",
@@ -53,153 +54,240 @@ const workspaceItems = [
   },
   {
     label: "Job Offers",
-    path: "/jobseeker/offers",
+    path: "/jobseeker/job-offers",
     icon: Gift,
   },
 ];
 
+// Account navigation
 const accountItems = [
   {
     label: "My Profile",
     path: "/jobseeker/profile",
     icon: UserRound,
   },
-  {
-    label: "Settings",
-    path: "/jobseeker/settings",
-    icon: Settings,
-  },
 ];
 
+// User information
+const userName = computed(() => authStore.user?.name || "Job Seeker");
+
+const userInitial = computed(
+  () => userName.value.trim().charAt(0).toUpperCase() || "U",
+);
+
+// Active route
 const isActive = (path: string) => {
+  if (path === "/jobseeker/dashboard") {
+    return route.path === path;
+  }
+
   return route.path === path || route.path.startsWith(`${path}/`);
 };
 
-const userName = computed(() => {
-  return authStore.user?.name || "Job Seeker";
-});
-
-const userInitial = computed(() => {
-  return userName.value.charAt(0).toUpperCase();
-});
-
+// Navigation
 const handleNavigation = () => {
   uiStore.closeSidebar();
 };
 
+// Logout
 const handleLogout = async () => {
   try {
-    await authStore.logout();
     uiStore.closeSidebar();
+
+    await authStore.logout();
+
     await router.replace("/login");
   } catch (error) {
     console.error("Logout failed:", error);
   }
 };
+
+// Shared navigation styles
+const menuClass =
+  "flex min-h-[44px] items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200";
+
+const activeMenuClass = "bg-[#102D59] font-semibold text-white shadow-sm";
 </script>
 
 <template>
+  <!-- Background Overlay -->
+  <Transition name="sidebar-overlay">
+    <div
+      v-if="uiStore.isSidebarOpen"
+      class="fixed inset-0 z-40 bg-slate-900/25 backdrop-blur-[2px]"
+      @click="uiStore.closeSidebar()"
+    ></div>
+  </Transition>
 
-  <aside class="fixed left-0 top-0 z-50 flex h-screen w-72 flex-col
-         bg-[#101B35] text-white shadow-2xl
-         transition-transform duration-300" :class="uiStore.isSidebarOpen
-          ? 'translate-x-0'
-          : '-translate-x-full'">
+  <!-- Sidebar -->
+  <Transition name="sidebar">
+    <aside
+      v-if="uiStore.isSidebarOpen"
+      class="fixed left-0 top-0 z-50 flex h-screen w-64 flex-col border-r border-slate-200 bg-white shadow-2xl"
+      aria-label="Job Seeker navigation"
+    >
+      <!-- Header -->
+      <div
+        class="flex h-16 shrink-0 items-center justify-between border-b border-slate-100 px-5"
+      >
+        <RouterLink
+          to="/jobseeker/dashboard"
+          class="flex items-center gap-3 no-underline"
+          @click="handleNavigation"
+        >
+          <div
+            class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#102D59] text-white"
+          >
+            <BriefcaseBusiness :size="20" />
+          </div>
 
-    <!-- Brand -->
-    <div class="flex h-20 shrink-0 items-center justify-between border-b border-white/10 px-6">
-      <RouterLink to="/jobseeker/dashboard" class="flex items-center gap-3 no-underline" @click="handleNavigation">
-        <div class="flex h-11 w-11 items-center justify-center rounded-xl
-                 bg-gradient-to-br from-blue-400 to-indigo-600 shadow-lg shadow-blue-900/40">
-          <Sparkles :size="23" class="text-white" />
-        </div>
-
-        <div>
-          <h2 class="text-xl font-bold tracking-wide text-white">
+          <h2 class="text-lg font-bold tracking-tight text-[#102D59]">
             JobConnect
+            <span class="text-blue-600">AI</span>
           </h2>
-          <p class="text-[11px] font-medium tracking-wider text-blue-300">
-            JOB SEEKER PORTAL
+        </RouterLink>
+
+        <button
+          type="button"
+          class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-[#102D59]"
+          aria-label="Close sidebar"
+          @click="uiStore.closeSidebar()"
+        >
+          <X :size="20" />
+        </button>
+      </div>
+
+      <!-- Navigation -->
+      <nav class="flex-1 overflow-y-auto px-4 py-6">
+        <!-- Workspace -->
+        <div>
+          <p
+            class="mb-3 px-3 text-[11px] font-bold uppercase tracking-[0.12em] text-slate-400"
+          >
+            Workspace
           </p>
-        </div>
-      </RouterLink>
 
-      <button type="button" class="rounded-lg p-2 text-slate-400 transition hover:bg-white/10 hover:text-white"
-        aria-label="Close sidebar" @click="uiStore.closeSidebar">
-        <X :size="20" />
-      </button>
-    </div>
+          <div class="space-y-1">
+            <RouterLink
+              v-for="item in workspaceItems"
+              :key="item.path"
+              :to="item.path"
+              :class="[
+                menuClass,
+                isActive(item.path)
+                  ? activeMenuClass
+                  : 'text-slate-600 hover:bg-slate-100 hover:text-[#102D59]',
+              ]"
+              @click="handleNavigation"
+            >
+              <component :is="item.icon" :size="19" class="shrink-0" />
 
-    <!-- Navigation -->
-    <nav class="flex-1 overflow-y-auto px-4 py-6">
-
-      <!-- Workspace -->
-      <div class="mb-7">
-        <p class="mb-3 px-3 text-[11px] font-bold uppercase tracking-[0.15em] text-slate-500">
-          Workspace
-        </p>
-
-        <div class="space-y-1.5">
-          <RouterLink v-for="item in workspaceItems" :key="item.path" :to="item.path" class="group relative flex items-center gap-3 rounded-xl
-                   px-3 py-3 text-sm font-medium no-underline
-                   transition-all duration-200" :class="isActive(item.path)
-                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-950/40'
-                    : 'text-slate-400 hover:bg-white/10 hover:text-white'
-                    " @click="handleNavigation">
-            <component :is="item.icon" :size="19" :stroke-width="isActive(item.path) ? 2.5 : 2" />
-
-            <span class="flex-1">{{ item.label }}</span>
-
-            <ChevronRight v-if="isActive(item.path)" :size="16" class="text-blue-100" />
-          </RouterLink>
-        </div>
-      </div>
-
-      <!-- Account -->
-      <div>
-        <p class="mb-3 px-3 text-[11px] font-bold uppercase tracking-[0.15em] text-slate-500">
-          Account
-        </p>
-
-        <div class="space-y-1.5">
-          <RouterLink v-for="item in accountItems" :key="item.path" :to="item.path" class="group flex items-center gap-3 rounded-xl
-                   px-3 py-3 text-sm font-medium no-underline
-                   transition-all duration-200" :class="isActive(item.path)
-                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-950/40'
-                    : 'text-slate-400 hover:bg-white/10 hover:text-white'
-                    " @click="handleNavigation">
-            <component :is="item.icon" :size="19" />
-            <span class="flex-1">{{ item.label }}</span>
-            <ChevronRight v-if="isActive(item.path)" :size="16" class="text-blue-100" />
-          </RouterLink>
-        </div>
-      </div>
-    </nav>
-
-    <!-- User Info -->
-    <div class="shrink-0 border-t border-white/10 p-4">
-      <div class="mb-3 flex items-center gap-3 rounded-xl bg-white/5 p-3">
-        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full
-                 bg-gradient-to-br from-blue-400 to-indigo-500
-                 text-sm font-bold text-white">
-          {{ userInitial }}
+              <span class="flex-1">
+                {{ item.label }}
+              </span>
+            </RouterLink>
+          </div>
         </div>
 
-        <div class="min-w-0 flex-1">
-          <p class="truncate text-sm font-semibold text-white">
-            {{ userName }}
+        <!-- Account -->
+        <div class="mt-8">
+          <p
+            class="mb-3 px-3 text-[11px] font-bold uppercase tracking-[0.12em] text-slate-400"
+          >
+            Account
           </p>
-          <p class="text-xs text-slate-400">Job Seeker</p>
-        </div>
-      </div>
 
-      <!-- Logout -->
-      <button type="button" class="flex w-full items-center gap-3 rounded-xl px-3 py-3
-               text-sm font-medium text-red-300 transition-colors
-               hover:bg-red-500/10 hover:text-red-200" @click="handleLogout">
-        <LogOut :size="19" />
-        <span>Logout</span>
-      </button>
-    </div>
-  </aside>
+          <div class="space-y-1">
+            <RouterLink
+              v-for="item in accountItems"
+              :key="item.path"
+              :to="item.path"
+              :class="[
+                menuClass,
+                isActive(item.path)
+                  ? activeMenuClass
+                  : 'text-slate-600 hover:bg-slate-100 hover:text-[#102D59]',
+              ]"
+              @click="handleNavigation"
+            >
+              <component :is="item.icon" :size="19" class="shrink-0" />
+
+              <span class="flex-1">
+                {{ item.label }}
+              </span>
+            </RouterLink>
+          </div>
+        </div>
+      </nav>
+
+      <!-- User Account Footer -->
+      <div class="shrink-0 border-t border-slate-100 p-4">
+        <!-- User Information -->
+        <div class="mb-3 flex items-center gap-3 rounded-xl bg-slate-50 p-3">
+          <div
+            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#102D59] text-sm font-bold text-white"
+          >
+            {{ userInitial }}
+          </div>
+
+          <div class="min-w-0 flex-1">
+            <p class="truncate text-sm font-semibold text-slate-800">
+              {{ userName }}
+            </p>
+
+            <p class="text-xs font-medium text-slate-500">Job Seeker</p>
+          </div>
+        </div>
+
+        <!-- Settings -->
+        <RouterLink
+          to="/jobseeker/settings"
+          :class="[
+            menuClass,
+            isActive('/jobseeker/settings')
+              ? activeMenuClass
+              : 'text-slate-600 hover:bg-slate-100 hover:text-[#102D59]',
+          ]"
+          @click="handleNavigation"
+        >
+          <Settings :size="19" class="shrink-0" />
+
+          <span>Settings</span>
+        </RouterLink>
+
+        <!-- Logout -->
+        <button
+          type="button"
+          class="mt-1 flex min-h-[44px] w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-red-600 transition hover:bg-red-50"
+          @click="handleLogout"
+        >
+          <LogOut :size="19" class="shrink-0" />
+
+          <span>Logout</span>
+        </button>
+      </div>
+    </aside>
+  </Transition>
 </template>
+
+<style scoped>
+.sidebar-enter-active,
+.sidebar-leave-active {
+  transition: transform 0.3s ease;
+}
+
+.sidebar-enter-from,
+.sidebar-leave-to {
+  transform: translateX(-100%);
+}
+
+.sidebar-overlay-enter-active,
+.sidebar-overlay-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.sidebar-overlay-enter-from,
+.sidebar-overlay-leave-to {
+  opacity: 0;
+}
+</style>

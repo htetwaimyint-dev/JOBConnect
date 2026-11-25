@@ -1,8 +1,4 @@
-import {
-  createRouter,
-  createWebHistory,
-  type RouteRecordRaw,
-} from "vue-router";
+import { createRouter, createWebHistory, type RouteRecordRaw } from "vue-router";
 import { useAuthStore } from "@/stores/auth.store";
 
 import { authRoutes } from "./auth.routes";
@@ -12,61 +8,84 @@ import { jobseekerRoutes } from "./jobseeker.routes";
 import { publicRoutes } from "./public.routes";
 
 const routes: RouteRecordRaw[] = [
-  ...publicRoutes,
-  ...authRoutes,
-  ...adminRoutes,
-  ...employerRoutes,
-  ...jobseekerRoutes,
+    ...publicRoutes,
+    ...authRoutes,
+    ...adminRoutes,
+    ...employerRoutes,
+    ...jobseekerRoutes,
 ];
 
 const router = createRouter({
-  history: createWebHistory(),
-  routes,
+    history: createWebHistory(),
+    routes,
 
-  scrollBehavior(to, from, savedPosition) {
-    // If the browser's back/forward button was used, keep the saved scroll position
-    if (savedPosition) {
-      return savedPosition;
-    } else {
-      // Always scroll to the top of the page on a new navigation
-      return { top: 0, left: 0 };
-    }
-  },
+    scrollBehavior(to, from, savedPosition) {
+        if (savedPosition) {
+            return savedPosition;
+        }
+
+        return { top: 0, left: 0 };
+    },
 });
 
-router.beforeEach(async (to) => {
-  const authStore = useAuthStore();
+// Get home page according to user role
+const getRoleHome = (role?: string): string => {
+    switch (role) {
+        case "admin":
+            return "/admin/dashboard";
 
-  if (!authStore.initialized) {
-    await authStore.initializeAuth();
-  }
+        case "employer":
+            return "/employer/dashboard";
 
-  if (to.meta.requiresAuth && !authStore.token) {
-    return "/login";
-  }
-
-  // Redirect authenticated users away from guest-only pages
-  if (to.meta.guestOnly && authStore.isAuthenticated) {
-    switch (authStore.user?.role) {
-      case "job_seeker":
-        return "/jobseeker/dashboard";
-
-      case "employer":
-        return "/employer/dashboard";
-
-      case "admin":
-        return "/admin/dashboard";
-
-      default:
-        return "/";
+        case "job_seeker":
+        default:
+            return "/";
     }
-  }
+};
 
-  if (to.meta.role && authStore.user?.role !== to.meta.role) {
-    return "/";
-  }
+router.beforeEach(async (to) => {
+    const authStore = useAuthStore();
 
-  return true;
+    // Initialize authentication
+    if (!authStore.initialized) {
+        await authStore.initializeAuth();
+    }
+
+    // 1. Protect routes requiring authentication
+    if (to.meta.requiresAuth && !authStore.isAuthenticated) {
+        return "/login";
+    }
+
+    // 2. Redirect authenticated users away from guest-only pages
+    if (to.meta.guestOnly && authStore.isAuthenticated) {
+        const redirectPath = getRoleHome(authStore.user?.role);
+
+        if (to.path !== redirectPath) {
+            return redirectPath;
+        }
+    }
+
+    // 3. Prevent access to routes belonging to other roles
+    if (to.meta.role && authStore.user?.role !== to.meta.role) {
+        const redirectPath = getRoleHome(authStore.user?.role);
+
+        if (to.path !== redirectPath) {
+            return redirectPath;
+        }
+    }
+
+    // 4. Redirect Admin and Employer from Home to their dashboards
+    if (to.path === "/") {
+        if (authStore.user?.role === "admin") {
+            return "/admin/dashboard";
+        }
+
+        if (authStore.user?.role === "employer") {
+            return "/employer/dashboard";
+        }
+    }
+
+    return true;
 });
 
 export default router;

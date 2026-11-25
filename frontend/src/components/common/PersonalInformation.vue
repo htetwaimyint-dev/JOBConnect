@@ -12,7 +12,6 @@ import {
   X,
 } from "lucide-vue-next";
 
-// Props
 const props = withDefaults(
   defineProps<{
     name: string;
@@ -29,7 +28,6 @@ const props = withDefaults(
   },
 );
 
-// Emits
 const emit = defineEmits<{
   save: [
     data: {
@@ -186,8 +184,8 @@ const saveChanges = () => {
     return;
   }
 
-  if (isPasswordEditing.value) {
-    if (!validatePassword()) return;
+  if (isPasswordEditing.value && !validatePassword()) {
+    return;
   }
 
   const password = isPasswordEditing.value
@@ -239,22 +237,22 @@ onBeforeUnmount(() => {
 
 <template>
   <section
-    class="mx-auto w-full max-w-3xl rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6"
+    class="mx-auto w-full min-w-0 max-w-3xl overflow-hidden rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:rounded-2xl sm:p-6 lg:p-7"
   >
-    <form @submit.prevent="saveChanges">
+    <form class="w-full min-w-0" @submit.prevent="saveChanges">
       <!-- Heading -->
-      <div class="mb-5">
-        <h2 class="text-xl font-semibold text-slate-800">
+      <div class="mb-5 min-w-0 sm:mb-6">
+        <h2 class="text-lg font-semibold text-slate-800 sm:text-xl">
           Personal Information
         </h2>
 
-        <p class="mt-1 text-sm text-slate-500">
+        <p class="mt-1 text-xs leading-relaxed text-slate-500 sm:text-sm">
           Manage your personal information and account settings.
         </p>
       </div>
 
       <!-- Profile Photo -->
-      <div v-if="showProfilePhoto" class="mb-5">
+      <div v-if="showProfilePhoto" class="mb-6">
         <label
           class="mb-3 block text-center text-sm font-medium text-slate-700"
         >
@@ -263,7 +261,7 @@ onBeforeUnmount(() => {
 
         <div class="flex flex-col items-center gap-3">
           <div
-            class="flex h-20 w-20 items-center justify-center overflow-hidden rounded-full border border-slate-200 bg-slate-100"
+            class="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full border border-slate-200 bg-slate-100 sm:h-24 sm:w-24"
           >
             <img
               v-if="displayedImage()"
@@ -272,24 +270,24 @@ onBeforeUnmount(() => {
               class="h-full w-full object-cover"
             />
 
-            <UserRound v-else class="h-9 w-9 text-slate-400" />
+            <UserRound v-else class="h-9 w-9 text-slate-400 sm:h-10 sm:w-10" />
           </div>
 
-          <div class="flex flex-wrap justify-center gap-2">
-            <input
-              ref="fileInput"
-              type="file"
-              accept="image/*"
-              class="hidden"
-              @change="handlePhotoChange"
-            />
+          <input
+            ref="fileInput"
+            type="file"
+            accept="image/*"
+            class="hidden"
+            @change="handlePhotoChange"
+          />
 
+          <div class="flex w-full flex-wrap justify-center gap-2">
             <button
               type="button"
               @click="openFilePicker"
-              class="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+              class="inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-300 px-3 py-2 text-xs font-medium text-slate-700 transition hover:bg-slate-50 sm:gap-2 sm:rounded-xl sm:px-4 sm:py-2.5 sm:text-sm"
             >
-              <Upload class="h-4 w-4" />
+              <Upload class="h-4 w-4 shrink-0" />
               Upload Photo
             </button>
 
@@ -297,32 +295,37 @@ onBeforeUnmount(() => {
               v-if="displayedImage()"
               type="button"
               @click="removePhoto"
-              class="inline-flex items-center gap-2 rounded-xl border border-red-200 px-4 py-2 text-sm font-medium text-red-600 transition hover:bg-red-50"
+              class="inline-flex items-center justify-center gap-1.5 rounded-lg border border-red-200 px-3 py-2 text-xs font-medium text-red-600 transition hover:bg-red-50 sm:gap-2 sm:rounded-xl sm:px-4 sm:py-2.5 sm:text-sm"
             >
-              <Trash2 class="h-4 w-4" />
+              <Trash2 class="h-4 w-4 shrink-0" />
               Remove
             </button>
           </div>
         </div>
 
-        <p class="mt-2 text-center text-xs text-slate-400">
+        <p
+          class="mt-2 text-center text-[11px] leading-relaxed text-slate-400 sm:text-xs"
+        >
           JPG, PNG or other image formats. Maximum size 2 MB.
         </p>
 
-        <p v-if="photoError" class="mt-1 text-center text-sm text-red-500">
+        <p
+          v-if="photoError"
+          class="mt-1 break-words text-center text-xs text-red-500 sm:text-sm"
+        >
           {{ photoError }}
         </p>
       </div>
 
       <!-- Full Name -->
-      <div class="mb-4">
-        <label class="mb-2 block text-sm font-medium text-slate-700">
+      <div class="mb-4 min-w-0">
+        <label class="mb-2 block text-xs font-medium text-slate-700 sm:text-sm">
           {{ nameLabel || "Full Name" }}
         </label>
 
-        <div class="relative">
+        <div class="relative min-w-0">
           <UserRound
-            class="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400"
+            class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 sm:left-4 sm:h-5 sm:w-5"
           />
 
           <input
@@ -330,13 +333,13 @@ onBeforeUnmount(() => {
             type="text"
             :readonly="!isNameEditing"
             placeholder="Enter your full name"
-            class="w-full rounded-xl border border-slate-300 bg-white py-3 pl-12 pr-12 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+            class="block w-full min-w-0 rounded-lg border border-slate-300 bg-white py-2.5 pl-10 pr-11 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 sm:rounded-xl sm:py-3 sm:pl-12 sm:pr-12"
           />
 
           <button
             type="button"
             @click="isNameEditing = !isNameEditing"
-            class="absolute right-3 top-1/2 -translate-y-1/2 rounded-lg p-2 text-slate-400 transition hover:bg-blue-50 hover:text-blue-600"
+            class="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-2 text-slate-400 transition hover:bg-blue-50 hover:text-blue-600 sm:right-3"
             :aria-label="isNameEditing ? 'Finish editing name' : 'Edit name'"
           >
             <Check v-if="isNameEditing" class="h-4 w-4" />
@@ -346,14 +349,14 @@ onBeforeUnmount(() => {
       </div>
 
       <!-- Email -->
-      <div class="mb-5">
-        <label class="mb-2 block text-sm font-medium text-slate-700">
+      <div class="mb-5 min-w-0">
+        <label class="mb-2 block text-xs font-medium text-slate-700 sm:text-sm">
           {{ emailLabel || "Email Address" }}
         </label>
 
-        <div class="relative">
+        <div class="relative min-w-0">
           <Mail
-            class="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400"
+            class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 sm:left-4 sm:h-5 sm:w-5"
           />
 
           <input
@@ -361,13 +364,13 @@ onBeforeUnmount(() => {
             type="email"
             :readonly="!isEmailEditing"
             placeholder="Enter your email address"
-            class="w-full rounded-xl border border-slate-300 bg-white py-3 pl-12 pr-12 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+            class="block w-full min-w-0 rounded-lg border border-slate-300 bg-white py-2.5 pl-10 pr-11 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 sm:rounded-xl sm:py-3 sm:pl-12 sm:pr-12"
           />
 
           <button
             type="button"
             @click="isEmailEditing = !isEmailEditing"
-            class="absolute right-3 top-1/2 -translate-y-1/2 rounded-lg p-2 text-slate-400 transition hover:bg-blue-50 hover:text-blue-600"
+            class="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-2 text-slate-400 transition hover:bg-blue-50 hover:text-blue-600 sm:right-3"
             :aria-label="isEmailEditing ? 'Finish editing email' : 'Edit email'"
           >
             <Check v-if="isEmailEditing" class="h-4 w-4" />
@@ -377,12 +380,14 @@ onBeforeUnmount(() => {
       </div>
 
       <!-- Change Password -->
-      <div class="border-t border-slate-200 pt-4">
-        <div class="mb-2 flex items-center justify-between">
-          <div class="flex items-center gap-2">
-            <LockKeyhole class="h-5 w-5 text-slate-600" />
+      <div class="min-w-0 border-t border-slate-200 pt-4 sm:pt-5">
+        <div class="mb-3 flex min-w-0 items-center justify-between gap-3">
+          <div class="flex min-w-0 items-center gap-2">
+            <LockKeyhole
+              class="h-4 w-4 shrink-0 text-slate-600 sm:h-5 sm:w-5"
+            />
 
-            <h3 class="text-base font-semibold text-slate-800">
+            <h3 class="text-sm font-semibold text-slate-800 sm:text-base">
               Change Password
             </h3>
           </div>
@@ -390,20 +395,21 @@ onBeforeUnmount(() => {
           <button
             type="button"
             @click="togglePasswordEditing"
-            class="rounded-xl p-2 text-slate-500 transition hover:bg-blue-50 hover:text-blue-600"
+            class="shrink-0 rounded-lg p-2 text-slate-500 transition hover:bg-blue-50 hover:text-blue-600"
             :aria-label="
               isPasswordEditing ? 'Cancel password editing' : 'Edit password'
             "
           >
-            <X v-if="isPasswordEditing" class="h-5 w-5" />
-            <Pencil v-else class="h-5 w-5" />
+            <X v-if="isPasswordEditing" class="h-4 w-4 sm:h-5 sm:w-5" />
+            <Pencil v-else class="h-4 w-4 sm:h-5 sm:w-5" />
           </button>
         </div>
 
-        <div v-if="isPasswordEditing" class="space-y-4">
-          <!-- Current Password -->
-          <div>
-            <label class="mb-1 block text-sm font-medium text-slate-700">
+        <div v-if="isPasswordEditing" class="space-y-3 sm:space-y-4">
+          <div class="min-w-0">
+            <label
+              class="mb-1.5 block text-xs font-medium text-slate-700 sm:text-sm"
+            >
               Current Password
             </label>
 
@@ -412,13 +418,14 @@ onBeforeUnmount(() => {
               type="password"
               autocomplete="current-password"
               placeholder="Enter current password"
-              class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              class="block w-full min-w-0 rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 sm:rounded-xl sm:px-4 sm:py-3"
             />
           </div>
 
-          <!-- New Password -->
-          <div>
-            <label class="mb-1 block text-sm font-medium text-slate-700">
+          <div class="min-w-0">
+            <label
+              class="mb-1.5 block text-xs font-medium text-slate-700 sm:text-sm"
+            >
               New Password
             </label>
 
@@ -427,13 +434,14 @@ onBeforeUnmount(() => {
               type="password"
               autocomplete="new-password"
               placeholder="Enter new password"
-              class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              class="block w-full min-w-0 rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 sm:rounded-xl sm:px-4 sm:py-3"
             />
           </div>
 
-          <!-- Confirm New Password -->
-          <div>
-            <label class="mb-1 block text-sm font-medium text-slate-700">
+          <div class="min-w-0">
+            <label
+              class="mb-1.5 block text-xs font-medium text-slate-700 sm:text-sm"
+            >
               Confirm New Password
             </label>
 
@@ -442,32 +450,37 @@ onBeforeUnmount(() => {
               type="password"
               autocomplete="new-password"
               placeholder="Confirm new password"
-              class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              class="block w-full min-w-0 rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 sm:rounded-xl sm:px-4 sm:py-3"
             />
           </div>
 
-          <p v-if="passwordError" class="text-sm text-red-500">
+          <p
+            v-if="passwordError"
+            class="break-words text-xs text-red-500 sm:text-sm"
+          >
             {{ passwordError }}
           </p>
         </div>
       </div>
 
       <!-- Bottom Buttons -->
-      <div class="mt-5 flex justify-end gap-3 border-t border-slate-200 pt-4">
+      <div
+        class="mt-5 grid grid-cols-2 gap-2 border-t border-slate-200 pt-4 sm:flex sm:justify-end sm:gap-3"
+      >
         <button
           type="button"
           @click="cancelChanges"
-          class="rounded-xl border border-slate-300 px-5 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-slate-50"
+          class="inline-flex min-w-0 items-center justify-center rounded-lg border border-slate-300 px-3 py-2.5 text-xs font-medium text-slate-600 transition hover:bg-slate-50 sm:rounded-xl sm:px-5 sm:text-sm"
         >
           Cancel
         </button>
 
         <button
           type="submit"
-          class="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-blue-700"
+          class="inline-flex min-w-0 items-center justify-center gap-1.5 rounded-lg bg-blue-600 px-3 py-2.5 text-xs font-medium text-white transition hover:bg-blue-700 sm:rounded-xl sm:gap-2 sm:px-5 sm:text-sm"
         >
-          <Check class="h-4 w-4" />
-          Save Changes
+          <Check class="h-4 w-4 shrink-0" />
+          <span>Save Changes</span>
         </button>
       </div>
     </form>
