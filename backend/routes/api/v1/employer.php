@@ -62,10 +62,10 @@ Route::middleware(['auth:sanctum', 'employer'])
             'index',
         ]);
 
-        Route::get('/job-seekers/{id}/profile', [
-            JobSeekerDirectoryController::class,
-            'show',
-        ]);
+        // Route::get('/job-seekers/{id}/profile', [
+        //     JobSeekerDirectoryController::class,
+        //     'show',
+        // ]);
 
         // Resume Preview and Download
         Route::get('/resumes/{resume}/preview', [
@@ -78,3 +78,12 @@ Route::middleware(['auth:sanctum', 'employer'])
             'download',
         ]);
     });
+
+    //allow admin and employer
+    Route::middleware(['auth:sanctum', 'role:admin,employer'])->group(function () {
+    Route::get('employer/job-seekers/{id}/profile', [
+            JobSeekerDirectoryController::class,
+            'show',
+        ]);
+});
+

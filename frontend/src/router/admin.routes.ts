@@ -10,6 +10,7 @@ import JobApprovalPage from "@/features/admin/pages/JobApprovalPage.vue";
 import CategoriesPage from "@/features/admin/pages/CategoriesPage.vue";
 import ReportsPage from "@/features/admin/pages/ReportsPage.vue";
 import CompanyDetailPage from "@/features/job-seeker/pages/CompanyDetailPage.vue";
+import JobSeekerDetailPage from "@/features/employer/pages/JobSeekerDetailPage.vue";
 
 export const adminRoutes: RouteRecordRaw[] = [
   {
@@ -67,6 +68,12 @@ export const adminRoutes: RouteRecordRaw[] = [
         name: "AdminCompanyDetail",
         component: CompanyDetailPage,
         meta: { title: "Company Detail" },
+      },
+      {
+        path: "job-seekers/:id",
+        name: "AdminJobSeekersDetail",
+        component: JobSeekerDetailPage,
+        meta: { title: "Job Seekers" },
       },
     ],
   },

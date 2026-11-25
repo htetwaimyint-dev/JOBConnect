@@ -86,7 +86,7 @@ export const jobseekerRoutes: RouteRecordRaw[] = [
         meta: { title: "Settings" },
       },
       {
-        path: "/companies/:id", // :id က Dynamic Parameter ပါ
+        path: "/companies/:id",
         name: "CompanyDetail",
         component: CompanyDetailPage,
         meta: { title: "Company Detail" },
