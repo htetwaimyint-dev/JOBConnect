@@ -81,7 +81,7 @@ function editCompanyProfile() {
     />
 
     <!-- Company Profile Layout -->
-    <template v-else-if="company && company.verification_status === 'verified'">
+    <template v-else-if="company">
       <!-- Banner & Header Card -->
       <CompanyBanner
         :company="company"

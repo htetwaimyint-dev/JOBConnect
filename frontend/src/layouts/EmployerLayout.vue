@@ -18,6 +18,7 @@ import CompanyGalleryForm from "@/features/employer/components/CompanyGalleryFor
 
 import AppHeader from "@/components/layout/AppHeader.vue";
 import AppSidebar from "@/components/layout/AppSidebar.vue";
+import AppPageContainer from "@/components/layout/AppPageContainer.vue";
 
 const uiStore = useUiStore();
 const router = useRouter();
@@ -39,6 +40,7 @@ const {
 
 // Reuse existing create/update composable
 const { mutation, submitForm } = useCompanyProfile();
+
 watch(
   () => mutation.isSuccess.value,
   (success) => {
@@ -80,19 +82,19 @@ const isLocked = computed(() => isCompanyMissing.value);
 
       <!-- Main Layout -->
       <div class="min-h-screen w-full min-w-0">
+        <!-- Header -->
         <AppHeader />
 
-        <main class="w-full min-w-0 p-4 sm:p-6 lg:p-8">
-          <div class="mx-auto w-full min-w-0 max-w-[1600px]">
-            <RouterView />
-          </div>
-        </main>
+        <!-- Page Content -->
+        <AppPageContainer>
+          <RouterView />
+        </AppPageContainer>
       </div>
     </div>
 
     <!-- Mandatory Company Create Modal -->
     <CompanyProfileRequiredModal :show="isLocked">
-      <form v-if="isLocked" @submit.prevent="submitForm" class="space-y-6">
+      <form v-if="isLocked" class="space-y-6" @submit.prevent="submitForm">
         <!-- Error Message -->
         <div
           v-if="companyStore.errorMessage"
@@ -132,7 +134,7 @@ const isLocked = computed(() => isCompanyMissing.value);
           @remove-new="companyStore.removeGallery($event, true)"
         />
 
-        <!-- Create Button Only -->
+        <!-- Create Button -->
         <div class="sticky bottom-0 bg-white pt-4 pb-2">
           <button
             type="submit"

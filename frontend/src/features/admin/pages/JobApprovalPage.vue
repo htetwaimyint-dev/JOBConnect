@@ -1,19 +1,15 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref, watch } from "vue";
+import { onMounted, onUnmounted, ref } from "vue";
 
-import {
-  Search,
-  RefreshCw,
-  AlertCircle,
-  X,
-  LoaderCircle,
-} from "lucide-vue-next";
+import { Search, AlertCircle, X, LoaderCircle } from "lucide-vue-next";
 
 import jobApprovalRepository from "../repositories/jobApprovalRepository";
 import JobApprovalTable from "../components/jobs/JobApprovalTable.vue";
 import JobApprovalModal from "../components/jobs/JobApprovalModal.vue";
 import JobApprovalDetailModal from "../components/jobs/JobApprovalDetailModal.vue";
+
 import BasePagination from "@/components/common/BasePagination.vue";
+import BaseFilterActions from "@/components/common/BaseFilterActions.vue";
 
 import type { Job } from "../types/job-approval.types";
 
@@ -37,7 +33,6 @@ const activeFilter = ref<ApprovalTab>("all");
 const errorMessage = ref("");
 
 // Request control
-let searchTimeout: ReturnType<typeof setTimeout>;
 let requestId = 0;
 
 // Job Details Modal
@@ -123,25 +118,32 @@ const fetchJobs = async (page = 1) => {
   }
 };
 
-// Backend Search with Debounce
-watch(searchQuery, () => {
-  clearTimeout(searchTimeout);
+// Search - Click Only
+const applySearch = () => {
+  if (loading.value) return;
 
-  searchTimeout = setTimeout(() => {
-    currentPage.value = 1;
-    fetchJobs(1);
-  }, 500);
-});
+  currentPage.value = 1;
+  fetchJobs(1);
+};
+
+// Clear Search
+const clearSearch = () => {
+  if (loading.value) return;
+
+  searchQuery.value = "";
+  currentPage.value = 1;
+
+  fetchJobs(1);
+};
 
 // Filter
 const changeFilter = (status: ApprovalTab) => {
-  if (activeFilter.value === status) return;
+  if (activeFilter.value === status || loading.value) return;
 
   activeFilter.value = status;
   searchQuery.value = "";
   currentPage.value = 1;
 
-  clearTimeout(searchTimeout);
   fetchJobs(1);
 };
 
@@ -153,17 +155,12 @@ const goToPage = (page: number) => {
 };
 
 const changePerPage = (value: number) => {
-  perPage.value = value;
-  currentPage.value = 1;
-  fetchJobs(1);
-};
-
-// Refresh
-const refreshJobs = () => {
   if (loading.value) return;
 
-  clearTimeout(searchTimeout);
-  fetchJobs(currentPage.value);
+  perPage.value = value;
+  currentPage.value = 1;
+
+  fetchJobs(1);
 };
 
 // Job Details
@@ -265,62 +262,46 @@ onMounted(() => {
 
 // Cleanup
 onUnmounted(() => {
-  clearTimeout(searchTimeout);
   requestId++;
 });
 </script>
 
 <template>
-  <div class="space-y-6">
+  <div class="w-full min-w-0 space-y-5 sm:space-y-6">
     <!-- Page Header -->
-    <div
-      class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
-    >
-      <div class="min-w-0">
-        <h1 class="text-2xl font-bold text-slate-800">Job Approval</h1>
+    <div class="min-w-0">
+      <h1 class="text-xl font-bold text-slate-800 sm:text-2xl">Job Approval</h1>
 
-        <p class="mt-1 text-sm text-slate-500">
-          Manage and review job listings submitted by employers.
-        </p>
-      </div>
-
-      <button
-        type="button"
-        @click="refreshJobs"
-        :disabled="loading"
-        class="mr-auto flex items-center justify-center gap-2 self-end rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-slate-50 disabled:opacity-50 sm:self-auto"
-      >
-        <RefreshCw :size="14" :class="{ 'animate-spin': loading }" />
-        Refresh
-      </button>
+      <p class="mt-1 text-xs text-slate-500 sm:text-sm">
+        Manage and review job listings submitted by employers.
+      </p>
     </div>
 
     <!-- Error Message -->
     <div
       v-if="errorMessage"
-      class="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700"
+      class="flex min-w-0 items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-3 text-xs text-red-700 sm:p-4 sm:text-sm"
     >
       <AlertCircle :size="18" class="mt-0.5 shrink-0" />
 
-      <p class="flex-1">
+      <p class="min-w-0 flex-1 break-words">
         {{ errorMessage }}
       </p>
 
       <button
         type="button"
         @click="errorMessage = ''"
-        class="text-red-500 hover:text-red-700"
+        class="shrink-0 text-red-500 transition hover:text-red-700"
       >
         <X :size="18" />
       </button>
     </div>
 
-    <!-- Job Approval Table -->
+    <!-- Job Approval Table Container -->
     <div
-      class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm"
+      class="w-full min-w-0 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm"
     >
-      <!-- Filters, Search, Table and Pagination -->
-      <div class="space-y-5 p-5">
+      <div class="space-y-5 p-4 sm:p-5">
         <!-- Filter Tabs -->
         <div class="flex flex-wrap gap-2">
           <button
@@ -329,7 +310,7 @@ onUnmounted(() => {
             type="button"
             @click="changeFilter(filter.value)"
             :disabled="loading"
-            class="rounded-xl border px-4 py-2.5 text-sm font-semibold transition disabled:opacity-50"
+            class="rounded-lg border px-3 py-2 text-xs font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 sm:rounded-xl sm:px-4 sm:py-2.5 sm:text-sm"
             :class="
               activeFilter === filter.value
                 ? 'border-blue-600 bg-blue-600 text-white shadow-sm'
@@ -340,19 +321,32 @@ onUnmounted(() => {
           </button>
         </div>
 
-        <!-- Search -->
-        <div class="relative max-w-xl">
-          <Search
-            :size="18"
-            class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-          />
+        <!-- Search Input + Search / Clear Buttons -->
+        <div class="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center">
+          <!-- Search Input -->
+          <div class="relative w-full min-w-0 sm:max-w-md sm:flex-1">
+            <Search
+              :size="18"
+              class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+            />
 
-          <input
-            v-model="searchQuery"
-            type="text"
-            placeholder="Search job, company, category..."
-            class="w-full rounded-xl border border-slate-200 bg-slate-50 py-3 pl-10 pr-4 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100"
-          />
+            <input
+              v-model="searchQuery"
+              type="text"
+              placeholder="Search job, company, category..."
+              @keyup.enter="applySearch"
+              class="w-full min-w-0 rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-10 pr-4 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100"
+            />
+          </div>
+
+          <!-- Common Search / Clear Buttons -->
+          <div class="flex shrink-0 items-center">
+            <BaseFilterActions
+              :loading="loading"
+              @search="applySearch"
+              @clear="clearSearch"
+            />
+          </div>
         </div>
       </div>
 
@@ -366,7 +360,7 @@ onUnmounted(() => {
       </div>
 
       <!-- Empty State -->
-      <div v-else-if="jobs.length === 0" class="py-16 text-center">
+      <div v-else-if="jobs.length === 0" class="px-4 py-16 text-center">
         <div
           class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-400"
         >
@@ -385,7 +379,7 @@ onUnmounted(() => {
       </div>
 
       <!-- Jobs Table Component -->
-      <div v-else>
+      <div v-else class="w-full min-w-0">
         <JobApprovalTable
           :jobs="jobs"
           @view="openDetails"
@@ -396,6 +390,7 @@ onUnmounted(() => {
 
       <!-- Pagination -->
       <BasePagination
+        v-if="total > 0"
         :current-page="currentPage"
         :last-page="lastPage"
         :total="total"

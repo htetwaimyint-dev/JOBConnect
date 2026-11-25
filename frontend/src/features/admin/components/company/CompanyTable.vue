@@ -16,6 +16,7 @@ import type {
 } from "../../types/company-approval.types";
 
 import BasePagination from "@/components/common/BasePagination.vue";
+import BaseFilterActions from "@/components/common/BaseFilterActions.vue";
 
 interface FilterOption {
   label: string;
@@ -43,7 +44,8 @@ const emit = defineEmits<{
   "update:searchQuery": [value: string];
   "update:per-page": [value: number];
   changeFilter: [value: CompanyStatusFilter];
-  refresh: [];
+  search: [];
+  clear: [];
   goToPage: [page: number];
   openDetails: [company: Company];
   openApproval: [company: Company, status: "verified" | "rejected"];
@@ -52,18 +54,11 @@ const emit = defineEmits<{
 
 <template>
   <div
-    class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
+    class="w-full min-w-0 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
   >
     <!-- Filter Header -->
-    <div class="space-y-5 border-b border-slate-100 p-5">
-      <div>
-        <h2 class="font-semibold text-slate-900">Companies</h2>
-        <p class="mt-1 text-xs text-slate-500">
-          View and manage company verification statuses.
-        </p>
-      </div>
-
-      <!-- Filters -->
+    <div class="space-y-5 border-b border-slate-100 p-4 sm:p-5">
+      <!-- Status Filters -->
       <div class="flex flex-wrap items-center gap-2">
         <button
           v-for="filter in filters"
@@ -71,7 +66,7 @@ const emit = defineEmits<{
           type="button"
           @click="emit('changeFilter', filter.value)"
           :disabled="loading"
-          class="rounded-xl px-4 py-2.5 text-sm font-semibold transition disabled:opacity-50"
+          class="rounded-lg px-3 py-2 text-xs font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 sm:rounded-xl sm:px-4 sm:py-2.5 sm:text-sm"
           :class="
             activeFilter === filter.value
               ? 'bg-blue-600 text-white shadow-sm shadow-blue-200'
@@ -82,31 +77,45 @@ const emit = defineEmits<{
         </button>
       </div>
 
-      <!-- Search -->
-      <div class="relative w-full sm:max-w-sm">
-        <Search
-          :size="18"
-          class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-        />
+      <!-- Search Input + Common Buttons -->
+      <div class="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center">
+        <!-- Search Input -->
+        <div class="relative w-full min-w-0 sm:max-w-md sm:flex-1">
+          <Search
+            :size="18"
+            class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+          />
 
-        <input
-          :value="searchQuery"
-          @input="
-            emit(
-              'update:searchQuery',
-              ($event.target as HTMLInputElement).value,
-            )
-          "
-          type="text"
-          placeholder="Search company, employer, email..."
-          class="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-10 pr-4 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100"
-        />
+          <input
+            :value="searchQuery"
+            @input="
+              emit(
+                'update:searchQuery',
+                ($event.target as HTMLInputElement).value,
+              )
+            "
+            @keyup.enter="emit('search')"
+            type="text"
+            placeholder="Search company, employer, email..."
+            class="w-full min-w-0 rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-10 pr-4 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100"
+          />
+        </div>
+
+        <!-- Common Search / Clear Buttons -->
+        <div class="flex shrink-0 items-center">
+          <BaseFilterActions
+            :loading="loading"
+            @search="emit('search')"
+            @clear="emit('clear')"
+          />
+        </div>
       </div>
     </div>
 
     <!-- Loading -->
     <div v-if="loading" class="flex flex-col items-center justify-center py-20">
       <LoaderCircle :size="32" class="animate-spin text-blue-600" />
+
       <p class="mt-3 text-sm text-slate-500">Loading companies...</p>
     </div>
 
@@ -135,7 +144,7 @@ const emit = defineEmits<{
     </div>
 
     <!-- Company Table -->
-    <div v-else class="overflow-x-auto">
+    <div v-else class="w-full overflow-x-auto">
       <table class="w-full min-w-[1450px] text-left">
         <thead class="bg-slate-50">
           <tr
@@ -180,6 +189,7 @@ const emit = defineEmits<{
                   <p class="truncate font-semibold text-slate-800">
                     {{ company.name }}
                   </p>
+
                   <p class="mt-1 truncate text-xs text-slate-500">
                     {{ company.industry || "Industry not specified" }}
                   </p>
@@ -192,6 +202,7 @@ const emit = defineEmits<{
               <p class="text-sm font-medium text-slate-700">
                 {{ company.employer?.name || "Unknown" }}
               </p>
+
               <p class="mt-1 text-xs text-slate-500">
                 {{ company.employer?.email || "—" }}
               </p>
@@ -203,6 +214,7 @@ const emit = defineEmits<{
                 <MapPin :size="15" class="shrink-0 text-slate-400" />
                 {{ company.city || "Not specified" }}
               </div>
+
               <p class="mt-1 max-w-[160px] truncate text-xs text-slate-400">
                 {{ company.address || "" }}
               </p>
@@ -213,6 +225,7 @@ const emit = defineEmits<{
               <p class="text-sm text-slate-700">
                 {{ company.company_email || "—" }}
               </p>
+
               <p class="mt-1 text-xs text-slate-500">
                 {{ company.phone || "No phone" }}
               </p>
@@ -242,6 +255,7 @@ const emit = defineEmits<{
                   class="h-1.5 w-1.5 rounded-full"
                   :class="statusDotClass(company.verification_status)"
                 ></span>
+
                 {{ statusLabel(company.verification_status) }}
               </span>
             </td>
@@ -272,7 +286,7 @@ const emit = defineEmits<{
                   type="button"
                   @click="emit('openApproval', company, 'verified')"
                   title="Approve company"
-                  class="rounded-lg p-2 text-emerald-600 transition hover:bg-emerald-50 border border-blue-200"
+                  class="rounded-lg border border-blue-200 p-2 text-emerald-600 transition hover:bg-emerald-50"
                 >
                   <CheckCircle2 :size="16" />
                 </button>
@@ -282,7 +296,7 @@ const emit = defineEmits<{
                   type="button"
                   @click="emit('openApproval', company, 'rejected')"
                   title="Reject company"
-                  class="rounded-lg p-2 text-red-500 transition hover:bg-red-50 border border-blue-200"
+                  class="rounded-lg border border-blue-200 p-2 text-red-500 transition hover:bg-red-50"
                 >
                   <XCircle :size="16" />
                 </button>

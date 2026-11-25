@@ -1,8 +1,7 @@
 import type { RouteRecordRaw } from "vue-router";
 
 import JobSeekerLayout from "@/layouts/JobSeekerLayout.vue";
-import JobSeekerSettingsPage from "@/features/job-seeker/pages/JobSeekerSettingsPage.vue";
-
+import SettingsPage from "@/components/common/SettingsPage.vue";
 import Dashboard from "@/features/job-seeker/pages/Dashboard.vue";
 import ProfilePage from "@/features/job-seeker/pages/ProfilePage.vue";
 import JobListPage from "@/features/jobs/pages/JobListPage.vue";
@@ -83,7 +82,7 @@ export const jobseekerRoutes: RouteRecordRaw[] = [
             {
                 path: "settings",
                 name: "JobSeekerSettings",
-                component: JobSeekerSettingsPage,
+                component: SettingsPage,
                 meta: { title: "Settings" },
             },
             {

@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, watch } from "vue";
+import { computed, onMounted, onUnmounted, ref } from "vue";
 
-import { RefreshCw, AlertCircle, X } from "lucide-vue-next";
+import { AlertCircle, X } from "lucide-vue-next";
 
 import CompanyTable from "../components/company/CompanyTable.vue";
 import CompanyDetailsModal from "../components/company/CompanyDetailsModal.vue";
@@ -32,8 +32,7 @@ const activeFilter = ref<CompanyStatusFilter>("all");
 
 const errorMessage = ref("");
 
-// Request control
-let searchTimeout: ReturnType<typeof setTimeout>;
+// Request Control
 let requestId = 0;
 
 // Details Modal
@@ -55,6 +54,9 @@ const filters: {
   { label: "Approved", value: "verified" },
   { label: "Rejected", value: "rejected" },
 ];
+
+// Pagination
+const perPage = ref(5);
 
 // Fetch Companies
 const fetchCompanies = async (page = 1) => {
@@ -90,30 +92,36 @@ const fetchCompanies = async (page = 1) => {
   }
 };
 
-// Backend Search with Debounce
-watch(searchQuery, () => {
-  clearTimeout(searchTimeout);
+// Search - Click Only
+const applySearch = () => {
+  if (loading.value) return;
 
-  searchTimeout = setTimeout(() => {
-    currentPage.value = 1;
-    fetchCompanies(1);
-  }, 500);
-});
+  currentPage.value = 1;
+  fetchCompanies(1);
+};
+
+// Clear Search
+const clearSearch = () => {
+  if (loading.value) return;
+
+  searchQuery.value = "";
+  currentPage.value = 1;
+
+  fetchCompanies(1);
+};
 
 // Filter
 const changeFilter = (status: CompanyStatusFilter) => {
-  if (activeFilter.value === status) return;
+  if (activeFilter.value === status || loading.value) return;
 
   activeFilter.value = status;
   searchQuery.value = "";
   currentPage.value = 1;
 
-  clearTimeout(searchTimeout);
   fetchCompanies(1);
 };
 
 // Pagination
-const perPage = ref(5);
 const goToPage = (page: number) => {
   if (page < 1 || page > lastPage.value || loading.value) return;
 
@@ -121,16 +129,12 @@ const goToPage = (page: number) => {
 };
 
 const changePerPage = (value: number) => {
-  perPage.value = value;
-  currentPage.value = 1;
-  fetchCompanies(1);
-};
-// Refresh
-const refreshCompanies = () => {
   if (loading.value) return;
 
-  clearTimeout(searchTimeout);
-  fetchCompanies(currentPage.value);
+  perPage.value = value;
+  currentPage.value = 1;
+
+  fetchCompanies(1);
 };
 
 // Status Helpers
@@ -251,51 +255,42 @@ onMounted(() => {
 
 // Cleanup
 onUnmounted(() => {
-  clearTimeout(searchTimeout);
   requestId++;
 });
 </script>
 
 <template>
-  <div class="space-y-6">
+  <div class="w-full min-w-0 space-y-5 sm:space-y-6">
     <!-- Page Header -->
     <div
-      class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
+      class="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
     >
       <div class="min-w-0">
-        <h1 class="text-2xl font-bold text-slate-800">Company Management</h1>
+        <h1 class="text-xl font-bold text-slate-800 sm:text-2xl">
+          Company Management
+        </h1>
 
-        <p class="mt-1 text-sm text-slate-500">
+        <p class="mt-1 text-xs text-slate-500 sm:text-sm">
           Manage and review company registrations
         </p>
       </div>
-
-      <button
-        type="button"
-        @click="refreshCompanies"
-        :disabled="loading"
-        class="mr-auto flex items-center justify-center gap-2 self-end rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-slate-50 disabled:opacity-50 sm:self-auto"
-      >
-        <RefreshCw :size="14" :class="{ 'animate-spin': loading }" />
-        Refresh
-      </button>
     </div>
 
     <!-- Error Message -->
     <div
       v-if="errorMessage"
-      class="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700"
+      class="flex min-w-0 items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-3 text-xs text-red-700 sm:p-4 sm:text-sm"
     >
       <AlertCircle :size="18" class="mt-0.5 shrink-0" />
 
-      <p class="flex-1">
+      <p class="min-w-0 flex-1 break-words">
         {{ errorMessage }}
       </p>
 
       <button
         type="button"
         @click="errorMessage = ''"
-        class="text-red-500 hover:text-red-700"
+        class="shrink-0 text-red-500 transition hover:text-red-700"
       >
         <X :size="18" />
       </button>
@@ -322,6 +317,8 @@ onUnmounted(() => {
       @go-to-page="goToPage"
       @open-details="openDetails"
       @open-approval="openApprovalDialog"
+      @search="applySearch"
+      @clear="clearSearch"
     />
 
     <!-- Company Details Modal -->

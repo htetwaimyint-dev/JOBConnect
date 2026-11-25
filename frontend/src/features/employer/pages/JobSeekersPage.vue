@@ -1,69 +1,127 @@
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
-import { Search, Users, LoaderCircle, RefreshCw } from "lucide-vue-next";
+
+import { Search, Users, LoaderCircle } from "lucide-vue-next";
 
 import JobSeekerCard from "../components/JobSeekerCard.vue";
-import jobSeekerRepository from "../repositories/jobSeekerRepository.ts";
-import BasePagination from "@/components/common/BasePagination.vue";
+import jobSeekerRepository from "../repositories/jobSeekerRepository";
 
-import type { JobSeeker } from "../types/job-seeker.types.ts";
+import BasePagination from "@/components/common/BasePagination.vue";
+import BaseFilterActions from "@/components/common/BaseFilterActions.vue";
+
+import type { JobSeeker } from "../types/job-seeker.types";
 
 const router = useRouter();
 
+// Job Seeker Data
 const jobSeekers = ref<JobSeeker[]>([]);
 
+// Search
 const search = ref("");
+const appliedSearch = ref("");
+
+// Pagination
 const perPage = ref(5);
 const currentPage = ref(1);
 const lastPage = ref(1);
 const total = ref(0);
 
+// Loading and Error
 const loading = ref(false);
 const errorMessage = ref("");
 
+// Prevent overlapping requests
+let requestId = 0;
+
+// Fetch Job Seekers
 const fetchJobSeekers = async () => {
+  const currentRequestId = ++requestId;
+
   loading.value = true;
   errorMessage.value = "";
 
   try {
     const response = await jobSeekerRepository.getJobSeekers({
-      search: search.value.trim() || undefined,
+      search: appliedSearch.value.trim() || undefined,
       per_page: perPage.value,
       page: currentPage.value,
     });
+
+    // Ignore an outdated response
+    if (currentRequestId !== requestId) return;
 
     jobSeekers.value = response.data;
     currentPage.value = response.meta.current_page;
     lastPage.value = response.meta.last_page;
     total.value = response.meta.total;
   } catch (error: any) {
+    if (currentRequestId !== requestId) return;
+
     console.error("Failed to fetch job seekers:", error);
     console.error("API Error Response:", error.response?.data);
     console.error("API Status:", error.response?.status);
 
     errorMessage.value = "Unable to load job seekers. Please try again.";
   } finally {
-    loading.value = false;
+    if (currentRequestId === requestId) {
+      loading.value = false;
+    }
   }
 };
 
+// Search only when Search button is clicked
 const handleSearch = () => {
+  if (loading.value) return;
+
+  appliedSearch.value = search.value.trim();
   currentPage.value = 1;
+
   fetchJobSeekers();
 };
 
+// Clear Search
+const handleClear = () => {
+  if (loading.value) return;
+
+  search.value = "";
+  appliedSearch.value = "";
+  currentPage.value = 1;
+
+  fetchJobSeekers();
+};
+
+// Retry
+const handleRetry = () => {
+  fetchJobSeekers();
+};
+
+// Pagination
 const handlePageChange = (page: number) => {
+  if (
+    loading.value ||
+    page < 1 ||
+    page > lastPage.value ||
+    page === currentPage.value
+  ) {
+    return;
+  }
+
   currentPage.value = page;
   fetchJobSeekers();
 };
 
+// Per Page
 const handlePerPageChange = (value: number) => {
+  if (loading.value || value === perPage.value) return;
+
   perPage.value = value;
   currentPage.value = 1;
+
   fetchJobSeekers();
 };
 
+// View Profile
 const handleViewProfile = (id: number) => {
   router.push({
     name: "EmployerJobSeekerDetail",
@@ -71,15 +129,17 @@ const handleViewProfile = (id: number) => {
   });
 };
 
+// Direct Offer
 const handleDirectOffer = (id: number) => {
   console.log("Direct offer:", id);
 };
 
+// Initial Fetch
 onMounted(fetchJobSeekers);
 </script>
 
 <template>
-  <div class="space-y-6">
+  <div class="w-full min-w-0 space-y-6">
     <!-- Header -->
     <div>
       <h1 class="text-2xl font-bold text-slate-900">Job Seeker Profiles</h1>
@@ -89,11 +149,12 @@ onMounted(fetchJobSeekers);
       </p>
     </div>
 
-    <!-- Search and Refresh -->
+    <!-- Search Section -->
     <div
-      class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+      class="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-4 sm:flex-row sm:items-center"
     >
-      <div class="relative w-full sm:max-w-md">
+      <!-- Search Input -->
+      <div class="relative w-full min-w-0 flex-1">
         <Search
           :size="18"
           class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
@@ -101,32 +162,34 @@ onMounted(fetchJobSeekers);
 
         <input
           v-model="search"
-          @keyup.enter="handleSearch"
           type="text"
           placeholder="Search by name, role, city or skill..."
-          class="w-full rounded-lg border border-slate-200 bg-white py-2.5 pl-10 pr-4 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+          :disabled="loading"
+          @keyup.enter="handleSearch"
+          class="w-full rounded-lg border border-slate-200 bg-white py-2.5 pl-10 pr-4 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:bg-slate-50"
         />
       </div>
 
-      <button
-        type="button"
-        @click="fetchJobSeekers"
-        :disabled="loading"
-        class="mr-auto flex items-center justify-center gap-2 self-end rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-slate-50 disabled:opacity-50 sm:self-auto"
-      >
-        <RefreshCw :size="16" :class="{ 'animate-spin': loading }" />
-        Refresh
-      </button>
+      <!-- Common Search and Clear Buttons -->
+      <BaseFilterActions
+        :loading="loading"
+        @search="handleSearch"
+        @clear="handleClear"
+      />
     </div>
 
     <!-- Result Count -->
     <div class="flex items-center gap-2 text-sm text-slate-500">
       <Users :size="17" />
-      <span>{{ total }} candidates found</span>
+
+      <span> {{ total }} candidates found </span>
     </div>
 
     <!-- Loading -->
-    <div v-if="loading" class="flex justify-center rounded-xl bg-white py-16">
+    <div
+      v-if="loading"
+      class="flex justify-center rounded-xl border border-slate-200 bg-white py-16"
+    >
       <LoaderCircle :size="32" class="animate-spin text-blue-600" />
     </div>
 
@@ -139,7 +202,7 @@ onMounted(fetchJobSeekers);
 
       <button
         type="button"
-        @click="fetchJobSeekers"
+        @click="handleRetry"
         class="ml-2 font-semibold underline"
       >
         Retry
@@ -173,7 +236,7 @@ onMounted(fetchJobSeekers);
 
     <!-- Pagination -->
     <BasePagination
-      v-if="!loading && !errorMessage"
+      v-if="!loading && !errorMessage && total > 0"
       :current-page="currentPage"
       :last-page="lastPage"
       :total="total"
