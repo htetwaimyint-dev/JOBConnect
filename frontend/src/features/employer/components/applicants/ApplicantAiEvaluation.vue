@@ -22,59 +22,76 @@ const aiEvaluation = computed(
     () => props.application.ai_evaluation ?? null,
 );
 
+// AI evaluation strengths.
 const aiStrengths = computed(() => {
     const value = aiEvaluation.value?.strengths;
 
     return Array.isArray(value) ? value : [];
 });
 
+// AI evaluation weaknesses.
 const aiWeaknesses = computed(() => {
     const value = aiEvaluation.value?.weaknesses;
 
     return Array.isArray(value) ? value : [];
 });
 
+// Skills matched with job requirements.
 const aiMatchedSkills = computed(() => {
     const value = aiEvaluation.value?.matched_skills;
 
     return Array.isArray(value) ? value : [];
 });
 
+// Skills missing from applicant profile.
 const aiMissingSkills = computed(() => {
     const value = aiEvaluation.value?.missing_skills;
 
     return Array.isArray(value) ? value : [];
 });
 
+// Convert snake_case labels into readable text.
 const formatLabel = (value: string): string =>
     value.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
+
+// Button label based on evaluation state.
+const evaluationButtonLabel = computed(() => {
+    if (props.evaluating) {
+        return "Evaluating...";
+    }
+
+    return aiEvaluation.value
+        ? "Re-evaluate"
+        : "Run AI Evaluation";
+});
 </script>
 
 <template>
     <section class="rounded-2xl border border-purple-100 p-5">
-        <!-- Header and Button -->
+        <!-- Header and Evaluation Button -->
         <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
             <h3 class="flex items-center gap-2 font-bold text-slate-900">
                 <Sparkles class="h-4 w-4 text-purple-600" />
                 AI Evaluation
             </h3>
 
-            <button v-if="!aiEvaluation" type="button" :disabled="evaluating || !canEvaluate"
-                @click="emit('run-evaluation')"
+            <button type="button" :disabled="evaluating || !canEvaluate" @click="emit('run-evaluation')"
                 class="inline-flex items-center justify-center gap-2 rounded-lg bg-purple-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-50">
                 <Sparkles v-if="!evaluating" class="h-4 w-4" />
 
                 <span v-else
                     class="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></span>
 
-                {{ evaluating ? "Evaluating..." : "Run AI Evaluation" }}
+                {{ evaluationButtonLabel }}
             </button>
         </div>
 
+        <!-- Application Status Notice -->
         <p v-if="!canEvaluate && !aiEvaluation" class="mb-3 text-xs text-amber-600">
             AI evaluation is available for pending or reviewed applications only.
         </p>
 
+        <!-- Evaluation Error -->
         <p v-if="evaluationError" class="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-600">
             {{ evaluationError }}
         </p>
@@ -175,6 +192,7 @@ const formatLabel = (value: string): string =>
             </div>
         </div>
 
+        <!-- No Evaluation -->
         <p v-else class="rounded-xl bg-slate-50 p-4 text-sm text-slate-400">
             No AI evaluation available. Click "Run AI Evaluation" to evaluate this applicant.
         </p>

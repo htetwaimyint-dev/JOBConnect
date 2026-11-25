@@ -10,11 +10,13 @@ use App\Models\User;
 use App\Repositories\Contracts\ApplicationRepositoryInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Validation\ValidationException;
+use App\Services\AI\ApplicantEvaluationInputBuilder;
 
 class ApplicationService
 {
     public function __construct(
-        protected ApplicationRepositoryInterface $applicationRepository
+        protected ApplicationRepositoryInterface $applicationRepository,
+        protected ApplicantEvaluationInputBuilder $inputBuilder
     ) {}
 
     /**
@@ -157,7 +159,40 @@ class ApplicationService
             $applicationId
         );
     }
+    /**
+     * Attach the AI evaluation matching the applicant's current input.
+     */
+    public function attachCurrentAiEvaluation(
+        Application $application
+    ): Application {
+        $application->loadMissing([
+            'job',
+            'jobSeeker.jobSeekerProfile',
+            'jobSeeker.skills',
+            'jobSeeker.educations',
+            'jobSeeker.experiences',
+            'answers.jobQuestion',
+        ]);
 
+        $evaluationInput = $this->inputBuilder->build(
+            $application->job,
+            $application
+        );
+
+        $inputHash = $evaluationInput['input_hash'];
+
+        $analysis = $application->aiAnalyses()
+            ->where('analysis_type', 'applicant_evaluation')
+            ->where('status', 'completed')
+            ->where('input_hash', $inputHash)
+            ->whereNotNull('result')
+            ->latest('id')
+            ->first();
+
+        $application->setRelation('currentAiEvaluation', $analysis);
+
+        return $application;
+    }
     /**
      * Update application status with transition validation.
      */

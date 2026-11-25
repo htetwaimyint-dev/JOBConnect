@@ -1,3 +1,4 @@
+
 <?php
 
 use Illuminate\Support\Facades\Route;
@@ -7,13 +8,13 @@ Route::prefix('employer')
     ->middleware(['auth:sanctum', 'employer'])
     ->group(function () {
 
-        // All company applications with filters
+        // Get all company applications with filters
         Route::get(
             '/applications',
             [ApplicationController::class, 'index']
         );
 
-        // Applications for a specific job
+        // Get applicants for a specific job
         Route::get(
             '/jobs/{jobId}/applications',
             [ApplicationController::class, 'jobIndex']
