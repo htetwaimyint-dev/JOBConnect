@@ -5,12 +5,13 @@ namespace App\Http\Requests\Api\Applications;
 use App\Enums\ApplicationStatus;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use App\Enums\UserRole;
 
 class UpdateApplicationStatusRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->role === 'employer';
+        return $this->user()?->role === UserRole::EMPLOYER;
     }
 
     public function rules(): array
@@ -18,7 +19,7 @@ class UpdateApplicationStatusRequest extends FormRequest
         $allowedStatuses = [
             ApplicationStatus::Reviewed->value,
             ApplicationStatus::Shortlisted->value,
-            ApplicationStatus::Interview->value,
+            //ApplicationStatus::Interview->value,
             ApplicationStatus::Accepted->value,
             ApplicationStatus::Rejected->value,
         ];

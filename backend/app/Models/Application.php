@@ -71,4 +71,19 @@ class Application extends Model
     {
         return $this->hasMany(AiAnalysis::class, 'application_id');
     }
+
+    /**
+     * Get the latest successful AI evaluation.
+     */
+    public function latestSuccessfulAiAnalysis(): HasOne
+    {
+        return $this->hasOne(AiAnalysis::class, 'application_id')
+            ->ofMany([
+                'created_at' => 'max',
+                'id' => 'max',
+            ], function ($query) {
+                $query->where('analysis_type', 'applicant_evaluation')
+                    ->where('status', 'completed');
+            });
+    }
 }

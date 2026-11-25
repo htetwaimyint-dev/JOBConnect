@@ -106,4 +106,16 @@ export const resumeRepository = {
 
         return response.data;
     },
+
+    // Preview a public resume as an employer
+    async previewForEmployer(id: number): Promise<Blob> {
+        const response = await api.get(
+            `/employer/resumes/${id}/preview`,
+            {
+                responseType: "blob",
+            }
+        );
+
+        return response.data;
+    },
 };

@@ -2,14 +2,14 @@
 
 namespace App\Services\Applications;
 
+use App\Enums\ApplicationStatus;
 use App\Models\Application;
 use App\Models\Company;
+use App\Models\Job;
 use App\Models\User;
 use App\Repositories\Contracts\ApplicationRepositoryInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
-use App\Models\Job;
 use Illuminate\Validation\ValidationException;
-use App\Enums\ApplicationStatus;
 
 class ApplicationService
 {
@@ -54,14 +54,19 @@ class ApplicationService
      */
     public function getCompanyApplications(
         Company $company,
-        int $perPage = 10
+        int $perPage = 10,
+        ?string $status = null,
+        ?int $categoryId = null,
+        ?string $search = null
     ): LengthAwarePaginator {
         return $this->applicationRepository->getByCompany(
             $company,
-            $perPage
+            $perPage,
+            $status,
+            $categoryId,
+            $search
         );
     }
-
 
     /**
      * Get applications for a specific Company job.
@@ -77,7 +82,6 @@ class ApplicationService
             $perPage
         );
     }
-
 
     /**
      * Create an application with validated answers.
@@ -106,7 +110,7 @@ class ApplicationService
             $jobQuestionIds
         );
 
-        if (!empty($invalidQuestionIds)) {
+        if (! empty($invalidQuestionIds)) {
             throw ValidationException::withMessages([
                 'answers' => 'Some questions do not belong to this job.',
             ]);
@@ -125,7 +129,7 @@ class ApplicationService
             $submittedQuestionIds
         );
 
-        if (!empty($missingQuestionIds)) {
+        if (! empty($missingQuestionIds)) {
             throw ValidationException::withMessages([
                 'answers' => 'Please answer all required questions.',
             ]);
@@ -155,12 +159,52 @@ class ApplicationService
     }
 
     /**
-     * Update application status.
+     * Update application status with transition validation.
      */
     public function updateApplicationStatus(
         Application $application,
         array $data
     ): Application {
+        $currentStatus = $application->status;
+
+        $newStatus = ApplicationStatus::from(
+            $data['new_status']
+        );
+
+        // Define allowed status transitions.
+        $allowedTransitions = [
+            ApplicationStatus::Pending->value => [
+                ApplicationStatus::Reviewed->value,
+            ],
+
+            ApplicationStatus::Reviewed->value => [
+                ApplicationStatus::Shortlisted->value,
+                ApplicationStatus::Rejected->value,
+            ],
+
+            ApplicationStatus::Shortlisted->value => [
+                ApplicationStatus::Accepted->value,
+                ApplicationStatus::Rejected->value,
+            ],
+
+            ApplicationStatus::Interview->value => [
+                ApplicationStatus::Accepted->value,
+                ApplicationStatus::Rejected->value,
+            ],
+        ];
+
+        $allowedStatuses = $allowedTransitions[$currentStatus->value] ?? [];
+
+        if (! in_array($newStatus->value, $allowedStatuses, true)) {
+            throw ValidationException::withMessages([
+                'new_status' => sprintf(
+                    'Cannot change application status from %s to %s.',
+                    $currentStatus->value,
+                    $newStatus->value
+                ),
+            ]);
+        }
+
         return $this->applicationRepository->updateStatus(
             $application,
             $data
@@ -174,21 +218,20 @@ class ApplicationService
         User $jobSeeker,
         int $applicationId
     ): Application {
-
-        // Find application belonging to this Job Seeker
+        // Find application belonging to this Job Seeker.
         $application = $this->getMyApplicationDetail(
             $jobSeeker,
             $applicationId
         );
 
-        // Only pending applications can be withdrawn
+        // Only pending applications can be withdrawn.
         if ($application->status !== ApplicationStatus::Pending) {
             throw ValidationException::withMessages([
                 'status' => 'Only pending applications can be withdrawn.',
             ]);
         }
 
-        // Update status and create history
+        // Update status and create history.
         return $this->applicationRepository->updateStatus(
             $application,
             [
