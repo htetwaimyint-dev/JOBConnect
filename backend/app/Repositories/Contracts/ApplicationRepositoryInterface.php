@@ -18,7 +18,10 @@ interface ApplicationRepositoryInterface
 
     public function getByCompany(
         Company $company,
-        int $perPage = 10
+        int $perPage = 10,
+        ?string $status = null,
+        ?int $categoryId = null,
+        ?string $search = null
     ): LengthAwarePaginator;
 
 

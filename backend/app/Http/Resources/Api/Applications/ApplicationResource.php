@@ -35,6 +35,22 @@ class ApplicationResource extends JsonResource
                 'file_type' => $this->resume?->file_type,
             ],
 
+            'ai_evaluation' => $this->whenLoaded(
+                'latestSuccessfulAiAnalysis',
+                function () {
+                    $analysis = $this->latestSuccessfulAiAnalysis;
+
+                    if (! $analysis) {
+                        return null;
+                    }
+
+                    return [
+                        'analysis_id' => $analysis->id,
+                        ...$analysis->result,
+                    ];
+                }
+            ),
+
             'answers' => $this->whenLoaded('answers', function () {
                 return $this->answers->map(function ($answer) {
                     return [
@@ -50,14 +66,66 @@ class ApplicationResource extends JsonResource
             }),
 
             'job_seeker' => $this->whenLoaded('jobSeeker', function () {
+                $jobSeeker = $this->jobSeeker;
+
                 return [
-                    'id' => $this->jobSeeker->id,
-                    'name' => $this->jobSeeker->name,
-                    'email' => $this->jobSeeker->email,
+                    'id' => $jobSeeker->id,
+                    'name' => $jobSeeker->name,
+                    'email' => $jobSeeker->email,
+
+                    'profile' => $this->when(
+                        $jobSeeker->relationLoaded('jobSeekerProfile'),
+                        function () use ($jobSeeker) {
+                            $profile = $jobSeeker->jobSeekerProfile;
+
+                            return $profile ? $profile->toArray() : null;
+                        }
+                    ),
+
+                    'skills' => $this->whenLoadedRelation(
+                        $jobSeeker,
+                        'skills'
+                    ),
+
+                    'educations' => $this->whenLoadedRelation(
+                        $jobSeeker,
+                        'educations'
+                    ),
+
+                    'experiences' => $this->whenLoadedRelation(
+                        $jobSeeker,
+                        'experiences'
+                    ),
                 ];
             }),
 
+            'status_histories' => $this->whenLoaded(
+                'statusHistories',
+                function () {
+                    return $this->statusHistories->map(function ($history) {
+                        return [
+                            'id' => $history->id,
+                            'old_status' => $history->old_status,
+                            'new_status' => $history->new_status,
+                            'note' => $history->note,
+                            'changed_by_company_id' =>
+                            $history->changed_by_company_id,
+                            'created_at' => $history->created_at,
+                        ];
+                    });
+                }
+            ),
+
             'created_at' => $this->created_at,
         ];
+    }
+
+    private function whenLoadedRelation(
+        $model,
+        string $relation
+    ) {
+        return $model->relationLoaded($relation)
+            ? $model->getRelation($relation)
+            : null;
     }
 }

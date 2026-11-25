@@ -29,10 +29,7 @@ Route::middleware(['auth:sanctum', 'employer'])
             'update',
         ]);
 
-        Route::get(
-            '/resumes/{resume}/download',
-            [\App\Http\Controllers\Api\V1\Employer\ResumeController::class, 'download']
-        );
+
         // Employer Jobs
         Route::get('/jobs', [
             CompanyJobController::class,
@@ -70,7 +67,12 @@ Route::middleware(['auth:sanctum', 'employer'])
             'show',
         ]);
 
-        // Resume Download
+        // Resume Preview and Download
+        Route::get('/resumes/{resume}/preview', [
+            ResumeController::class,
+            'preview',
+        ]);
+
         Route::get('/resumes/{resume}/download', [
             ResumeController::class,
             'download',

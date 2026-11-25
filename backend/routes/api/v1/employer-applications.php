@@ -1,4 +1,3 @@
-
 <?php
 
 use Illuminate\Support\Facades\Route;
@@ -7,11 +6,26 @@ use App\Http\Controllers\Api\V1\Employer\ApplicationController;
 Route::prefix('employer')
     ->middleware(['auth:sanctum', 'employer'])
     ->group(function () {
+
+        // All company applications with filters
         Route::get(
-            '/jobs/{jobId}/applications',
+            '/applications',
             [ApplicationController::class, 'index']
         );
 
+        // Applications for a specific job
+        Route::get(
+            '/jobs/{jobId}/applications',
+            [ApplicationController::class, 'jobIndex']
+        );
+
+        // Get application details
+        Route::get(
+            '/applications/{applicationId}',
+            [ApplicationController::class, 'show']
+        );
+
+        // Update application status
         Route::patch(
             '/applications/{applicationId}/status',
             [ApplicationController::class, 'updateStatus']
