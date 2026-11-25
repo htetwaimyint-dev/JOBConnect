@@ -348,13 +348,13 @@ function closePreview() {
         <div
           class="flex items-center gap-2 text-xs font-medium text-slate-400 sm:text-sm"
         >
-          <span>Employer</span>
+          <!-- <span>Employer</span>
           <span>/</span>
           <span>Jobs</span>
           <span>/</span>
           <span class="font-bold text-slate-700">
             {{ isEditMode ? "Edit Job" : "Create Job" }}
-          </span>
+          </span> -->
         </div>
       </div>
 

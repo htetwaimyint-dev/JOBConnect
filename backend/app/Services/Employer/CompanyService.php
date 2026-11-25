@@ -33,6 +33,10 @@ class CompanyService
     ): Company {
         $company = $this->companyRepository->findByEmployer($user);
 
+        // Check whether the existing company was rejected.
+        $wasRejected = $company !== null
+            && $company->verification_status === 'rejected';
+
         $oldLogo = $company?->logo;
         $oldCover = $company?->cover_image;
         $oldGallery = $company?->gallery ?? [];
@@ -108,7 +112,6 @@ class CompanyService
             $retainedGallery = [];
 
             foreach ($oldGallery as $path) {
-
                 $url = Storage::disk('public')->url($path);
 
                 if (in_array($url, $requestedGallery, true)) {
@@ -152,6 +155,20 @@ class CompanyService
             );
 
             /*
+             * If the company was rejected, resubmit it for verification.
+             * These values are controlled by the backend, not the employer.
+             */
+            if ($wasRejected) {
+                $savedCompany->forceFill([
+                    'verification_status' => 'pending',
+                    'verified_at' => null,
+                    'rejection_reason' => null,
+                ])->save();
+
+                $savedCompany->refresh();
+            }
+
+            /*
              * Delete old files only after database save succeeds.
              */
             foreach (array_unique($filesToDelete) as $path) {
@@ -182,13 +199,13 @@ class CompanyService
         );
     }
 
-    //get compaines for job seeker
+    // Get companies for job seeker.
     public function getCompanies(?string $search): Collection
     {
         return $this->companyRepository->getAll($search);
     }
 
-    //company details for job seeker
+    // Company details for job seeker.
     public function getCompanyById(int $id): Company
     {
         $company = $this->companyRepository->findById($id);
@@ -200,16 +217,16 @@ class CompanyService
         return $company;
     }
 
-    //jobs of company (for jobseeker)
+    // Jobs of company (for job seeker).
     public function getCompanyWithJobs(int $companyId): ?Company
     {
         return $this->companyRepository->getCompanyWithJobs($companyId);
     }
 
-     //for filter and serarching (for jobseeker to filter or search one company's jobs)
+    // Filter and search one company's jobs.
     public function getCompanyJobs(
-    int $companyId,
-    array $filters = []
+        int $companyId,
+        array $filters = []
     ): Collection {
         return $this->companyRepository->getCompanyJobs(
             $companyId,

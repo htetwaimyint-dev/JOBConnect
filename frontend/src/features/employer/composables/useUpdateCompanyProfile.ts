@@ -1,4 +1,11 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/vue-query";
+
+import {
+    useQuery,
+    useMutation,
+    useQueryClient,
+} from "@tanstack/vue-query";
+
+import { useRouter } from "vue-router";
 import { companyRepository } from "@/features/employer/repositories/companyRepository";
 import { useCompanyProfileStore } from "../../../stores/company-profile.store";
 import { computed, watch } from "vue";
@@ -8,10 +15,17 @@ export function useCompanyProfile() {
     const store = useCompanyProfileStore();
     const authStore = useAuthStore();
     const queryClient = useQueryClient();
+    const router = useRouter();
 
     const userId = computed(() => authStore.user?.id || "guest");
 
-    const { data, isPending, isError, error, refetch } = useQuery({
+    const {
+        data,
+        isPending,
+        isError,
+        error,
+        refetch,
+    } = useQuery({
         queryKey: ["company", "profile", userId],
         queryFn: () => companyRepository.getCompanyProfileForForm(),
         retry: 1,
@@ -34,7 +48,7 @@ export function useCompanyProfile() {
         () => isError.value,
         (hasError) => {
             if (hasError) {
-                store.reset(); //
+                store.reset();
             }
         },
     );
@@ -48,16 +62,23 @@ export function useCompanyProfile() {
 
         onSuccess: async (company) => {
             store.populate(company);
+
             store.successMessage = "Company profile saved successfully.";
             store.errorMessage = "";
             store.clearErrors();
 
             // Update the cached profile immediately.
-            queryClient.setQueryData(["company", "profile", userId.value], company);
+            queryClient.setQueryData(
+                ["company", "profile", userId.value],
+                company,
+            );
 
             await queryClient.invalidateQueries({
                 queryKey: ["company", "profile", userId.value],
             });
+
+            // Navigate to company profile after successful save.
+            router.push({ name: "company-profile" });
         },
 
         onError: (error: any) => {
@@ -91,13 +112,6 @@ export function useCompanyProfile() {
         }
 
         const formData = store.buildFormData();
-
-        for (const [key, value] of formData.entries()) {
-            console.log(
-                key,
-                value instanceof File ? `File: ${value.name}` : value,
-            );
-        }
 
         mutation.mutate(formData);
     }
