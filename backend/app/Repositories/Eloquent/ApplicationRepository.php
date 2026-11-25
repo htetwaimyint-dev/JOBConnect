@@ -43,12 +43,40 @@ class ApplicationRepository implements ApplicationRepositoryInterface
      */
     public function getByCompany(
         Company $company,
-        int $perPage = 10
+        int $perPage = 10,
+        ?string $status = null,
+        ?int $categoryId = null,
+        ?string $search = null
     ): LengthAwarePaginator {
         return Application::query()
-            ->with(['job.company', 'resume', 'jobSeeker'])
-            ->whereHas('job', function ($query) use ($company) {
-                $query->where('company_id', $company->id);
+            ->with([
+                'job.company',
+                'job.category',
+                'resume',
+                'jobSeeker',
+                'latestSuccessfulAiAnalysis',
+            ])
+            ->whereHas('job', function ($query) use ($company, $categoryId) {
+                $query->where('company_id', $company->id)
+                    ->when($categoryId, function ($jobQuery) use ($categoryId) {
+                        $jobQuery->where('category_id', $categoryId);
+                    });
+            })
+            ->when($status, function ($query) use ($status) {
+                $query->where('status', $status);
+            })
+            ->when($search, function ($query) use ($search) {
+                $query->where(function ($searchQuery) use ($search) {
+                    $searchQuery
+                        ->where('applicant_name', 'like', "%{$search}%")
+                        ->orWhereHas('jobSeeker', function ($userQuery) use ($search) {
+                            $userQuery->where('name', 'like', "%{$search}%")
+                                ->orWhere('email', 'like', "%{$search}%");
+                        })
+                        ->orWhereHas('job', function ($jobQuery) use ($search) {
+                            $jobQuery->where('title', 'like', "%{$search}%");
+                        });
+                });
             })
             ->latest('applied_at')
             ->paginate($perPage);
@@ -63,7 +91,12 @@ class ApplicationRepository implements ApplicationRepositoryInterface
         int $perPage = 10
     ): LengthAwarePaginator {
         return Application::query()
-            ->with(['job.company', 'resume', 'jobSeeker'])
+            ->with([
+                'job.company',
+                'resume',
+                'jobSeeker',
+                'latestSuccessfulAiAnalysis',
+            ])
             ->whereHas('job', function ($query) use ($company, $jobId) {
                 $query->where('company_id', $company->id)
                     ->where('id', $jobId);
@@ -104,7 +137,17 @@ class ApplicationRepository implements ApplicationRepositoryInterface
         int $applicationId
     ): ?Application {
         return Application::query()
-            ->with(['job.company', 'resume', 'jobSeeker'])
+            ->with([
+                'job.company',
+                'resume',
+                'jobSeeker.jobSeekerProfile',
+                'jobSeeker.skills',
+                'jobSeeker.educations',
+                'jobSeeker.experiences',
+                'answers.jobQuestion',
+                'statusHistories',
+                'latestSuccessfulAiAnalysis',
+            ])
             ->whereHas('job', function ($query) use ($company) {
                 $query->where('company_id', $company->id);
             })
@@ -152,8 +195,13 @@ class ApplicationRepository implements ApplicationRepositoryInterface
             return $application->fresh([
                 'job.company',
                 'resume',
-                'jobSeeker',
+                'jobSeeker.jobSeekerProfile',
+                'jobSeeker.skills',
+                'jobSeeker.educations',
+                'jobSeeker.experiences',
+                'answers.jobQuestion',
                 'statusHistories',
+                'latestSuccessfulAiAnalysis',
             ]);
         });
     }

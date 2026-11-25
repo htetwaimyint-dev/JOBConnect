@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Services\Applications\ApplicationService;
 use App\Services\Employer\CompanyService;
 use Illuminate\Http\Request;
+use App\Enums\ApplicationStatus;
 
 
 class ApplicationController extends Controller
@@ -20,9 +21,56 @@ class ApplicationController extends Controller
     ) {}
 
     /**
+     * Get all applications belonging to the Employer's Company.
+     */
+    public function index(Request $request)
+    {
+        $company = $this->getEmployerCompany($request->user());
+
+        $validated = $request->validate([
+            'perpage' => ['nullable', 'integer', 'min:1', 'max:50'],
+            'status' => [
+                'nullable',
+                'string',
+                \Illuminate\Validation\Rule::in([
+                    'pending',
+                    'reviewed',
+                    'shortlisted',
+                    'interview',
+                    'accepted',
+                    'rejected',
+                    'withdrawn',
+                ]),
+            ],
+            'category_id' => ['nullable', 'integer', 'exists:categories,id'],
+            'search' => ['nullable', 'string', 'max:100'],
+        ]);
+
+        $perPage = (int) ($validated['perpage'] ?? 10);
+
+        $applications = $this->applicationService
+            ->getCompanyApplications(
+                $company,
+                $perPage,
+                $validated['status'] ?? null,
+                isset($validated['category_id'])
+                    ? (int) $validated['category_id']
+                    : null,
+                $validated['search'] ?? null
+            );
+
+        return ApplicationResource::collection($applications)
+            ->additional([
+                'success' => true,
+                'message' => 'Applications retrieved successfully.',
+            ]);
+    }
+
+
+    /**
      * Get applications for a specific company job.
      */
-    public function index(Request $request, int $jobId)
+    public function jobIndex(Request $request, int $jobId)
     {
         $company = $this->getEmployerCompany($request->user());
 
@@ -39,6 +87,46 @@ class ApplicationController extends Controller
                 'success' => true,
                 'message' => 'Applications retrieved successfully.',
             ]);
+    }
+
+    /**
+     * Get application details for the Employer.
+     * Automatically mark pending applications as reviewed.
+     */
+    public function show(Request $request, int $applicationId)
+    {
+        $company = $this->getEmployerCompany($request->user());
+
+        $application = $this->applicationService
+            ->findCompanyApplication($company, $applicationId);
+
+        abort_unless(
+            $application,
+            404,
+            'Application not found.'
+        );
+
+        // Automatically mark as reviewed on first detail view.
+        if ($application->status === ApplicationStatus::Pending) {
+            $this->applicationService->updateApplicationStatus(
+                $application,
+                [
+                    'new_status' => ApplicationStatus::Reviewed->value,
+                    'changed_by_company_id' => $company->id,
+                    'note' => 'Automatically marked as reviewed when employer opened application details.',
+                ]
+            );
+
+            // Reload application with updated status and relationships.
+            $application = $this->applicationService
+                ->findCompanyApplication($company, $applicationId);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Application details retrieved successfully.',
+            'data' => new ApplicationResource($application),
+        ]);
     }
 
     /**
