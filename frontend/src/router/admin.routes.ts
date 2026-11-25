@@ -9,6 +9,7 @@ import CompanyApprovalPage from "@/features/admin/pages/CompanyApprovalPage.vue"
 import JobApprovalPage from "@/features/admin/pages/JobApprovalPage.vue";
 import CategoriesPage from "@/features/admin/pages/CategoriesPage.vue";
 import ReportsPage from "@/features/admin/pages/ReportsPage.vue";
+import CompanyDetailPage from "@/features/job-seeker/pages/CompanyDetailPage.vue";
 
 export const adminRoutes: RouteRecordRaw[] = [
   {
