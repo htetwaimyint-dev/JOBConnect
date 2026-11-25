@@ -2,9 +2,10 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Interview extends Model
 {
@@ -30,5 +31,11 @@ class Interview extends Model
     public function application(): BelongsTo
     {
         return $this->belongsTo(Application::class, 'application_id');
+    }
+
+    public function interviewers(): BelongsToMany
+    {
+        return $this->belongsToMany(Interviewer::class, 'interview_interviewer')
+            ->withTimestamps();
     }
 }

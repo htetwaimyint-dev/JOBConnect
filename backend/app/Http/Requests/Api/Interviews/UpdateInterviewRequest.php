@@ -2,28 +2,27 @@
 
 namespace App\Http\Requests\Api\Interviews;
 
-use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateInterviewRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
-        return false;
+        return $this->user() !== null;
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, ValidationRule|array<mixed>|string>
-     */
     public function rules(): array
     {
         return [
-            //
+            'interview_type' => ['sometimes', 'required', Rule::in(['online', 'onsite', 'phone'])],
+            'scheduled_at' => ['required_if:status,rescheduled', 'date', 'after:now'],
+            'status' => ['sometimes', Rule::in(['rescheduled'])],
+            'location' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'meeting_link' => ['sometimes', 'nullable', 'url', 'max:255'],
+            'notes' => ['sometimes', 'nullable', 'string'],
+            'interviewer_ids' => ['sometimes', 'array'],
+            'interviewer_ids.*' => ['integer', 'distinct', 'exists:interviewers,id'],
         ];
     }
 }

@@ -91,6 +91,10 @@ const employerNavigation = [
         title: "Direct Offer",
         path: "/employer/job-offers",
     },
+    {
+        title: "Interviews",
+        path: "/employer/interviews",
+    },
 ];
 
 // User Information

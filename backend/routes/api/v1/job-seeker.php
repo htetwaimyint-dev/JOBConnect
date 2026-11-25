@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\V1\JobSeeker\ExperienceController;
 use App\Http\Controllers\Api\V1\JobSeeker\ResumeController;
 use App\Http\Controllers\Api\V1\JobSeeker\UserSkillController;
 use App\Http\Controllers\Api\V1\JobSeeker\CompanyProfileViewController;
+use App\Http\Controllers\Api\V1\JobSeeker\InterviewController;
 
 use App\Http\Controllers\Api\V1\Jobs\SavedJobController;
 
@@ -19,6 +20,10 @@ Route::middleware(['auth:sanctum', 'job-seeker'])
         // Job Seeker Profile
         Route::get('/profile', [ProfileController::class, 'show']);
         Route::put('/profile', [ProfileController::class, 'update']);
+
+        // Job Seeker Interviews
+        Route::get('/interviews', [InterviewController::class, 'index']);
+        Route::patch('/interviews/{interviewId}/request-reschedule', [InterviewController::class, 'requestReschedule']);
 
         // Job Seeker Education
         Route::apiResource('/educations', EducationController::class);

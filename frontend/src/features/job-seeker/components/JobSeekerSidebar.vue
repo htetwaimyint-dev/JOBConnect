@@ -113,7 +113,7 @@ const handleLogout = async () => {
                 @click="handleNavigation"
             >
                 <div
-                    class="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-blue-400 to-indigo-600 shadow-lg shadow-blue-900/40"
+                    class="flex h-11 w-11 items-center justify-center rounded-xl bg-linear-to-br from-blue-400 to-indigo-600 shadow-lg shadow-blue-900/40"
                 >
                     <Sparkles :size="23" class="text-white" />
                 </div>
@@ -217,7 +217,7 @@ const handleLogout = async () => {
         <div class="shrink-0 border-t border-white/10 p-4">
             <div class="mb-3 flex items-center gap-3 rounded-xl bg-white/5 p-3">
                 <div
-                    class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 text-sm font-bold text-white"
+                    class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-blue-400 to-indigo-500 text-sm font-bold text-white"
                 >
                     {{ userInitial }}
                 </div>
