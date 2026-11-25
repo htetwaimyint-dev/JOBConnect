@@ -84,7 +84,7 @@ function interviewsForHour(date: Date, hour: number) {
 
         <!-- This is the only vertically scrollable region of the page. -->
         <div
-            class="calendar-scrollbar min-h-0 flex-1 overflow-auto"
+            class="calendar-scrollbar min-h-0 flex-1 overflow-x-hidden overflow-y-auto"
             data-calendar-scroll
         >
             <div

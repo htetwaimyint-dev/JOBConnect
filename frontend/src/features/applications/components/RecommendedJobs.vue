@@ -55,8 +55,6 @@ const handleLogoError = (jobId: number) => {
                     <div class="min-w-0 flex-1 space-y-3">
                         <div class="h-4 w-3/4 rounded bg-slate-100"></div>
 
-                        <div class="h-3 w-1/2 rounded bg-slate-100"></div>
-
                         <div class="h-3 w-2/3 rounded bg-slate-100"></div>
                     </div>
                 </div>
