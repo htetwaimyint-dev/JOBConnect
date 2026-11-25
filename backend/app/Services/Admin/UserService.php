@@ -14,46 +14,101 @@ class UserService
         protected UserRepositoryInterface $userRepository
     ) {}
 
-    public function getCompanies(?string $search = null, int $perPage = 10): LengthAwarePaginator
-    {
+    // Get Companies
+    public function getCompanies(
+        ?string $search = null,
+        ?string $status = null,
+        int $perPage = 10
+    ): LengthAwarePaginator {
+
         return $this->userRepository->getUsersByRole(
             UserRole::EMPLOYER,
             $search,
+            $status,
             $perPage
         );
     }
 
-    public function getJobSeekers(?string $search = null, int $perPage = 10): LengthAwarePaginator
+    public function getCompanyStats(): array
+{
+    return [
+        'total' => User::withTrashed()
+            ->where('role', 'employer')
+            ->count(),
+
+        'active' => User::withTrashed()
+            ->where('role', 'employer')
+            ->where('status', 'active')
+            ->count(),
+
+        'suspended' => User::withTrashed()
+            ->where('role', 'employer')
+            ->where('status', 'suspended')
+            ->count(),
+    ];
+}
+
+    public function suspendEmployer(int $id): User
     {
-        return $this->userRepository->getUsersByRole(
-            UserRole::JOB_SEEKER,
-            $search,
-            $perPage
+        return $this->userRepository->updateEmployerStatus(
+            $id,
+            'suspended'
         );
     }
 
-    // DELETE /admin/companies/{id}
-    public function deleteCompany(int $id): void
+    public function restoreEmployer(int $id): User
     {
-        $company = User::where('id', $id)->where('role', 'employer')->first();
-
-        if (!$company) {
-            throw new Exception("Company not found", 404);
-        }
-
-        $company->delete(); 
+        return $this->userRepository->updateEmployerStatus(
+            $id,
+            'active'
+        );
     }
 
-    // DELETE /admin/job-seekers/{id}
-    public function deleteJobSeeker(int $id): void
-    {
-        $jobSeeker = User::where('id', $id)->where('role', 'job_seeker')->first();
+    public function getJobSeekers(
+    ?string $search = null,
+    ?string $status = null,
+    int $perPage = 5
+): LengthAwarePaginator {
+    return $this->userRepository->getUsersByRole(
+        UserRole::JOB_SEEKER,
+        $search,
+        $status,
+        $perPage
+    );
+}
 
-        if (!$jobSeeker) {
-            throw new Exception("Job Seeker not found", 404);
-        }
+public function getJobSeekerStats(): array
+{
+    $query = User::withTrashed()
+        ->where('role', UserRole::JOB_SEEKER->value);
 
-        $jobSeeker->delete(); 
-    }
+    return [
+        'total' => (clone $query)->count(),
+
+        'active' => (clone $query)
+            ->where('status', 'active')
+            ->count(),
+
+        'suspended' => (clone $query)
+            ->where('status', 'suspended')
+            ->count(),
+    ];
+}
+
+public function suspendJobSeeker(int $id): User
+{
+    return $this->userRepository->updateJobSeekerStatus(
+        $id,
+        'suspended'
+    );
+}
+
+public function restoreJobSeeker(int $id): User
+{
+    return $this->userRepository->updateJobSeekerStatus(
+        $id,
+        'active'
+    );
+}
 
 }

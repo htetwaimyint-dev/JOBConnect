@@ -1,5 +1,8 @@
 import api from "@/services/api";
-import type { Company } from "@/features/employer/types/company.types";
+import type {
+  Company,
+  CompanyJobFilters,
+} from "@/features/employer/types/company.types";
 
 interface ApiResponse<T> {
   success: boolean;
@@ -20,7 +23,16 @@ export const companyRepository = {
 
     return response.data.data;
   },
-  //fetch companies for job seekers
+
+  //show jobs of companies ( for jobseeker )
+  async getCompanyJobs(companyId: number, filters: CompanyJobFilters = {}) {
+    const response = await api.get(`job-seeker/companies/${companyId}/jobs`, {
+      params: filters,
+    });
+
+    return response.data;
+  },
+
   async getCompanyById(id: number): Promise<Company> {
     const response = await api.get<ApiResponse<Company>>(
       `job-seeker/companies/${id}`,
@@ -33,6 +45,32 @@ export const companyRepository = {
     }
 
     return response.data.data;
+  },
+  //fetch company details for job seekers
+  async getCompanyDetails(
+    id: number,
+    params?: {
+      page?: number;
+      keyword?: string;
+      job_type?: string;
+      location?: string;
+    },
+  ): Promise<any> {
+    const response = await api.get(`job-seeker/companies/${id}`, { params });
+
+    if (!response.data.success || !response.data.data) {
+      throw new Error(
+        response.data.message || "Failed to fetch company jobs and details",
+      );
+    }
+
+    const payload = response.data.data;
+
+    return {
+      status: true,
+      company: payload.company ?? payload,
+      jobs: payload.jobs ?? [],
+    };
   },
 
   async getCompanyProfile(): Promise<Company> {

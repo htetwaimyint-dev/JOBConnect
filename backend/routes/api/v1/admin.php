@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\V1\Admin\CompanyApprovalController;
 use App\Http\Controllers\Api\V1\Admin\JobApprovalController;
 use App\Http\Controllers\Api\V1\Admin\UserManagementController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\V1\JobSeeker\CompanyProfileViewController;
 
 Route::middleware(['auth:sanctum', 'admin'])->group(function () {
 
@@ -28,8 +29,25 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
         Route::get('/companies', [UserManagementController::class, 'companies']);
         Route::get('/job-seekers', [UserManagementController::class, 'jobSeekers']);
 
-        Route::delete('/companies/{id}', [UserManagementController::class, 'deleteCompany']);
-        Route::delete('/job-seekers/{id}', [UserManagementController::class, 'deleteJobSeeker']);
+        Route::patch('/companies/{id}/suspend', [
+            UserManagementController::class,
+            'suspendCompany'
+        ]);
+
+        Route::patch('/companies/{id}/restore', [
+            UserManagementController::class,
+            'restoreCompany'
+        ]);
+
+        Route::patch(
+        '/job-seekers/{id}/suspend',
+        [UserManagementController::class, 'suspendJobSeeker']
+    );
+
+    Route::patch(
+        '/job-seekers/{id}/restore',
+        [UserManagementController::class, 'restoreJobSeeker']
+    );
 
         // Company Approval Management
         Route::get('/companies/pending', [
@@ -70,5 +88,7 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
             JobApprovalController::class,
             'update'
         ]);
+
+        
     });
 });

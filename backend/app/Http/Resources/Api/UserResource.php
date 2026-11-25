@@ -24,7 +24,20 @@ class UserResource extends JsonResource
             'created_at' => $this->created_at?->toDateTimeString(),
             // Include related details depending on role
             'company' => $this->whenLoaded('company'),
+            'jobs_count' => $this->whenCounted('jobs'), 
             'profile' => $this->whenLoaded('jobSeekerProfile'),
-        ];
+            // Job Seeker Profile
+            'profile' => $this->whenLoaded(
+                'jobSeekerProfile',
+                function () {
+                    return [
+                        'profile_photo' => $this->jobSeekerProfile?->profile_photo,
+                    ];
+                }
+            ),
+
+            // Resume Count
+            'resume_count' => $this->whenCounted('resumes'),
+            ];
     }
 }

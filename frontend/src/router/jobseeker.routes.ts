@@ -16,81 +16,81 @@ import ApplicationDetailPage from "@/features/applications/pages/ApplicationDeta
 //import SettingsPage from "@/features/job-seeker/pages/SettingsPage.vue";
 
 export const jobseekerRoutes: RouteRecordRaw[] = [
-    {
-        path: "/jobseeker",
-        component: JobSeekerLayout,
-        meta: {
-            requiresAuth: true,
-            role: "job_seeker",
-        },
-        children: [
-            {
-                path: "dashboard",
-                name: "JobSeekerDashboard",
-                component: Dashboard,
-                meta: { title: "Dashboard" },
-            },
-            {
-                //add meta
-                path: "profile",
-                name: "JobSeekerProfile",
-                component: ProfilePage,
-                meta: { title: "My Profile" },
-            },
-            {
-                path: "jobs",
-                name: "JobSeekerJobs",
-                component: JobListPage,
-                meta: { title: "Find Jobs" },
-            },
-            {
-                path: "saved-jobs",
-                name: "JobSeekerSavedJobs",
-                component: SavedJobsPage,
-                meta: { title: "Saved Jobs" },
-            },
-            {
-                path: "applications",
-                name: "JobSeekerApplications",
-                component: MyApplicationsPage,
-                meta: { title: "My Applications" },
-            },
-            //HWM add path for application detail page
-            {
-                path: "applications/:id",
-                name: "JobSeekerApplicationDetail",
-                component: ApplicationDetailPage,
-                meta: { title: "Application Details" },
-            },
-            {
-                path: "interviews",
-                name: "JobSeekerInterviews",
-                component: InterviewsPage,
-                meta: { title: "Interviews" },
-            },
-            {
-                path: "companyProfile",
-                name: "CompanyProfile",
-                component: CompanyProfilePage,
-                meta: { title: "Company Profile" },
-            },
-            {
-                path: "job-offers",
-                name: "job-seeker-offers",
-                component: JobSeekerOffersPage,
-            },
-            {
-                path: "settings",
-                name: "JobSeekerSettings",
-                component: SettingsPage,
-                meta: { title: "Settings" },
-            },
-            {
-                path: "/companies/:id", // :id က Dynamic Parameter ပါ
-                name: "CompanyDetail",
-                component: CompanyDetailPage,
-                meta: { title: "Company Detail" },
-            },
-        ],
+  {
+    path: "/jobseeker",
+    component: JobSeekerLayout,
+    meta: {
+      requiresAuth: true,
+      role: "job_seeker",
     },
+    children: [
+      {
+        path: "dashboard",
+        name: "JobSeekerDashboard",
+        component: Dashboard,
+        meta: { title: "Dashboard" },
+      },
+      {
+        //add meta
+        path: "profile",
+        name: "JobSeekerProfile",
+        component: ProfilePage,
+        meta: { title: "My Profile" },
+      },
+      {
+        path: "jobs",
+        name: "JobSeekerJobs",
+        component: JobListPage,
+        meta: { title: "Find Jobs" },
+      },
+      {
+        path: "saved-jobs",
+        name: "JobSeekerSavedJobs",
+        component: SavedJobsPage,
+        meta: { title: "Saved Jobs" },
+      },
+      {
+        path: "applications",
+        name: "JobSeekerApplications",
+        component: MyApplicationsPage,
+        meta: { title: "My Applications" },
+      },
+      //HWM add path for application detail page
+      {
+        path: "applications/:id",
+        name: "JobSeekerApplicationDetail",
+        component: ApplicationDetailPage,
+        meta: { title: "Application Details" },
+      },
+      {
+        path: "interviews",
+        name: "JobSeekerInterviews",
+        component: InterviewsPage,
+        meta: { title: "Interviews" },
+      },
+      {
+        path: "companyProfile",
+        name: "CompanyProfile",
+        component: CompanyProfilePage,
+        meta: { title: "Company Profile" },
+      },
+      {
+        path: "job-offers",
+        name: "job-seeker-offers",
+        component: JobSeekerOffersPage,
+      },
+      {
+        path: "settings",
+        name: "JobSeekerSettings",
+        component: SettingsPage,
+        meta: { title: "Settings" },
+      },
+      {
+        path: "/companies/:id", // :id က Dynamic Parameter ပါ
+        name: "CompanyDetail",
+        component: CompanyDetailPage,
+        meta: { title: "Company Detail" },
+      },
+    ],
+  },
 ];

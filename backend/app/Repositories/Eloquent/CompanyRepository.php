@@ -1,9 +1,9 @@
 <?php
 
 namespace App\Repositories\Eloquent;
-
 use App\Models\Company;
 use App\Models\User;
+use App\Models\Job;
 use App\Repositories\Contracts\CompanyRepositoryInterface;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Collection;
@@ -36,6 +36,7 @@ class CompanyRepository implements CompanyRepositoryInterface
         });
     }
 
+    //get companies (for jobseeker)
     public function getAll(?string $search): Collection
     {
         $query = Company::query();
@@ -51,8 +52,54 @@ class CompanyRepository implements CompanyRepositoryInterface
         return $query->latest()->get();
     }
 
+    //company details(for jobseeker)
     public function findById(int $id): ?Company
     {
         return Company::find($id);
     }
+
+    //get company's jobs (for jobseeker)
+    public function getCompanyWithJobs(int $companyId): ?Company
+    {
+        return Company::with([
+            'jobs' => function ($query) {
+                $query->where('status', 'published')
+                    ->latest();
+            }
+        ])->find($companyId);
+    }
+
+    //for filter and serarching (for jobseeker to filter or search one company's jobs)
+    public function getCompanyJobs(
+    int $companyId,
+    array $filters = []
+): Collection {
+    $query = Job::query()
+        ->with(['company', 'category', 'jobQuestion'])
+        ->where('company_id', $companyId)
+        ->where('status', 'published');
+
+    if (!empty($filters['keyword'])) {
+        $query->where('title', 'LIKE', '%' . $filters['keyword'] . '%');
+    }
+
+    if (!empty($filters['location'])) {
+        $location = $filters['location'];
+
+        $query->where(function ($q) use ($location) {
+            $q->where('city', 'LIKE', "%{$location}%")
+              ->orWhere('country', 'LIKE', "%{$location}%");
+        });
+    }
+
+    if (!empty($filters['employment_type'])) {
+        $query->where('employment_type', $filters['employment_type']);
+    }
+
+    if (!empty($filters['workplace_type'])) {
+        $query->where('workplace_type', $filters['workplace_type']);
+    }
+
+    return $query->latest()->get();
+}
 }
