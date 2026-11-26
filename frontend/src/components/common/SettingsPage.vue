@@ -79,7 +79,7 @@ const loadSettings = async () => {
 
     if (isJobSeeker.value) {
       const profile = await profileRepository.getProfile();
-      user.value.profileImage = profile.profile_photo ?? null;
+      user.value.profileImage = profile?.profile_photo ?? null;
     }
   } catch (error) {
     console.error("Failed to load settings:", error);
@@ -170,78 +170,51 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div
-    class="mx-auto w-full min-w-0 max-w-3xl space-y-4 px-4 py-5 sm:space-y-5 sm:px-6 sm:py-6"
-  >
+  <div class="mx-auto w-full min-w-0 max-w-3xl space-y-4 px-4 py-5 sm:space-y-5 sm:px-6 sm:py-6">
     <!-- Back Button -->
-    <button
-      type="button"
-      @click="goBack"
-      class="group inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-blue-200 hover:text-blue-700 hover:shadow-md sm:gap-2.5 sm:rounded-xl sm:px-4 sm:py-2.5"
-    >
+    <button type="button" @click="goBack"
+      class="group inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-blue-200 hover:text-blue-700 hover:shadow-md sm:gap-2.5 sm:rounded-xl sm:px-4 sm:py-2.5">
       <span
-        class="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-slate-100 transition group-hover:bg-blue-50 sm:h-8 sm:w-8 sm:rounded-lg"
-      >
-        <ArrowLeft
-          class="h-4 w-4 transition-transform group-hover:-translate-x-1"
-        />
+        class="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-slate-100 transition group-hover:bg-blue-50 sm:h-8 sm:w-8 sm:rounded-lg">
+        <ArrowLeft class="h-4 w-4 transition-transform group-hover:-translate-x-1" />
       </span>
 
       <span>Back</span>
     </button>
 
     <!-- Alert -->
-    <div
-      v-if="alertMessage"
+    <div v-if="alertMessage"
       class="flex min-w-0 items-start gap-2.5 rounded-lg border p-3 text-xs sm:items-center sm:gap-3 sm:rounded-xl sm:p-4 sm:text-sm"
       :class="{
         'border-green-200 bg-green-50 text-green-700': alertType === 'success',
         'border-red-200 bg-red-50 text-red-700': alertType === 'error',
         'border-amber-200 bg-amber-50 text-amber-700': alertType === 'warning',
-      }"
-    >
-      <CheckCircle2
-        v-if="alertType === 'success'"
-        class="mt-0.5 h-4 w-4 shrink-0 sm:mt-0 sm:h-5 sm:w-5"
-      />
+      }">
+      <CheckCircle2 v-if="alertType === 'success'" class="mt-0.5 h-4 w-4 shrink-0 sm:mt-0 sm:h-5 sm:w-5" />
 
-      <AlertCircle
-        v-else
-        class="mt-0.5 h-4 w-4 shrink-0 sm:mt-0 sm:h-5 sm:w-5"
-      />
+      <AlertCircle v-else class="mt-0.5 h-4 w-4 shrink-0 sm:mt-0 sm:h-5 sm:w-5" />
 
       <span class="min-w-0 break-words">{{ alertMessage }}</span>
     </div>
 
     <!-- Loading -->
-    <div
-      v-if="isLoading"
-      class="flex min-h-56 items-center justify-center rounded-xl border border-slate-200 bg-white sm:min-h-64"
-    >
+    <div v-if="isLoading"
+      class="flex min-h-56 items-center justify-center rounded-xl border border-slate-200 bg-white sm:min-h-64">
       <div class="flex items-center gap-2.5 text-slate-500 sm:gap-3">
-        <LoaderCircle
-          class="h-5 w-5 animate-spin text-blue-600 sm:h-6 sm:w-6"
-        />
+        <LoaderCircle class="h-5 w-5 animate-spin text-blue-600 sm:h-6 sm:w-6" />
         <span class="text-xs sm:text-sm">Loading settings...</span>
       </div>
     </div>
 
     <!-- Personal Information -->
     <div v-else class="w-full min-w-0">
-      <PersonalInformation
-        :name="user.name"
-        :email="user.email"
-        :profile-image="user.profileImage"
-        :show-profile-photo="isJobSeeker"
-        @save="handleSave"
-      />
+      <PersonalInformation :name="user.name" :email="user.email" :profile-image="user.profileImage"
+        :show-profile-photo="isJobSeeker" @save="handleSave" />
     </div>
 
     <!-- Saving Indicator -->
-    <div
-      v-if="isSaving"
-      class="flex items-center justify-center gap-2 rounded-lg bg-blue-50 px-3 py-2.5 text-xs font-medium text-blue-600 sm:text-sm"
-    >
+    <div v-if="isSaving"
+      class="flex items-center justify-center gap-2 rounded-lg bg-blue-50 px-3 py-2.5 text-xs font-medium text-blue-600 sm:text-sm">
       <LoaderCircle class="h-4 w-4 animate-spin" />
       <span>Saving changes...</span>
     </div>
