@@ -86,8 +86,9 @@ export interface EmployerApplicationStatusHistory {
 // AI Evaluation Result
 // ==========================================
 
+
 export interface EmployerAiEvaluationResult {
-    analysis_id: number;
+    analysis_id?: number;
     match_score: number;
     matched_skills: string[];
     missing_skills: string[];
@@ -126,7 +127,7 @@ export interface EmployerApplication {
     applied_at: string;
 
     job: EmployerApplicationJob;
-    resume: EmployerApplicationResume | null;
+    resume: EmployerApplicationResume;
 
     job_seeker?: EmployerJobSeeker | null;
     answers?: EmployerApplicationAnswer[];

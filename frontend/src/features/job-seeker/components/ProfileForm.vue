@@ -169,7 +169,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-    <AppModal :show="show" title="Edit Personal Information"
+    <AppModal :show="show" :title="profile ? 'Edit Personal Information' : 'Create Your Profile'"
         description="Update your personal details and professional profile." max-width="max-w-3xl"
         @close="emit('close')">
         <form class="space-y-6" @submit.prevent="handleSubmit">
@@ -383,7 +383,13 @@ onBeforeUnmount(() => {
                     class="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60">
                     <LoaderCircle v-if="isSaving" :size="17" class="animate-spin" />
                     <Save v-else :size="17" />
-                    {{ isSaving ? "Saving Changes..." : "Save Changes" }}
+                    {{
+                        isSaving
+                            ? "Saving..."
+                            : profile
+                    ? "Save Changes"
+                    : "Create Profile"
+                    }}
                 </button>
             </div>
         </form>
