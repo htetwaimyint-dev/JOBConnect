@@ -3,6 +3,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\V1\AI\JobMatchingController;
+use App\Http\Controllers\Api\V1\AI\RecommendationController;
 
 Route::prefix('employer')
     ->middleware(['auth:sanctum', 'employer'])
@@ -18,5 +19,24 @@ Route::prefix('employer')
         Route::post(
             '/applications/{applicationId}/ai-screening',
             [JobMatchingController::class, 'evaluateSingleApplicant']
+        );
+    });
+
+Route::prefix('job-seeker')
+    ->middleware(['auth:sanctum', 'job-seeker'])
+    ->group(function () {
+
+
+        Route::post(
+            '/recommendations',
+            [RecommendationController::class, 'store']
+        );
+
+        Route::get(
+            '/recommendations',
+            [
+                RecommendationController::class,
+                'index',
+            ]
         );
     });

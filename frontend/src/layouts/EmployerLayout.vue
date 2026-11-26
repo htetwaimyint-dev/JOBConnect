@@ -59,14 +59,16 @@ const isLocked = computed(() => isCompanyMissing.value);
 </script>
 
 <template>
-    <div class="relative min-h-screen w-full bg-slate-50">
+    <div
+        class="relative min-h-screen w-full bg-slate-50 has-[.screen-locked]:h-screen has-[.screen-locked]:overflow-hidden"
+    >
         <!-- Background Layout -->
         <div
             :inert="isLocked"
             :class="{
                 'pointer-events-none select-none blur-sm': isLocked,
             }"
-            class="min-h-screen transition-all duration-300"
+            class="min-h-screen transition-all duration-300 has-[.screen-locked]:flex has-[.screen-locked]:h-full has-[.screen-locked]:flex-col has-[.screen-locked]:overflow-hidden"
         >
             <!-- Sidebar Overlay -->
             <Transition name="fade">
@@ -81,7 +83,9 @@ const isLocked = computed(() => isCompanyMissing.value);
             <AppSidebar />
 
             <!-- Main Layout -->
-            <div class="min-h-screen w-full min-w-0">
+            <div
+                class="min-h-screen w-full min-w-0 has-[.screen-locked]:flex has-[.screen-locked]:min-h-0 has-[.screen-locked]:flex-1 has-[.screen-locked]:flex-col has-[.screen-locked]:overflow-hidden"
+            >
                 <!-- Header -->
                 <AppHeader />
 

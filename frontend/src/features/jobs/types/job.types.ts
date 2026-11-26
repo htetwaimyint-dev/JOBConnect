@@ -91,7 +91,7 @@ export interface JobListParams {
     page?: number;
     search?: string;
     category_id?: number;
-    company_id?:number;
+    company_id?: number;
     employment_type?: EmploymentType;
     workplace_type?: WorkplaceType;
     city?: string;

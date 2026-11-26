@@ -48,4 +48,8 @@ return [
         'binary' => env('LIBREOFFICE_PATH', 'soffice'),
     ],
 
+    'recommendations' => [
+        'expiry_days' => env('AI_RECOMMENDATION_EXPIRY_DAYS', 7),
+    ],
+
 ];
