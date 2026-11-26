@@ -1,4 +1,4 @@
-import type { Job } from "@/features/jobs/types/job.types";
+import type { Job } from "./job.types";
 
 export interface AiRecommendation {
     id: number;
@@ -8,13 +8,14 @@ export interface AiRecommendation {
     job: Job;
 }
 
-export interface RecommendationResponse {
-    analysis: {
-        id: number;
-        status: string;
-        created_at: string;
-    } | null;
+export interface RecommendationAnalysis {
+    id: number;
+    status: string;
+    created_at: string;
+}
 
+export interface RecommendationResponse {
+    analysis: RecommendationAnalysis | null;
     recommendations: AiRecommendation[];
     total: number;
     is_refreshing: boolean;

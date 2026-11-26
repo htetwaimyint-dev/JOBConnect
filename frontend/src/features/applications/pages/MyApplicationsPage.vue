@@ -49,7 +49,7 @@ const {
 
 const { getRecommendations } = useRecommendations();
 
-const recommendationsQuery = getRecommendations(10);
+const recommendationsQuery = getRecommendations(4);
 
 const recommendedJobs = computed(
     () =>
@@ -62,6 +62,9 @@ const isRefreshing = computed(
     () => recommendationsQuery.data.value?.is_refreshing ?? false,
 );
 
+onMounted(() => {
+    fetchApplications();
+});
 function refresh() {
     fetchApplications(currentPage.value);
     recommendationsQuery.refetch();

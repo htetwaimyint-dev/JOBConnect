@@ -1,9 +1,9 @@
-import { useQuery, useMutation } from "@tanstack/vue-query";
+import { useQuery } from "@tanstack/vue-query";
 import recommendationRepository from "../repositories/recommendationRepository";
 import type { RecommendationResponse } from "../types/recommendation.types";
 
 export function useRecommendations() {
-    const getRecommendations = (limit = 4) => {
+    function getRecommendations(limit = 10) {
         return useQuery({
             queryKey: ["recommendations", limit],
 
@@ -14,23 +14,13 @@ export function useRecommendations() {
                 return response.data.data;
             },
 
+            // Poll only while the backend is generating new recommendations.
             refetchInterval: (query) =>
                 query.state.data?.is_refreshing ? 5000 : false,
         });
-    };
-
-    const generateRecommendations = useMutation({
-        mutationFn: async (
-            limit: number = 10,
-        ): Promise<RecommendationResponse> => {
-            const response =
-                await recommendationRepository.generateRecommendations(limit);
-            return response.data.data;
-        },
-    });
+    }
 
     return {
         getRecommendations,
-        generateRecommendations,
     };
 }

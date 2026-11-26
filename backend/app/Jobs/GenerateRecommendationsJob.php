@@ -15,7 +15,10 @@ use Throwable;
 
 class GenerateRecommendationsJob implements ShouldQueue, ShouldBeUnique
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Dispatchable;
+    use InteractsWithQueue;
+    use Queueable;
+    use SerializesModels;
 
     public int $tries = 2;
 
@@ -55,7 +58,7 @@ class GenerateRecommendationsJob implements ShouldQueue, ShouldBeUnique
 
     public function failed(Throwable $exception): void
     {
-        Log::error('AI recommendation generation failed.', [
+        Log::error('AI recommendation job failed.', [
             'user_id' => $this->userId,
             'error' => $exception->getMessage(),
         ]);

@@ -32,8 +32,11 @@ Route::prefix('job-seeker')
             [RecommendationController::class, 'store']
         );
 
-        Route::get('/recommendations', [
-            RecommendationController::class,
-            'index',
-        ]);
+        Route::get(
+            '/recommendations',
+            [
+                RecommendationController::class,
+                'index',
+            ]
+        );
     });
