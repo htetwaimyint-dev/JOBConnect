@@ -67,4 +67,7 @@ interface JobRepositoryInterface
     public function findPublishedJob(
         int $jobId
     ): ?Job;
+
+    //Employer Dashboard(for job Stats)
+    public function getJobStats(Company $company): array;
 }

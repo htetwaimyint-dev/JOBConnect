@@ -27,6 +27,28 @@
         </div>
       </div>
 
+      <!-- Loading -->
+      <div
+        v-if="isPending"
+        class="mb-4 rounded-xl bg-blue-50 p-4 text-blue-700"
+      >
+        Loading job statistics...
+      </div>
+
+      <!-- Error -->
+      <div
+        v-else-if="isError"
+        class="mb-4 rounded-xl bg-rose-50 p-4 text-rose-700"
+      >
+        <p>{{ error?.message || "Failed to load job statistics." }}</p>
+
+        <button
+          @click="refetch()"
+          class="mt-2 rounded-lg bg-rose-600 px-4 py-2 text-white"
+        >
+          Retry
+        </button>
+      </div>
       <!-- ================= TOP STAT CARDS (Clickable Links) ================= -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <!-- Card 1: Job Posts (Blue Theme) -->
@@ -77,9 +99,7 @@
                 <div class="w-full bg-slate-100 rounded-full h-1.5">
                   <div
                     class="bg-blue-500 h-1.5 rounded-full"
-                    :style="{
-                      width: (jobStats.draft / jobStats.total) * 100 + '%',
-                    }"
+                    :style="{ width: getPercentage(jobStats.draft) }"
                   ></div>
                 </div>
               </div>
@@ -98,9 +118,7 @@
                 <div class="w-full bg-slate-100 rounded-full h-1.5">
                   <div
                     class="bg-amber-500 h-1.5 rounded-full"
-                    :style="{
-                      width: (jobStats.pending / jobStats.total) * 100 + '%',
-                    }"
+                    :style="{ width: getPercentage(jobStats.pending) }"
                   ></div>
                 </div>
               </div>
@@ -120,10 +138,7 @@
                   <div class="w-full bg-slate-100 rounded-full h-1.5">
                     <div
                       class="bg-emerald-500 h-1.5 rounded-full"
-                      :style="{
-                        width:
-                          (jobStats.published / jobStats.total) * 100 + '%',
-                      }"
+                      :style="{ width: getPercentage(jobStats.published) }"
                     ></div>
                   </div>
                 </div>
@@ -140,9 +155,7 @@
                   <div class="w-full bg-slate-100 rounded-full h-1.5">
                     <div
                       class="bg-rose-500 h-1.5 rounded-full"
-                      :style="{
-                        width: (jobStats.rejected / jobStats.total) * 100 + '%',
-                      }"
+                      :style="{ width: getPercentage(jobStats.rejected) }"
                     ></div>
                   </div>
                 </div>
@@ -647,8 +660,9 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed } from "vue";
+
 import {
   Briefcase,
   Users,
@@ -662,13 +676,32 @@ import {
 // DUMMY DATA (Replace with API calls)
 // ==========================================
 
-// 1. Job Posts Logic
-const jobStats = {
-  total: 11,
-  draft: 2,
-  pending: 4,
-  published: 3,
-  rejected: 2,
+import { useEmployerJobStats } from "@/features/employer/composables/useEmployerJobStats";
+
+const {
+  data: jobStatsData,
+  isPending,
+  isError,
+  error,
+  refetch,
+} = useEmployerJobStats();
+
+const jobStats = computed(
+  () =>
+    jobStatsData.value ?? {
+      total: 0,
+      draft: 0,
+      pending: 0,
+      published: 0,
+      rejected: 0,
+      closed: 0,
+    },
+);
+
+const getPercentage = (value: number) => {
+  if (jobStats.value.total === 0) return "0%";
+
+  return `${(value / jobStats.value.total) * 100}%`;
 };
 
 // 2. Applicants Logic
@@ -771,9 +804,9 @@ const donutGradient = computed(() => {
   const rejectedStop = publishedStop + rejectedPct;
 
   return `conic-gradient(
-    #3b82f6 0% ${draftStop}%, 
-    #f59e0b ${draftStop}% ${pendingStop}%, 
-    #10b981 ${pendingStop}% ${publishedStop}%, 
+    #3b82f6 0% ${draftStop}%,
+    #f59e0b ${draftStop}% ${pendingStop}%,
+    #10b981 ${pendingStop}% ${publishedStop}%,
     #f43f5e ${publishedStop}% ${rejectedStop}%
   )`;
 });

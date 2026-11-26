@@ -2,6 +2,7 @@ import api from "@/services/api";
 import type {
   Company,
   CompanyJobFilters,
+  JobStats,
 } from "@/features/employer/types/company.types";
 
 interface ApiResponse<T> {
@@ -118,6 +119,22 @@ export const companyRepository = {
 
     if (!response.data.success || !response.data.data) {
       throw new Error(response.data.message);
+    }
+
+    return response.data.data;
+  },
+
+  async getJobStats(): Promise<JobStats> {
+    const response = await api.get<{
+      success: boolean;
+      message: string;
+      data: JobStats | null;
+    }>("/employer/jobs/stats");
+
+    if (!response.data.success || !response.data.data) {
+      throw new Error(
+        response.data.message || "Failed to fetch job statistics",
+      );
     }
 
     return response.data.data;

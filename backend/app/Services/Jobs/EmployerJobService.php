@@ -5,19 +5,38 @@ namespace App\Services\Jobs;
 use App\Enums\JobStatus;
 use App\Models\Company;
 use App\Models\Job;
+use App\Models\User;
 use App\Repositories\Contracts\JobRepositoryInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Validation\ValidationException;
+use App\Services\Employer\CompanyService;
 
 class EmployerJobService
 {
     protected JobRepositoryInterface $jobRepository;
+    protected CompanyService $companyService;
 
-    public function __construct(JobRepositoryInterface $jobRepository)
+    public function __construct(JobRepositoryInterface $jobRepository, CompanyService $companyService)
     {
         $this->jobRepository = $jobRepository;
+        $this->companyService = $companyService;
     }
+
+    // Job Statistics -Employer Dashboard
+    public function getJobStats(User $user): array
+    {
+        $company = $this->companyService->getCompanyByEmployer($user);
+
+        abort_unless(
+            $company,
+            403,
+            'Please create your company profile before viewing job statistics.'
+        );
+
+        return $this->jobRepository->getJobStats($company);
+    }
+    
 
     public function getJobs(
         Company $company,
@@ -190,4 +209,6 @@ class EmployerJobService
 
         return trim($text);
     }
+
+    
 }

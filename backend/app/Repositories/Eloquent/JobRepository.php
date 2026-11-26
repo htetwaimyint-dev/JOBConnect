@@ -9,6 +9,7 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use App\Enums\JobStatus;
 
+
 class JobRepository implements JobRepositoryInterface
 {
     /*
@@ -259,4 +260,31 @@ class JobRepository implements JobRepositoryInterface
             ->whereKey($jobId)
             ->first();
     }
+
+    //Employer Dashboard(for job Stats)
+    public function getJobStats(Company $company): array
+    {
+        $stats = Job::query()
+            ->where('company_id', $company->id)
+            ->selectRaw("
+                COUNT(*) as total,
+                COALESCE(SUM(CASE WHEN status = 'draft' THEN 1 ELSE 0 END), 0) as draft,
+                COALESCE(SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END), 0) as pending,
+                COALESCE(SUM(CASE WHEN status = 'published' THEN 1 ELSE 0 END), 0) as published,
+                COALESCE(SUM(CASE WHEN status = 'rejected' THEN 1 ELSE 0 END), 0) as rejected,
+                COALESCE(SUM(CASE WHEN status = 'closed' THEN 1 ELSE 0 END), 0) as closed
+            ")
+            ->first();
+
+        return [
+            'total' => (int) $stats->total,
+            'draft' => (int) $stats->draft,
+            'pending' => (int) $stats->pending,
+            'published' => (int) $stats->published,
+            'rejected' => (int) $stats->rejected,
+            'closed' => (int) $stats->closed,
+        ];
+    }
+
+    
 }

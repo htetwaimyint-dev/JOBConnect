@@ -5,7 +5,7 @@ use App\Http\Controllers\Api\V1\Employer\CompanyProfileController;
 use App\Http\Controllers\Api\V1\Employer\CompanyJobController;
 use App\Http\Controllers\Api\V1\Employer\JobSeekerDirectoryController;
 use App\Http\Controllers\Api\V1\Employer\ResumeController;
-use App\Http\Controllers\Api\V1\Employer\EmployerDashboardController;
+use App\Http\Controllers\Api\V1\Employer\ApplicationController;
 
 
 
@@ -13,12 +13,7 @@ Route::middleware(['auth:sanctum', 'employer'])
     ->prefix('employer')
     ->group(function () {
 
-        //Employer Dashboard
-        Route::get('/dashboard', [
-            EmployerDashboardController::class,
-            'index'
-        ]);
-
+       
         // Company Profile
         Route::get('/profile', [
             CompanyProfileController::class,
@@ -46,6 +41,19 @@ Route::middleware(['auth:sanctum', 'employer'])
             CompanyJobController::class,
             'store',
         ]);
+
+        // Job Statistics -Employer Dashboard
+        Route::get('/jobs/stats', [
+            CompanyJobController::class,
+            'stats',
+        ]);
+      
+        // Employer Applicant Statistics -Employer Dashboard
+        Route::get('/applicants/stats', [
+            ApplicationController::class,
+            'stats',
+        ]);
+
 
         Route::get('/jobs/{jobId}', [
             CompanyJobController::class,

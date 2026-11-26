@@ -84,6 +84,20 @@ class CompanyJobController extends Controller
         ], 201);
     }
 
+    // Job Statistics -Employer Dashboard
+    public function stats(Request $request)
+    {
+        $stats = $this->jobService->getJobStats(
+            $request->user()
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Job statistics retrieved successfully.',
+            'data' => $stats,
+        ]);
+    }
+
     public function show(Request $request, int $jobId)
     {
         $company = $this->getEmployerCompany($request->user());

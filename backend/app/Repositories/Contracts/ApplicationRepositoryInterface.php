@@ -51,4 +51,11 @@ interface ApplicationRepositoryInterface
         Application $application,
         array $data
     ): Application;
+
+    // Employer Applicant Statistics -Employer Dashboard
+    public function getEmployerApplicantStats(
+    Company $company,
+    int $month,
+    int $year
+    ): array;
 }

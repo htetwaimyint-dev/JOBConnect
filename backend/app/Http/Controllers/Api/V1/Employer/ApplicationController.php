@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1\Employer;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Applications\UpdateApplicationStatusRequest;
+use App\Http\Requests\Api\Employer\ApplicantStatsRequest;
 use App\Http\Resources\Api\Applications\ApplicationResource;
 use App\Models\Company;
 use App\Models\User;
@@ -175,5 +176,21 @@ class ApplicationController extends Controller
         );
 
         return $company;
+    }
+
+      // Employer Applicant Statistics -Employer Dashboard
+    public function stats(ApplicantStatsRequest $request)
+    {
+        $stats = $this->applicationService->getApplicantStats(
+            $request->user(),
+            $request->validated('month'),
+            $request->validated('year')
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Applicant statistics retrieved successfully.',
+            'data' => $stats,
+        ]);
     }
 }

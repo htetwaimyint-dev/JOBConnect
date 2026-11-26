@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Repositories\Contracts\ApplicationRepositoryInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 
 class ApplicationRepository implements ApplicationRepositoryInterface
@@ -205,4 +206,47 @@ class ApplicationRepository implements ApplicationRepositoryInterface
             ]);
         });
     }
+
+    // Employer Applicant Statistics -Employer Dashboard
+    public function getEmployerApplicantStats(
+    Company $company,
+    int $month,
+    int $year
+    ): array {
+        $startDate = Carbon::create($year, $month, 1)->startOfMonth();
+        $endDate = $startDate->copy()->endOfMonth();
+
+        $stats = Application::query()
+            ->whereBetween('applied_at', [$startDate, $endDate])
+            ->whereHas('job', function ($query) use ($company) {
+                $query->where('company_id', $company->id);
+            })
+            ->selectRaw("
+                COUNT(*) as total,
+                COALESCE(SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END), 0) as pending,
+                COALESCE(SUM(CASE WHEN status = 'reviewed' THEN 1 ELSE 0 END), 0) as reviewed,
+                COALESCE(SUM(CASE WHEN status = 'shortlisted' THEN 1 ELSE 0 END), 0) as shortlisted,
+                COALESCE(SUM(CASE WHEN status = 'interview' THEN 1 ELSE 0 END), 0) as interview,
+                COALESCE(SUM(CASE WHEN status = 'accepted' THEN 1 ELSE 0 END), 0) as accepted,
+                COALESCE(SUM(CASE WHEN status = 'rejected' THEN 1 ELSE 0 END), 0) as rejected,
+                COALESCE(SUM(CASE WHEN status = 'withdrawn' THEN 1 ELSE 0 END), 0) as withdrawn
+            ")
+            ->first();
+
+        return [
+            'total' => (int) $stats->total,
+            'pending' => (int) $stats->pending,
+            'reviewed' => (int) $stats->reviewed,
+            'shortlisted' => (int) $stats->shortlisted,
+            'interview' => (int) $stats->interview,
+            'accepted' => (int) $stats->accepted,
+            'rejected' => (int) $stats->rejected,
+            'withdrawn' => (int) $stats->withdrawn,
+            'date_range' => [
+                'from' => $startDate->toDateString(),
+                'to' => $endDate->toDateString(),
+            ],
+        ];
+    }
+
 }

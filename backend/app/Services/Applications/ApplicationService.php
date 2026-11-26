@@ -10,12 +10,17 @@ use App\Models\User;
 use App\Repositories\Contracts\ApplicationRepositoryInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Validation\ValidationException;
+use App\Services\Employer\CompanyService;
 
 class ApplicationService
 {
-    public function __construct(
-        protected ApplicationRepositoryInterface $applicationRepository
-    ) {}
+    protected ApplicationRepositoryInterface $applicationRepository;
+    protected CompanyService $companyService;
+    public function __construct(ApplicationRepositoryInterface $applicationRepository, CompanyService $companyService)
+    {
+        $this->applicationRepository = $applicationRepository;
+        $this->companyService = $companyService;
+    }
 
     /**
      * Get applications belonging to a Job Seeker.
@@ -240,5 +245,19 @@ class ApplicationService
                 'note' => 'Withdrawn by job seeker.',
             ]
         );
+    }
+
+    // Employer Applicant Statistics -Employer Dashboard
+    public function getApplicantStats(
+    User $user,
+    int $month,
+    int $year
+    ): array {
+        $company = $this->companyService->getCompanyByEmployer($user);
+
+        abort_unless($company, 403, 'Please create your company profile first.');
+
+        return $this->applicationRepository
+            ->getEmployerApplicantStats($company, $month, $year);
     }
 }
