@@ -32,6 +32,7 @@ export type JobStatus =
 export interface Job {
     id: number;
     company_id: number;
+    applications_count?: number;
 
     company: JobCompany;
     category: JobCategory | null;
@@ -91,7 +92,7 @@ export interface JobListParams {
     page?: number;
     search?: string;
     category_id?: number;
-    company_id?:number;
+    company_id?: number;
     employment_type?: EmploymentType;
     workplace_type?: WorkplaceType;
     city?: string;

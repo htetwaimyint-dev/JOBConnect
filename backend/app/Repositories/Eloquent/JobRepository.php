@@ -26,6 +26,7 @@ class JobRepository implements JobRepositoryInterface
 
         return $company->jobs()
             ->with('category')
+            ->withCount('applications')
             ->when($params['search'] ?? null, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('title', 'like', "%{$search}%")
