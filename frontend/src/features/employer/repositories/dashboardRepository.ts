@@ -26,8 +26,16 @@ export const dashboardRepository = {
 
   async getInterviewDashboard(): Promise<InterviewDashboard> {
     const response = await api.get<ApiResponse<InterviewDashboard>>(
-      "/employer/interviews/dashboard",
+      "/employer/interviews/stats",
     );
+
+    return response.data.data;
+  },
+
+  async getYearlyApplicantStats(year: number) {
+    const response = await api.get("/employer/applicants/yearly-stats", {
+      params: { year },
+    });
 
     return response.data.data;
   },
