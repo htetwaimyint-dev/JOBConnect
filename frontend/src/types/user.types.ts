@@ -1,5 +1,5 @@
-
 export type UserRole = "job_seeker" | "admin" | "employer";
+
 export interface JobSeekerProfile {
     profile_photo: string | null;
     phone?: string | null;
@@ -14,7 +14,8 @@ export interface JobSeekerProfile {
     linkedin_url?: string | null;
     portfolio_url?: string | null;
 }
-export interface User {
+
+export interface User<TProfile = JobSeekerProfile> {
     id: number;
     name: string;
     email: string;
@@ -22,5 +23,12 @@ export interface User {
     status?: string;
     email_verified_at?: string | null;
     created_at?: string;
-    profile?: JobSeekerProfile | null;
+    deleted_at?: string | null;
+    profile?: TProfile | null;
+}
+
+export interface JobSeeker extends User<JobSeekerProfile> {
+    role: "job_seeker";
+    isDeleted: boolean;
+    resume_count?: number;
 }

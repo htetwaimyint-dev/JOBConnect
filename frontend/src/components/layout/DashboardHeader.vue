@@ -249,17 +249,17 @@ const logout = async () => {
       <!-- Logo -->
       <RouterLink
         to="/"
-        class="flex shrink-0 items-center gap-2 no-underline"
+        class="flex shrink-0 items-center gap-1 no-underline"
         @click="closeMenus"
       >
         <span
           class="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-600 text-white shadow-sm sm:h-10 sm:w-10"
         >
-          <BriefcaseBusiness :size="22" />
+          <BriefcaseBusiness :size="21" />
         </span>
 
         <h2
-          class="m-0 whitespace-nowrap text-lg font-bold tracking-tight text-blue-700 sm:text-xl"
+          class="m-0 whitespace-nowrap text-lg font-bold tracking-tight text-blue-600 sm:text-lg"
         >
           JobConnect
         </h2>

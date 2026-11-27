@@ -9,12 +9,12 @@ import {
   Globe,
   Clock,
   Banknote,
-  GraduationCap,
   CheckCircle2,
   XCircle,
 } from "lucide-vue-next";
 
 import type { Job } from "../../types/job-approval.types";
+import DOMPurify from "dompurify";
 
 const props = defineProps<{
   job: Job | null;
@@ -36,6 +36,19 @@ const canApprove = computed(() => {
 const canReject = computed(() => {
   return props.job?.status === "pending" || props.job?.status === "published";
 });
+
+// Sanitize HTML content before rendering
+const sanitizedDescription = computed(() =>
+  DOMPurify.sanitize(props.job?.description || ""),
+);
+
+const sanitizedRequirements = computed(() =>
+  DOMPurify.sanitize(props.job?.requirements || ""),
+);
+
+const sanitizedResponsibilities = computed(() =>
+  DOMPurify.sanitize(props.job?.responsibilities || ""),
+);
 
 // Salary
 const salaryText = computed(() => {
@@ -175,9 +188,14 @@ const formatDate = (date: string | null | undefined) => {
             <h4 class="mb-2 font-semibold text-slate-900">Job Description</h4>
 
             <div
-              class="whitespace-pre-line text-sm leading-7 text-slate-600"
-              v-html="job.description || 'No job description provided.'"
+              v-if="sanitizedDescription"
+              class="job-html-content text-sm leading-7 text-slate-600"
+              v-html="sanitizedDescription"
             ></div>
+
+            <p v-else class="text-sm text-slate-400">
+              No job description provided.
+            </p>
           </div>
 
           <!-- Job Information -->
@@ -294,8 +312,14 @@ const formatDate = (date: string | null | undefined) => {
           <div>
             <h4 class="mb-2 font-semibold text-slate-900">Requirements</h4>
 
-            <p class="whitespace-pre-line text-sm leading-7 text-slate-600">
-              {{ job.requirements || "No requirements provided." }}
+            <div
+              v-if="sanitizedRequirements"
+              class="job-html-content text-sm leading-7 text-slate-600"
+              v-html="sanitizedRequirements"
+            ></div>
+
+            <p v-else class="text-sm text-slate-400">
+              No requirements provided.
             </p>
           </div>
 
@@ -303,8 +327,14 @@ const formatDate = (date: string | null | undefined) => {
           <div>
             <h4 class="mb-2 font-semibold text-slate-900">Responsibilities</h4>
 
-            <p class="whitespace-pre-line text-sm leading-7 text-slate-600">
-              {{ job.responsibilities || "No responsibilities provided." }}
+            <div
+              v-if="sanitizedResponsibilities"
+              class="job-html-content text-sm leading-7 text-slate-600"
+              v-html="sanitizedResponsibilities"
+            ></div>
+
+            <p v-else class="text-sm text-slate-400">
+              No responsibilities provided.
             </p>
           </div>
 
@@ -378,3 +408,42 @@ const formatDate = (date: string | null | undefined) => {
     </div>
   </Teleport>
 </template>
+
+<style scoped>
+.job-html-content :deep(p) {
+  margin-bottom: 0.5rem;
+}
+
+.job-html-content :deep(p:last-child) {
+  margin-bottom: 0;
+}
+
+.job-html-content :deep(ul) {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+  padding-left: 1.5rem;
+  list-style-type: disc;
+}
+
+.job-html-content :deep(ol) {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+  padding-left: 1.5rem;
+  list-style-type: decimal;
+}
+
+.job-html-content :deep(li) {
+  margin-top: 0.25rem;
+  margin-bottom: 0.25rem;
+}
+
+.job-html-content :deep(strong),
+.job-html-content :deep(b) {
+  font-weight: 600;
+}
+
+.job-html-content :deep(a) {
+  color: #2563eb;
+  text-decoration: underline;
+}
+</style>

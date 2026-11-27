@@ -110,18 +110,16 @@ class CompanyJobController extends Controller
         ]);
     }
 
-
-    public function update(UpdateJobRequest $request, int $jobId)
-    {
+    public function update(
+        UpdateJobRequest $request,
+        int $jobId,
+        ActivityLogService $activityLogService
+    ) {
         $company = $this->getEmployerCompany($request->user());
 
         $validated = $request->validated();
 
-        $hasQuestions = array_key_exists(
-            'job_questions',
-            $validated
-        );
-
+        $hasQuestions = array_key_exists('job_questions', $validated);
         $questions = $validated['job_questions'] ?? [];
 
         unset($validated['job_questions']);
@@ -132,6 +130,12 @@ class CompanyJobController extends Controller
             $this->jobQuestionService->sync($job, $questions);
         }
 
+        $activityLogService->log(
+            'Updated Job',
+            'Updated job: ' . $job->title,
+            $job
+        );
+
         $job->load('jobQuestion');
 
         return response()->json([
@@ -140,6 +144,7 @@ class CompanyJobController extends Controller
             'data' => new JobResource($job),
         ]);
     }
+
     //HWM add 
     public function close(Request $request, int $jobId)
     {

@@ -8,12 +8,18 @@ use App\Http\Resources\Api\CompanyResource;
 use App\Models\Company;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use App\Services\Activity\ActivityLogService;
 
 class CompanyApprovalController extends Controller
 {
     /**
      * Display all companies with status filtering and pagination.
      */
+
+    public function __construct(
+        protected ActivityLogService $activityLogService
+    ) {}
+
     public function index(Request $request)
     {
         $validated = $request->validate([
@@ -100,6 +106,21 @@ class CompanyApprovalController extends Controller
                 ? $validated['rejection_reason']
                 : null,
         ]);
+
+        // Log company approval or rejection
+        $action = $status === 'verified'
+            ? 'Approved Company'
+            : 'Rejected Company';
+
+        $description = $status === 'verified'
+            ? "Approved company: {$company->name}"
+            : "Rejected company: {$company->name}";
+
+        $this->activityLogService->log(
+            $action,
+            $description,
+            $company
+        );
 
         $company->refresh()->load('employer:id,name,email');
 

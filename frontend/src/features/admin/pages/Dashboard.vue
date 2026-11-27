@@ -2,8 +2,10 @@
 import { ref, computed, onMounted } from "vue";
 import type { Component } from "vue";
 import { RouterLink } from "vue-router";
-import { Line, Doughnut } from "vue-chartjs";
+import { Line, Doughnut, Pie, Bar } from "vue-chartjs";
 import { formatDate } from "@/utils/formatDate";
+import { useDashboardCharts } from "@/features/admin/composables/useDashboardCharts";
+import { adminRepository } from "@/features/admin/repositories/adminRepository";
 
 import {
   Chart as ChartJS,
@@ -15,6 +17,7 @@ import {
   CategoryScale,
   LinearScale,
   ArcElement,
+  BarElement,
 } from "chart.js";
 
 import {
@@ -22,17 +25,15 @@ import {
   Building2,
   BriefcaseBusiness,
   FileText,
-  ClipboardCheck,
-  Tags,
   ChartNoAxesCombined,
   Activity,
-  ArrowUpRight,
   Clock3,
   ShieldCheck,
+  PieChart,
+  BarChart3,
 } from "lucide-vue-next";
 
-import { adminRepository } from "@/features/admin/repositories/adminRepository";
-
+// Register Chart.js components
 ChartJS.register(
   Title,
   Tooltip,
@@ -42,6 +43,7 @@ ChartJS.register(
   CategoryScale,
   LinearScale,
   ArcElement,
+  BarElement,
 );
 
 // Types
@@ -51,13 +53,7 @@ interface StatCard {
   description: string;
   icon: Component;
   iconStyle: string;
-}
-
-interface QuickAction {
-  title: string;
-  description: string;
-  to: string;
-  icon: Component;
+  to?: string;
 }
 
 interface DashboardStats {
@@ -87,7 +83,18 @@ interface RecentActivity {
   created_at: string | null;
 }
 
-// Dashboard State
+interface JobsByCategory {
+  category: string;
+  total: number;
+}
+
+interface MonthlyJob {
+  date: string;
+  month: string;
+  total: number;
+}
+
+// Dashboard States
 const dashboardStats = ref<DashboardStats>({
   total_users: 0,
   total_companies: 0,
@@ -98,9 +105,26 @@ const dashboardStats = ref<DashboardStats>({
 const userGrowth = ref<UserGrowth[]>([]);
 const jobStatus = ref<JobStatus[]>([]);
 const recentActivities = ref<RecentActivity[]>([]);
+const jobsByCategory = ref<JobsByCategory[]>([]);
+const monthlyJobs = ref<MonthlyJob[]>([]);
 
 const isLoading = ref(false);
 const errorMessage = ref("");
+
+// Chart Composable
+const {
+  userGrowthChartData,
+  userGrowthChartOptions,
+  jobStatusTotal,
+  jobStatusColors,
+  jobStatusChartData,
+  jobStatusChartOptions,
+  getJobStatusPercentage,
+  jobsByCategoryChartData,
+  jobsByCategoryChartOptions,
+  monthlyJobsChartData,
+  monthlyJobsChartOptions,
+} = useDashboardCharts(userGrowth, jobStatus, jobsByCategory, monthlyJobs);
 
 // Statistics Cards
 const stats = computed<StatCard[]>(() => [
@@ -141,11 +165,7 @@ async function fetchDashboard() {
 
   try {
     const response = await adminRepository.getDashboard();
-
-    // Support both Axios response and already-unwrapped repository data.
     const responseData = response.data ?? response;
-
-    // Laravel response may contain an additional "data" wrapper.
     const data = responseData.data ?? responseData;
 
     dashboardStats.value = {
@@ -158,8 +178,8 @@ async function fetchDashboard() {
     userGrowth.value = data.user_growth ?? [];
     jobStatus.value = data.job_status ?? [];
     recentActivities.value = data.recent_activities ?? [];
-
-    console.log("Dashboard Data:", data);
+    jobsByCategory.value = data.jobs_by_category ?? [];
+    monthlyJobs.value = data.monthly_jobs ?? [];
   } catch (error) {
     console.error("Failed to fetch dashboard data:", error);
     errorMessage.value = "Failed to load dashboard data.";
@@ -167,172 +187,6 @@ async function fetchDashboard() {
     isLoading.value = false;
   }
 }
-
-// User Growth Line Chart
-const userGrowthChartData = computed(() => ({
-  labels: userGrowth.value.map((item) => item.day),
-  datasets: [
-    {
-      label: "Job Seekers",
-      data: userGrowth.value.map((item) => item.job_seekers),
-      borderColor: "#3B82F6",
-      backgroundColor: "rgba(59, 130, 246, 0.1)",
-      pointBackgroundColor: "#3B82F6",
-      pointBorderColor: "#FFFFFF",
-      pointBorderWidth: 2,
-      pointRadius: 4,
-      pointHoverRadius: 6,
-      borderWidth: 2.5,
-      tension: 0.4,
-    },
-    {
-      label: "Employers",
-      data: userGrowth.value.map((item) => item.employers),
-      borderColor: "#10B981",
-      backgroundColor: "rgba(16, 185, 129, 0.1)",
-      pointBackgroundColor: "#10B981",
-      pointBorderColor: "#FFFFFF",
-      pointBorderWidth: 2,
-      pointRadius: 4,
-      pointHoverRadius: 6,
-      borderWidth: 2.5,
-      tension: 0.4,
-    },
-  ],
-}));
-
-const userGrowthChartOptions = {
-  responsive: true,
-  maintainAspectRatio: false,
-  plugins: {
-    legend: {
-      display: true,
-      position: "top" as const,
-      align: "end" as const,
-      labels: {
-        usePointStyle: true,
-        pointStyle: "circle" as const,
-        boxWidth: 8,
-        padding: 18,
-        color: "#64748B",
-        font: {
-          size: 12,
-        },
-      },
-    },
-    tooltip: {
-      mode: "index" as const,
-      intersect: false,
-    },
-  },
-  interaction: {
-    mode: "index" as const,
-    intersect: false,
-  },
-  scales: {
-    x: {
-      grid: {
-        display: false,
-      },
-      ticks: {
-        color: "#94A3B8",
-        font: {
-          size: 11,
-        },
-      },
-    },
-    y: {
-      beginAtZero: true,
-      ticks: {
-        precision: 0,
-        color: "#94A3B8",
-        font: {
-          size: 11,
-        },
-      },
-      grid: {
-        color: "#E2E8F0",
-      },
-    },
-  },
-};
-
-// Job Status Doughnut Chart
-const jobStatusTotal = computed(() =>
-  jobStatus.value.reduce((total, item) => total + Number(item.total), 0),
-);
-
-const jobStatusColors: Record<string, string> = {
-  draft: "#94A3B8",
-  pending: "#F59E0B",
-  published: "#1B0981",
-  approved: "#10B981",
-  rejected: "#EF4444",
-  closed: "#A855F7",
-};
-
-const jobStatusChartData = computed(() => ({
-  labels: jobStatus.value.map((item) => item.status),
-  datasets: [
-    {
-      data: jobStatus.value.map((item) => Number(item.total)),
-      backgroundColor: jobStatus.value.map(
-        (item) => jobStatusColors[item.status.toLowerCase()] ?? "#64748B",
-      ),
-      borderWidth: 0,
-      hoverOffset: 5,
-    },
-  ],
-}));
-
-const jobStatusChartOptions = {
-  responsive: true,
-  maintainAspectRatio: false,
-  cutout: "65%",
-  plugins: {
-    legend: {
-      display: false,
-    },
-    tooltip: {
-      enabled: true,
-    },
-  },
-};
-
-// Job Status Percentage
-function getJobStatusPercentage(total: number): number {
-  if (jobStatusTotal.value === 0) return 0;
-
-  return Math.round((total / jobStatusTotal.value) * 100);
-}
-
-// Quick Actions
-const quickActions: QuickAction[] = [
-  {
-    title: "Company Approvals",
-    description: "Review company verification requests",
-    to: "/admin/company-approvals",
-    icon: ClipboardCheck,
-  },
-  {
-    title: "Job Approvals",
-    description: "Review pending job posts",
-    to: "/admin/job-approvals",
-    icon: BriefcaseBusiness,
-  },
-  {
-    title: "Manage Categories",
-    description: "Manage job categories",
-    to: "/admin/categories",
-    icon: Tags,
-  },
-  {
-    title: "View Reports",
-    description: "Explore platform analytics",
-    to: "/admin/reports",
-    icon: ChartNoAxesCombined,
-  },
-];
 
 onMounted(fetchDashboard);
 </script>
@@ -377,39 +231,75 @@ onMounted(fetchDashboard);
         <h2 class="text-base font-semibold text-slate-800">
           Platform Statistics
         </h2>
+
         <span class="text-xs text-slate-400">
           {{ isLoading ? "Loading..." : "Overview" }}
         </span>
       </div>
 
       <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <article
-          v-for="stat in stats"
-          :key="stat.title"
-          class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
-        >
-          <div class="flex items-start justify-between">
-            <div>
-              <p class="text-sm font-medium text-slate-600">
-                {{ stat.title }}
-              </p>
-              <p class="mt-3 text-3xl font-bold tracking-tight text-slate-800">
-                {{ isLoading ? "..." : stat.value }}
-              </p>
+        <template v-for="stat in stats" :key="stat.title">
+          <RouterLink
+            v-if="stat.to"
+            :to="stat.to"
+            class="block rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:bg-blue-50/30 hover:shadow-md"
+          >
+            <div class="flex items-start justify-between">
+              <div>
+                <p class="text-sm font-medium text-slate-600">
+                  {{ stat.title }}
+                </p>
+
+                <p
+                  class="mt-3 text-3xl font-bold tracking-tight text-slate-800"
+                >
+                  {{ isLoading ? "..." : stat.value }}
+                </p>
+              </div>
+
+              <div
+                class="flex h-11 w-11 items-center justify-center rounded-xl"
+                :class="stat.iconStyle"
+              >
+                <component :is="stat.icon" :size="22" />
+              </div>
             </div>
 
-            <div
-              class="flex h-11 w-11 items-center justify-center rounded-xl"
-              :class="stat.iconStyle"
-            >
-              <component :is="stat.icon" :size="22" />
-            </div>
-          </div>
+            <p class="mt-4 text-xs text-slate-500">
+              {{ stat.description }}
+            </p>
+          </RouterLink>
 
-          <p class="mt-4 text-xs text-slate-500">
-            {{ stat.description }}
-          </p>
-        </article>
+          <article
+            v-else
+            class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm"
+          >
+            <div class="flex items-start justify-between">
+              <div>
+                <p class="text-sm font-medium text-slate-600">
+                  {{ stat.title }}
+                </p>
+
+                <p
+                  class="mt-3 text-3xl font-bold tracking-tight text-slate-800"
+                >
+                  {{ isLoading ? "..." : stat.value }}
+                </p>
+              </div>
+
+              <div
+                class="flex h-11 w-11 items-center justify-center rounded-xl"
+                :class="stat.iconStyle"
+              >
+                <component :is="stat.icon" :size="22" />
+              </div>
+            </div>
+
+            <p class="mt-4 text-xs text-slate-500">
+              {{ stat.description }}
+            </p>
+          </article>
+        </template>
       </div>
     </section>
 
@@ -423,7 +313,7 @@ onMounted(fetchDashboard);
           <div>
             <h2 class="font-semibold text-slate-800">User Growth Overview</h2>
             <p class="mt-1 text-xs text-slate-400">
-              Monthly registration activity over the last 6 months
+              Daily registration activity over the last 7 days
             </p>
           </div>
 
@@ -539,27 +429,34 @@ onMounted(fetchDashboard);
     </section>
 
     <!-- Bottom Section -->
-    <section class="grid grid-cols-1 gap-5 xl:grid-cols-2">
+    <section class="grid grid-cols-1 gap-5 xl:grid-cols-3">
+      <!-- Recent Activities -->
+
       <!-- Recent Activities -->
       <article
         class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm"
       >
-        <div class="flex items-center justify-between">
+        <div class="flex items-center justify-between gap-3">
           <div>
             <h2 class="font-semibold text-slate-800">Recent Activities</h2>
             <p class="mt-1 text-xs text-slate-400">
-              Latest activities across the platform
+              Latest 5 activities across the platform
             </p>
           </div>
 
-          <Clock3 :size="19" class="text-slate-400" />
+          <RouterLink
+            to="/admin/activity-logs"
+            class="shrink-0 text-sm font-semibold text-blue-600 transition hover:text-blue-700"
+          >
+            View All
+          </RouterLink>
         </div>
 
         <div class="mt-5 space-y-4">
           <div
-            v-for="activity in recentActivities"
+            v-for="activity in recentActivities.slice(0, 5)"
             :key="activity.id"
-            class="flex items-start gap-3 border-b border-slate-100 pb-4 last:border-0"
+            class="flex items-start gap-3 border-b border-slate-100 pb-4 last:border-0 last:pb-0"
           >
             <div
               class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-50 text-blue-600"
@@ -568,16 +465,22 @@ onMounted(fetchDashboard);
             </div>
 
             <div class="min-w-0 flex-1">
-              <div class="text-sm font-semibold text-slate-800">
-                {{ activity.actor }}
+              <div class="flex flex-wrap items-center gap-2">
+                <p class="text-sm font-semibold text-slate-800">
+                  {{ activity.action }}
+                </p>
 
-                <span class="mt-1 text-xs text-slate-400">
-                  ({{ formatDate(activity.created_at) }})
+                <span class="text-xs text-slate-400">
+                  {{ formatDate(activity.created_at) }}
                 </span>
               </div>
 
               <p class="mt-1 text-sm text-slate-600">
                 {{ activity.description || "No description available." }}
+              </p>
+
+              <p class="mt-1 text-xs text-slate-400">
+                By {{ activity.actor || "System" }}
               </p>
             </div>
           </div>
@@ -595,50 +498,87 @@ onMounted(fetchDashboard);
         </div>
       </article>
 
-      <!-- Quick Actions -->
+      <!-- Jobs By Category Pie Chart -->
       <article
         class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm"
       >
         <div class="flex items-center justify-between">
           <div>
-            <h2 class="font-semibold text-slate-800">Quick Actions</h2>
+            <h2 class="font-semibold text-slate-800">Jobs By Category</h2>
             <p class="mt-1 text-xs text-slate-400">
-              Frequently used admin pages
+              Job distribution by category
             </p>
           </div>
 
-          <ArrowUpRight :size="19" class="text-slate-400" />
+          <div
+            class="flex h-10 w-10 items-center justify-center rounded-lg bg-violet-50 text-violet-600"
+          >
+            <PieChart :size="20" />
+          </div>
         </div>
 
-        <div class="mt-5 space-y-2">
-          <RouterLink
-            v-for="action in quickActions"
-            :key="action.to"
-            :to="action.to"
-            class="group flex items-center gap-3 rounded-lg border border-transparent p-3 transition hover:border-blue-100 hover:bg-blue-50/70"
+        <div class="mt-5 h-64 w-full">
+          <Pie
+            v-if="jobsByCategory.length > 0"
+            :data="jobsByCategoryChartData"
+            :options="jobsByCategoryChartOptions"
+          />
+
+          <div
+            v-else-if="!isLoading"
+            class="flex h-full items-center justify-center rounded-lg bg-slate-50 text-sm text-slate-400"
           >
-            <div
-              class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-600 transition group-hover:bg-blue-100 group-hover:text-blue-600"
-            >
-              <component :is="action.icon" :size="19" />
-            </div>
+            No category data available.
+          </div>
 
-            <div class="min-w-0 flex-1">
-              <p
-                class="text-sm font-medium text-slate-700 transition group-hover:text-blue-700"
-              >
-                {{ action.title }}
-              </p>
-              <p class="mt-0.5 text-xs text-slate-400">
-                {{ action.description }}
-              </p>
-            </div>
+          <div
+            v-else
+            class="flex h-full items-center justify-center text-sm text-slate-400"
+          >
+            Loading chart...
+          </div>
+        </div>
+      </article>
 
-            <ArrowUpRight
-              :size="16"
-              class="shrink-0 text-slate-300 transition group-hover:text-blue-600"
-            />
-          </RouterLink>
+      <!-- Monthly Jobs Bar Chart -->
+      <article
+        class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm"
+      >
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="font-semibold text-slate-800">Monthly Job Posts</h2>
+            <p class="mt-1 text-xs text-slate-400">
+              Jobs posted over the last 6 months
+            </p>
+          </div>
+
+          <div
+            class="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 text-blue-600"
+          >
+            <BarChart3 :size="20" />
+          </div>
+        </div>
+
+        <div class="mt-5 h-64 w-full">
+          <Bar
+            v-if="monthlyJobs.length > 0"
+            :data="monthlyJobsChartData"
+            :options="monthlyJobsChartOptions"
+          />
+
+          <div
+            v-else-if="!isLoading"
+            class="flex h-full items-center justify-center rounded-lg bg-slate-50 text-sm text-slate-400"
+          >
+            No monthly job data available.
+          </div>
+
+          <div
+            v-else
+            class="flex h-full items-center justify-center text-sm text-slate-400"
+          >
+            Loading chart...
+          </div>
         </div>
       </article>
     </section>
