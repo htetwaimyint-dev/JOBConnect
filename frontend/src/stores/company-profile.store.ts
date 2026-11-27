@@ -224,6 +224,9 @@ export const useCompanyProfileStore = defineStore("company-profile", () => {
 
         formData.append("description", JSON.stringify(form.value.sections));
 
+        console.log("Sections:", form.value.sections);
+        console.log("Description FormData:", formData.get("description"));
+
         // Company logo
         if (logoFile.value instanceof File) {
             formData.append("logo", logoFile.value);

@@ -27,7 +27,6 @@ import {
   FileText,
   ChartNoAxesCombined,
   Activity,
-  Clock3,
   ShieldCheck,
   PieChart,
   BarChart3,
@@ -75,6 +74,11 @@ interface JobStatus {
   total: number;
 }
 
+interface CompanyVerification {
+  status: string;
+  total: number;
+}
+
 interface RecentActivity {
   id: number;
   actor: string;
@@ -104,6 +108,7 @@ const dashboardStats = ref<DashboardStats>({
 
 const userGrowth = ref<UserGrowth[]>([]);
 const jobStatus = ref<JobStatus[]>([]);
+const companyVerification = ref<CompanyVerification[]>([]);
 const recentActivities = ref<RecentActivity[]>([]);
 const jobsByCategory = ref<JobsByCategory[]>([]);
 const monthlyJobs = ref<MonthlyJob[]>([]);
@@ -115,16 +120,31 @@ const errorMessage = ref("");
 const {
   userGrowthChartData,
   userGrowthChartOptions,
+
   jobStatusTotal,
   jobStatusColors,
   jobStatusChartData,
   jobStatusChartOptions,
   getJobStatusPercentage,
+
+  companyVerificationTotal,
+  companyVerificationColors,
+  companyVerificationChartData,
+  companyVerificationChartOptions,
+  getCompanyVerificationPercentage,
+
   jobsByCategoryChartData,
   jobsByCategoryChartOptions,
+
   monthlyJobsChartData,
   monthlyJobsChartOptions,
-} = useDashboardCharts(userGrowth, jobStatus, jobsByCategory, monthlyJobs);
+} = useDashboardCharts(
+  userGrowth,
+  jobStatus,
+  jobsByCategory,
+  monthlyJobs,
+  companyVerification,
+);
 
 // Statistics Cards
 const stats = computed<StatCard[]>(() => [
@@ -177,6 +197,7 @@ async function fetchDashboard() {
 
     userGrowth.value = data.user_growth ?? [];
     jobStatus.value = data.job_status ?? [];
+    companyVerification.value = data.company_verification ?? [];
     recentActivities.value = data.recent_activities ?? [];
     jobsByCategory.value = data.jobs_by_category ?? [];
     monthlyJobs.value = data.monthly_jobs ?? [];
@@ -307,7 +328,7 @@ onMounted(fetchDashboard);
     <section class="grid grid-cols-1 gap-5 xl:grid-cols-3">
       <!-- User Growth -->
       <article
-        class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm xl:col-span-2"
+        class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm"
       >
         <div class="flex items-center justify-between gap-3">
           <div>
@@ -426,78 +447,93 @@ onMounted(fetchDashboard);
           </p>
         </div>
       </article>
-    </section>
 
-    <!-- Bottom Section -->
-    <section class="grid grid-cols-1 gap-5 xl:grid-cols-3">
-      <!-- Recent Activities -->
-
-      <!-- Recent Activities -->
+      <!-- Company Verification -->
       <article
         class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm"
       >
-        <div class="flex items-center justify-between gap-3">
+        <div class="flex items-center justify-between">
           <div>
-            <h2 class="font-semibold text-slate-800">Recent Activities</h2>
+            <h2 class="font-semibold text-slate-800">Company Verification</h2>
             <p class="mt-1 text-xs text-slate-400">
-              Latest 5 activities across the platform
+              Overview of company approval statuses
             </p>
           </div>
 
-          <RouterLink
-            to="/admin/activity-logs"
-            class="shrink-0 text-sm font-semibold text-blue-600 transition hover:text-blue-700"
+          <div
+            class="flex h-10 w-10 items-center justify-center rounded-lg bg-violet-50 text-violet-600"
           >
-            View All
-          </RouterLink>
+            <Building2 :size="20" />
+          </div>
         </div>
 
-        <div class="mt-5 space-y-4">
+        <div class="relative mx-auto mt-5 h-52 w-full max-w-[230px]">
+          <Doughnut
+            v-if="companyVerification.length > 0"
+            :data="companyVerificationChartData"
+            :options="companyVerificationChartOptions"
+          />
+
           <div
-            v-for="activity in recentActivities.slice(0, 5)"
-            :key="activity.id"
-            class="flex items-start gap-3 border-b border-slate-100 pb-4 last:border-0 last:pb-0"
+            class="pointer-events-none absolute inset-0 flex flex-col items-center justify-center"
           >
-            <div
-              class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-50 text-blue-600"
-            >
-              <Activity :size="17" />
+            <span class="text-3xl font-bold text-slate-800">
+              {{ companyVerificationTotal }}
+            </span>
+            <span class="mt-1 text-xs text-slate-400">Total Companies</span>
+          </div>
+
+          <div
+            v-if="!isLoading && companyVerification.length === 0"
+            class="absolute inset-0 flex items-center justify-center rounded-full text-xs text-slate-400"
+          >
+            No data
+          </div>
+        </div>
+
+        <div class="mt-5 space-y-3">
+          <div
+            v-for="item in companyVerification"
+            :key="item.status"
+            class="flex items-center justify-between gap-3"
+          >
+            <div class="flex min-w-0 items-center gap-2">
+              <span
+                class="h-2.5 w-2.5 shrink-0 rounded-full"
+                :style="{
+                  backgroundColor:
+                    companyVerificationColors[item.status.toLowerCase()] ??
+                    '#64748B',
+                }"
+              ></span>
+
+              <span class="truncate text-sm capitalize text-slate-600">
+                {{ item.status }}
+              </span>
             </div>
 
-            <div class="min-w-0 flex-1">
-              <div class="flex flex-wrap items-center gap-2">
-                <p class="text-sm font-semibold text-slate-800">
-                  {{ activity.action }}
-                </p>
-
-                <span class="text-xs text-slate-400">
-                  {{ formatDate(activity.created_at) }}
-                </span>
-              </div>
-
-              <p class="mt-1 text-sm text-slate-600">
-                {{ activity.description || "No description available." }}
-              </p>
-
-              <p class="mt-1 text-xs text-slate-400">
-                By {{ activity.actor || "System" }}
-              </p>
+            <div class="flex shrink-0 items-center gap-2">
+              <span class="text-sm font-semibold text-slate-800">
+                {{ item.total }}
+              </span>
+              <span class="w-10 text-right text-xs text-slate-400">
+                {{ getCompanyVerificationPercentage(item.total) }}%
+              </span>
             </div>
           </div>
 
           <p
-            v-if="!isLoading && recentActivities.length === 0"
-            class="py-8 text-center text-sm text-slate-400"
+            v-if="!isLoading && companyVerification.length === 0"
+            class="py-3 text-center text-sm text-slate-400"
           >
-            No recent activities available.
-          </p>
-
-          <p v-if="isLoading" class="py-8 text-center text-sm text-slate-400">
-            Loading activities...
+            No company verification data available.
           </p>
         </div>
       </article>
+    </section>
 
+    <!-- Bottom Section -->
+    <section class="grid grid-cols-1 gap-5 xl:grid-cols-3">
       <!-- Jobs By Category Pie Chart -->
       <article
         class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm"
@@ -579,6 +615,72 @@ onMounted(fetchDashboard);
           >
             Loading chart...
           </div>
+        </div>
+      </article>
+
+      <!-- Recent Activities -->
+      <article
+        class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm"
+      >
+        <div class="flex items-center justify-between gap-3">
+          <div>
+            <h2 class="font-semibold text-slate-800">Recent Activities</h2>
+            <p class="mt-1 text-xs text-slate-400">
+              Latest 5 activities across the platform
+            </p>
+          </div>
+
+          <RouterLink
+            to="/admin/activity-logs"
+            class="shrink-0 text-sm font-semibold text-blue-600 transition hover:text-blue-700"
+          >
+            View All
+          </RouterLink>
+        </div>
+
+        <div class="mt-5 space-y-4">
+          <div
+            v-for="activity in recentActivities.slice(0, 5)"
+            :key="activity.id"
+            class="flex items-start gap-3 border-b border-slate-100 pb-4 last:border-0 last:pb-0"
+          >
+            <div
+              class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-50 text-blue-600"
+            >
+              <Activity :size="17" />
+            </div>
+
+            <div class="min-w-0 flex-1">
+              <div class="flex flex-wrap items-center gap-2">
+                <p class="text-sm font-semibold text-slate-800">
+                  {{ activity.action }}
+                </p>
+
+                <span class="text-xs text-slate-400">
+                  {{ formatDate(activity.created_at) }}
+                </span>
+              </div>
+
+              <p class="mt-1 text-sm text-slate-600">
+                {{ activity.description || "No description available." }}
+              </p>
+
+              <p class="mt-1 text-xs text-slate-400">
+                By {{ activity.actor || "System" }}
+              </p>
+            </div>
+          </div>
+
+          <p
+            v-if="!isLoading && recentActivities.length === 0"
+            class="py-8 text-center text-sm text-slate-400"
+          >
+            No recent activities available.
+          </p>
+
+          <p v-if="isLoading" class="py-8 text-center text-sm text-slate-400">
+            Loading activities...
+          </p>
         </div>
       </article>
     </section>

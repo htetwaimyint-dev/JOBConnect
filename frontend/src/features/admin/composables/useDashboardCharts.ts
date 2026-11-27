@@ -13,6 +13,11 @@ interface JobStatus {
   total: number;
 }
 
+interface CompanyVerification {
+  status: string;
+  total: number;
+}
+
 interface JobsByCategory {
   category: string;
   total: number;
@@ -29,6 +34,7 @@ export function useDashboardCharts(
   jobStatus: Ref<JobStatus[]>,
   jobsByCategory: Ref<JobsByCategory[]>,
   monthlyJobs: Ref<MonthlyJob[]>,
+  companyVerification: Ref<CompanyVerification[]>,
 ) {
   // User Growth Line Chart
   const userGrowthChartData = computed(() => ({
@@ -146,6 +152,51 @@ export function useDashboardCharts(
     return Math.round((total / jobStatusTotal.value) * 100);
   }
 
+  // Company Verification Doughnut Chart
+  const companyVerificationTotal = computed(() =>
+    companyVerification.value.reduce(
+      (total, item) => total + Number(item.total),
+      0,
+    ),
+  );
+
+  const companyVerificationColors: Record<string, string> = {
+    pending: "#F59E0B",
+    verified: "#10B981",
+    rejected: "#EF4444",
+  };
+
+  const companyVerificationChartData = computed(() => ({
+    labels: companyVerification.value.map((item) => item.status),
+    datasets: [
+      {
+        data: companyVerification.value.map((item) => Number(item.total)),
+        backgroundColor: companyVerification.value.map(
+          (item) =>
+            companyVerificationColors[item.status.toLowerCase()] ?? "#64748B",
+        ),
+        borderWidth: 0,
+        hoverOffset: 5,
+      },
+    ],
+  }));
+
+  const companyVerificationChartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    cutout: "65%",
+    plugins: {
+      legend: { display: false },
+      tooltip: { enabled: true },
+    },
+  };
+
+  function getCompanyVerificationPercentage(total: number): number {
+    if (companyVerificationTotal.value === 0) return 0;
+
+    return Math.round((total / companyVerificationTotal.value) * 100);
+  }
+
   // Jobs By Category Pie Chart
   const jobsByCategoryChartData = computed(() => ({
     labels: jobsByCategory.value.map((item) => item.category),
@@ -182,8 +233,6 @@ export function useDashboardCharts(
           padding: 15,
           color: "#64748B",
           font: { size: 11 },
-
-          // Custom Legend Labels: Category Name + Job Count
           generateLabels(chart: any) {
             const dataset = chart.data.datasets[0];
 
@@ -248,6 +297,12 @@ export function useDashboardCharts(
     jobStatusChartData,
     jobStatusChartOptions,
     getJobStatusPercentage,
+
+    companyVerificationTotal,
+    companyVerificationColors,
+    companyVerificationChartData,
+    companyVerificationChartOptions,
+    getCompanyVerificationPercentage,
 
     jobsByCategoryChartData,
     jobsByCategoryChartOptions,
