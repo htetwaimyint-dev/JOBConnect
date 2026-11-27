@@ -6,6 +6,7 @@ use App\Models\Application;
 use App\Models\Company;
 use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
 
 interface ApplicationRepositoryInterface
 {
@@ -54,8 +55,15 @@ interface ApplicationRepositoryInterface
 
     // Employer Applicant Statistics -Employer Dashboard
     public function getEmployerApplicantStats(
-    Company $company,
-    int $month,
-    int $year
+    Company $company
     ): array;
+
+     //Applicant Graph(Month)- Employer Dashboard
+    public function getApplicantYears(int $companyId): Collection;
+
+     //Applicant Graph(Month)- Employer Dashboard
+    public function getMonthlyApplicantStats(
+        int $companyId,
+        int $selectedYear
+    ): Collection;
 }

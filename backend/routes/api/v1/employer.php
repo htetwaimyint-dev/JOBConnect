@@ -6,7 +6,8 @@ use App\Http\Controllers\Api\V1\Employer\CompanyJobController;
 use App\Http\Controllers\Api\V1\Employer\JobSeekerDirectoryController;
 use App\Http\Controllers\Api\V1\Employer\ResumeController;
 use App\Http\Controllers\Api\V1\Employer\ApplicationController;
-
+use App\Http\Controllers\Api\V1\Employer\JobOfferController;
+use App\Http\Controllers\Api\V1\Interviews\InterviewController;
 
 
 Route::middleware(['auth:sanctum', 'employer'])
@@ -54,6 +55,23 @@ Route::middleware(['auth:sanctum', 'employer'])
             'stats',
         ]);
 
+        // Company Direct Offer - Employer Dashboard
+        Route::get(
+        '/offers/stats',
+        [JobOfferController::class, 'stats']
+        );
+
+        // Interview stats - Employer Dashboard
+        Route::get(
+        '/interviews/stats',
+        [InterviewController::class, 'stats']
+        );
+
+        //applicant graph
+        Route::get(
+        '/applicants/yearly-stats',
+        [ ApplicationController::class, 'yearlyStats']
+        );
 
         Route::get('/jobs/{jobId}', [
             CompanyJobController::class,

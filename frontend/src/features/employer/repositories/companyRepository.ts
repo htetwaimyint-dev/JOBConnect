@@ -2,7 +2,6 @@ import api from "@/services/api";
 import type {
   Company,
   CompanyJobFilters,
-  JobStats,
 } from "@/features/employer/types/company.types";
 
 interface ApiResponse<T> {

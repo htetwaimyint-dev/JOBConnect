@@ -5,110 +5,107 @@ import { computed, watch } from "vue";
 import { useAuthStore } from "@/stores/auth.store";
 
 export function useCompanyProfile() {
-    const store = useCompanyProfileStore();
-    const authStore = useAuthStore();
-    const queryClient = useQueryClient();
+  const store = useCompanyProfileStore();
+  const authStore = useAuthStore();
+  const queryClient = useQueryClient();
 
-    const userId = computed(() => authStore.user?.id || "guest");
+  const userId = computed(() => authStore.user?.id || "guest");
 
-    const { data, isPending, isError, error, refetch } = useQuery({
-        queryKey: ["company", "profile", userId],
-        queryFn: () => companyRepository.getCompanyProfileForForm(),
-        retry: 1,
-    });
+  const { data, isPending, isError, error, refetch } = useQuery({
+    queryKey: ["company", "profile", userId],
+    queryFn: () => companyRepository.getCompanyProfileForForm(),
+    retry: 1,
+  });
 
-    // Populate the form when the company profile is loaded.
-    watch(
-        () => data.value,
-        (company) => {
-            if (company) {
-                store.populate(company);
-            } else {
-                store.reset();
-            }
-        },
-        { immediate: true },
-    );
+  // Populate the form when the company profile is loaded.
+  watch(
+    () => data.value,
+    (company) => {
+      if (company) {
+        store.populate(company);
+      } else {
+        store.reset();
+      }
+    },
+    { immediate: true },
+  );
 
-    watch(
-        () => isError.value,
-        (hasError) => {
-            if (hasError) {
-                store.reset(); //
-            }
-        },
-    );
+  watch(
+    () => isError.value,
+    (hasError) => {
+      if (hasError) {
+        store.reset(); //
+      }
+    },
+  );
 
-    const mutation = useMutation({
-        mutationFn: (formData: FormData) => {
-            return store.isEditMode
-                ? companyRepository.updateCompanyProfile(formData)
-                : companyRepository.createCompanyProfile(formData);
-        },
+  const mutation = useMutation({
+    mutationFn: (formData: FormData) => {
+      return store.isEditMode
+        ? companyRepository.updateCompanyProfile(formData)
+        : companyRepository.createCompanyProfile(formData);
+    },
 
-        onSuccess: async (company) => {
-            store.populate(company);
-            store.successMessage = "Company profile saved successfully.";
-            store.errorMessage = "";
-            store.clearErrors();
+    onSuccess: async (company) => {
+      store.populate(company);
+      store.successMessage = "Company profile saved successfully.";
+      store.errorMessage = "";
+      store.clearErrors();
 
-            // Update the cached profile immediately.
-            queryClient.setQueryData(["company", "profile", userId.value], company);
+      // Update the cached profile immediately.
+      queryClient.setQueryData(["company", "profile", userId.value], company);
 
-            await queryClient.invalidateQueries({
-                queryKey: ["company", "profile", userId.value],
-            });
-        },
+      await queryClient.invalidateQueries({
+        queryKey: ["company", "profile", userId.value],
+      });
+    },
 
-        onError: (error: any) => {
-            const response = error?.response?.data;
+    onError: (error: any) => {
+      const response = error?.response?.data;
 
-            store.errorMessage =
-                response?.message || "Unable to save company profile.";
+      store.errorMessage =
+        response?.message || "Unable to save company profile.";
 
-            if (response?.errors) {
-                store.setErrors(response.errors);
-            } else {
-                store.clearErrors();
-            }
-        },
-    });
-
-    function submitForm() {
-        store.errorMessage = "";
-        store.successMessage = "";
+      if (response?.errors) {
+        store.setErrors(response.errors);
+      } else {
         store.clearErrors();
+      }
+    },
+  });
 
-        if (mutation.isPending.value) {
-            return;
-        }
+  function submitForm() {
+    store.errorMessage = "";
+    store.successMessage = "";
+    store.clearErrors();
 
-        if (!store.form.name.trim()) {
-            store.setErrors({
-                name: ["The company name is required."],
-            });
-            return;
-        }
-
-        const formData = store.buildFormData();
-
-        for (const [key, value] of formData.entries()) {
-            console.log(
-                key,
-                value instanceof File ? `File: ${value.name}` : value,
-            );
-        }
-
-        mutation.mutate(formData);
+    if (mutation.isPending.value) {
+      return;
     }
 
-    return {
-        data,
-        isPending,
-        isError,
-        error,
-        refetch,
-        mutation,
-        submitForm,
-    };
+    if (!store.form.name.trim()) {
+      store.setErrors({
+        name: ["The company name is required."],
+      });
+      return;
+    }
+
+    const formData = store.buildFormData();
+
+    for (const [key, value] of formData.entries()) {
+      console.log(key, value instanceof File ? `File: ${value.name}` : value);
+    }
+
+    mutation.mutate(formData);
+  }
+
+  return {
+    data,
+    isPending,
+    isError,
+    error,
+    refetch,
+    mutation,
+    submitForm,
+  };
 }

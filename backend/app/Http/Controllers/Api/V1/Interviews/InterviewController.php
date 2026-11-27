@@ -112,4 +112,18 @@ class InterviewController extends Controller
 
         return $company;
     }
+
+    //Interview Stats - Employer Dashboard
+    public function stats(Request $request)
+    {
+        $data = $this->interviewService->getDashboardInterviews(
+            $request->user()
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Dashboard interviews retrieved successfully.',
+            'data' => $data,
+        ]);
+    }
 }

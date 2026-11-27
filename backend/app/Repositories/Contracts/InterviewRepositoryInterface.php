@@ -42,4 +42,8 @@ interface InterviewRepositoryInterface
     public function getForJobSeeker(int $jobSeekerId, array $filters = []): Collection;
 
     public function requestReschedule(int $jobSeekerId, int $interviewId, array $data): Interview;
+
+    public function getTodayInterviews(int $companyId): Collection;
+
+    public function getUpcomingInterviews(int $companyId): Collection;
 }

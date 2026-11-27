@@ -172,6 +172,7 @@
           <div
             class="absolute top-0 right-0 w-32 h-32 bg-emerald-50 rounded-bl-full -z-0 opacity-50 group-hover:scale-110 transition-transform"
           ></div>
+
           <div class="relative z-10">
             <!-- Header -->
             <div class="flex justify-between items-start mb-4">
@@ -180,10 +181,12 @@
               >
                 <Users class="w-5 h-5" />
               </div>
+
               <span
                 class="px-2.5 py-1 bg-white/60 backdrop-blur-sm text-emerald-700 text-[10px] font-bold rounded-lg uppercase tracking-wider border border-emerald-100"
-                >Applicants</span
               >
+                Applicants
+              </span>
             </div>
 
             <!-- Main Stat -->
@@ -191,8 +194,9 @@
               <h2 class="text-3xl font-black text-slate-900 leading-none">
                 {{ applicantStats.total }}
               </h2>
+
               <p class="text-xs font-semibold text-slate-500 mt-1.5">
-                Total Applicants
+                Applicants (This Month)
               </p>
             </div>
 
@@ -203,43 +207,50 @@
                 <div class="flex justify-between items-center mb-1">
                   <span
                     class="text-[10px] font-bold text-slate-400 uppercase tracking-wider"
-                    >Pending</span
                   >
-                  <span class="text-xs font-bold text-slate-700">{{
-                    applicantStats.pending
-                  }}</span>
+                    Pending
+                  </span>
+
+                  <span class="text-xs font-bold text-slate-700">
+                    {{ applicantStats.pending }}
+                  </span>
                 </div>
+
                 <div class="w-full bg-slate-100 rounded-full h-1.5">
                   <div
                     class="bg-amber-500 h-1.5 rounded-full"
                     :style="{
-                      width:
-                        (applicantStats.pending / applicantStats.total) * 100 +
-                        '%',
+                      width: getPercentage(
+                        applicantStats.pending,
+                        applicantStats.total,
+                      ),
                     }"
                   ></div>
                 </div>
               </div>
 
-              <!-- Shortlist -->
+              <!-- Reviewed -->
               <div>
                 <div class="flex justify-between items-center mb-1">
                   <span
                     class="text-[10px] font-bold text-slate-400 uppercase tracking-wider"
-                    >Shortlist</span
                   >
-                  <span class="text-xs font-bold text-slate-700">{{
-                    applicantStats.shortlisted
-                  }}</span>
+                    Reviewed
+                  </span>
+
+                  <span class="text-xs font-bold text-slate-700">
+                    {{ applicantStats.reviewed }}
+                  </span>
                 </div>
+
                 <div class="w-full bg-slate-100 rounded-full h-1.5">
                   <div
                     class="bg-teal-500 h-1.5 rounded-full"
                     :style="{
-                      width:
-                        (applicantStats.shortlisted / applicantStats.total) *
-                          100 +
-                        '%',
+                      width: getPercentage(
+                        applicantStats.reviewed,
+                        applicantStats.total,
+                      ),
                     }"
                   ></div>
                 </div>
@@ -250,23 +261,35 @@
                 <div class="flex justify-between items-center mb-1">
                   <span
                     class="text-[10px] font-bold text-slate-400 uppercase tracking-wider"
-                    >Interview</span
                   >
-                  <span class="text-xs font-bold text-slate-700">{{
-                    applicantStats.interview
-                  }}</span>
+                    Interview
+                  </span>
+
+                  <span class="text-xs font-bold text-slate-700">
+                    {{ applicantStats.interview }}
+                  </span>
                 </div>
+
                 <div class="w-full bg-slate-100 rounded-full h-1.5">
                   <div
                     class="bg-purple-500 h-1.5 rounded-full"
                     :style="{
-                      width:
-                        (applicantStats.interview / applicantStats.total) *
-                          100 +
-                        '%',
+                      width: getPercentage(
+                        applicantStats.interview,
+                        applicantStats.total,
+                      ),
                     }"
                   ></div>
                 </div>
+              </div>
+
+              <!-- Date Range -->
+              <div class="pt-2">
+                <p
+                  class="text-[10px] font-bold text-slate-400 uppercase tracking-wider"
+                >
+                  Range: {{ formatDateRange(applicantStats.date_range) }}
+                </p>
               </div>
             </div>
           </div>
@@ -672,11 +695,15 @@ import {
   Clock,
 } from "lucide-vue-next";
 
-// ==========================================
-// DUMMY DATA (Replace with API calls)
-// ==========================================
-
 import { useEmployerJobStats } from "@/features/employer/composables/useEmployerJobStats";
+
+import { useEmployerApplicantStats } from "@/features/employer/composables/useEmployerApplicantStats";
+import { useEmployerOfferStats } from "@/features/employer/composables/useEmployerOfferStats";
+import { useEmployerInterviewDashboard } from "@/features/employer/composables/useEmployerInterviewDashboard";
+
+// ==================================
+// 1. JOB STATS (Existing API)
+// ==================================
 
 const {
   data: jobStatsData,
@@ -698,105 +725,173 @@ const jobStats = computed(
     },
 );
 
-const getPercentage = (value: number) => {
-  if (jobStats.value.total === 0) return "0%";
+const getPercentage = (value: number, total: number) => {
+  if (total === 0) return "0%";
 
-  return `${(value / jobStats.value.total) * 100}%`;
+  return `${(value / total) * 100}%`;
 };
 
-// 2. Applicants Logic
-const applicantStats = {
-  total: 32,
-  pending: 14,
-  shortlisted: 12,
-  interview: 6,
+// ==================================
+// 2. APPLICANT STATS (This Month)
+// ==================================
+
+const { data: applicantStatsData } = useEmployerApplicantStats();
+
+const applicantStats = computed(
+  () =>
+    applicantStatsData.value ?? {
+      total: 0,
+      pending: 0,
+      reviewed: 0,
+      shortlisted: 0,
+      interview: 0,
+      accepted: 0,
+      rejected: 0,
+      withdrawn: 0,
+      date_range: {
+        from: "",
+        to: "",
+      },
+    },
+);
+
+// ==================================
+// 3. OFFER STATS (This Month)
+// ==================================
+
+const { data: offerStatsData } = useEmployerOfferStats();
+
+const offerStats = computed(
+  () =>
+    offerStatsData.value ?? {
+      total: 0,
+      pending: 0,
+      accepted: 0,
+      rejected: 0,
+      expired: 0,
+      withdrawn: 0,
+      date_range: {
+        from: "",
+        to: "",
+      },
+    },
+);
+
+// ==================================
+// 4. INTERVIEW DASHBOARD
+// ==================================
+
+const { data: interviewData } = useEmployerInterviewDashboard();
+
+const todayInterviews = computed(
+  () => interviewData.value?.today_interviews ?? [],
+);
+
+const upcomingInterviews = computed(
+  () => interviewData.value?.upcoming_interviews ?? [],
+);
+
+// IMPORTANT:
+// upcoming_interviews already includes today's interviews.
+// Therefore, don't add todayInterviews.length again.
+
+const scheduleStats = computed(() => ({
+  total: upcomingInterviews.value.length,
+  today: todayInterviews.value.length,
+}));
+
+// ==================================
+// 5. DATE FORMATTING
+// ==================================
+
+const formatDateRange = (range: { from: string; to: string }) => {
+  if (!range.from || !range.to) return "";
+
+  const formatDate = (date: string) =>
+    new Date(`${date}T00:00:00Z`).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      timeZone: "UTC",
+    });
+
+  const from = formatDate(range.from);
+  const to = formatDate(range.to);
+
+  const year = range.to.substring(0, 4);
+
+  return `${from} – ${to}, ${year}`;
 };
 
-// 3. Direct Offers Logic (Past 5 days)
-const offerStats = {
-  total: 5,
-  accepted: 2,
-  rejected: 1,
-  pending: 2,
-  dateRange: "Nov 21 – Nov 26",
+// ==================================
+// 6. INTERVIEW DATE & TIME
+// ==================================
+
+const APP_TIME_ZONE = "Asia/Yangon";
+
+const formatInterviewMonth = (date: string) => {
+  return new Date(date).toLocaleDateString("en-US", {
+    month: "short",
+    timeZone: APP_TIME_ZONE,
+  });
 };
 
-// 4. Schedule/Interviewer Logic (Next 5 days)
-const scheduleStats = {
-  total: 4,
-  dateRange: "Nov 26 – Nov 30",
+const formatInterviewDay = (date: string) => {
+  return new Date(date).toLocaleDateString("en-US", {
+    day: "2-digit",
+    timeZone: APP_TIME_ZONE,
+  });
 };
 
-// 5. Upcoming Interviews List (Max 5)
-const upcomingInterviews = [
-  {
-    month: "Nov",
-    day: "26",
-    candidate: "Aung Aung",
-    role: "Laravel",
-    level: "Senior Developer",
-    time: "10:00 AM",
-    tagColor: "text-blue-600 bg-blue-50",
-  },
-  {
-    month: "Nov",
-    day: "27",
-    candidate: "Su Su",
-    role: "UI/UX",
-    level: "Mid-level Designer",
-    time: "2:00 PM",
-    tagColor: "text-pink-600 bg-pink-50",
-  },
-  {
-    month: "Nov",
-    day: "28",
-    candidate: "Kyaw Kyaw",
-    role: "Frontend",
-    level: "Junior Developer",
-    time: "9:30 AM",
-    tagColor: "text-emerald-600 bg-emerald-50",
-  },
-  {
-    month: "Nov",
-    day: "29",
-    candidate: "Mg Mg",
-    role: "Backend",
-    level: "Senior Developer",
-    time: "1:00 PM",
-    tagColor: "text-purple-600 bg-purple-50",
-  },
-  {
-    month: "Nov",
-    day: "30",
-    candidate: "Hla Hla",
-    role: "QA Engineer",
-    level: "Mid-level",
-    time: "11:00 AM",
-    tagColor: "text-orange-600 bg-orange-50",
-  },
-];
+const formatInterviewTime = (date: string) => {
+  return new Date(date).toLocaleTimeString("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+    timeZone: APP_TIME_ZONE,
+  });
+};
 
-// ==========================================
-// CHART COMPUTED PROPERTIES
-// ==========================================
+// ==================================
+// 7. APPLICANT BAR CHART
+// ==================================
+
+const applicantBreakdown = computed(() => [
+  {
+    label: "Pending",
+    count: applicantStats.value.pending,
+    color: "bg-amber-500",
+  },
+  {
+    label: "Reviewed",
+    count: applicantStats.value.reviewed,
+    color: "bg-teal-500",
+  },
+  {
+    label: "Interview",
+    count: applicantStats.value.interview,
+    color: "bg-purple-500",
+  },
+]);
 
 const maxApplicant = computed(() => {
-  return Math.max(
-    applicantStats.pending,
-    applicantStats.shortlisted,
-    applicantStats.interview,
-    1,
-  );
+  return Math.max(...applicantBreakdown.value.map((item) => item.count), 1);
 });
 
-const donutGradient = computed(() => {
-  const total = jobStats.total;
-  if (total === 0) return "conic-gradient(#f1f5f9 0% 100%)";
+// ==================================
+// 8. JOB DONUT CHART
+// ==================================
 
-  const draftPct = (jobStats.draft / total) * 100;
-  const pendingPct = (jobStats.pending / total) * 100;
-  const publishedPct = (jobStats.published / total) * 100;
-  const rejectedPct = (jobStats.rejected / total) * 100;
+const donutGradient = computed(() => {
+  const total = jobStats.value.total;
+
+  if (total === 0) {
+    return "conic-gradient(#f1f5f9 0% 100%)";
+  }
+
+  const draftPct = (jobStats.value.draft / total) * 100;
+  const pendingPct = (jobStats.value.pending / total) * 100;
+  const publishedPct = (jobStats.value.published / total) * 100;
+  const rejectedPct = (jobStats.value.rejected / total) * 100;
 
   const draftStop = draftPct;
   const pendingStop = draftStop + pendingPct;

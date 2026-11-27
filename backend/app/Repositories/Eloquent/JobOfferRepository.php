@@ -156,4 +156,37 @@ class JobOfferRepository implements JobOfferRepositoryInterface
             ->where('job_seeker_id', $jobSeekerId)
             ->exists();
     }
+
+    //Direct Offer(Employer Dashboard)
+    public function getEmployerOfferStats(Company $company): array
+    {
+        $startDate = now()->startOfMonth();
+        $endDate = now();
+
+        $stats = JobOffer::query()
+            ->where('company_id', $company->id)
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->selectRaw("
+                COUNT(*) as total,
+                SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending,
+                SUM(CASE WHEN status = 'accepted' THEN 1 ELSE 0 END) as accepted,
+                SUM(CASE WHEN status = 'rejected' THEN 1 ELSE 0 END) as rejected,
+                SUM(CASE WHEN status = 'expired' THEN 1 ELSE 0 END) as expired,
+                SUM(CASE WHEN status = 'withdrawn' THEN 1 ELSE 0 END) as withdrawn
+            ")
+            ->first();
+
+        return [
+            'total' => (int) $stats->total,
+            'pending' => (int) $stats->pending,
+            'accepted' => (int) $stats->accepted,
+            'rejected' => (int) $stats->rejected,
+            'expired' => (int) $stats->expired,
+            'withdrawn' => (int) $stats->withdrawn,
+            'date_range' => [
+                'from' => $startDate->toDateString(),
+                'to' => $endDate->toDateString(),
+            ],
+        ];
+    }
 }

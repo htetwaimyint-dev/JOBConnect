@@ -8,7 +8,7 @@ use App\Models\User;
 use App\Repositories\Contracts\ApplicationRepositoryInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
+use Illuminate\Support\Collection;
 
 
 class ApplicationRepository implements ApplicationRepositoryInterface
@@ -209,29 +209,27 @@ class ApplicationRepository implements ApplicationRepositoryInterface
 
     // Employer Applicant Statistics -Employer Dashboard
     public function getEmployerApplicantStats(
-    Company $company,
-    int $month,
-    int $year
+    Company $company
     ): array {
-        $startDate = Carbon::create($year, $month, 1)->startOfMonth();
-        $endDate = $startDate->copy()->endOfMonth();
+    $startDate = now()->startOfMonth();
+    $endDate = now();
 
-        $stats = Application::query()
-            ->whereBetween('applied_at', [$startDate, $endDate])
-            ->whereHas('job', function ($query) use ($company) {
-                $query->where('company_id', $company->id);
-            })
-            ->selectRaw("
-                COUNT(*) as total,
-                COALESCE(SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END), 0) as pending,
-                COALESCE(SUM(CASE WHEN status = 'reviewed' THEN 1 ELSE 0 END), 0) as reviewed,
-                COALESCE(SUM(CASE WHEN status = 'shortlisted' THEN 1 ELSE 0 END), 0) as shortlisted,
-                COALESCE(SUM(CASE WHEN status = 'interview' THEN 1 ELSE 0 END), 0) as interview,
-                COALESCE(SUM(CASE WHEN status = 'accepted' THEN 1 ELSE 0 END), 0) as accepted,
-                COALESCE(SUM(CASE WHEN status = 'rejected' THEN 1 ELSE 0 END), 0) as rejected,
-                COALESCE(SUM(CASE WHEN status = 'withdrawn' THEN 1 ELSE 0 END), 0) as withdrawn
-            ")
-            ->first();
+    $stats = Application::query()
+        ->whereBetween('applied_at', [$startDate, $endDate])
+        ->whereHas('job', function ($query) use ($company) {
+            $query->where('company_id', $company->id);
+        })
+        ->selectRaw("
+            COUNT(*) as total,
+            SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending,
+            SUM(CASE WHEN status = 'reviewed' THEN 1 ELSE 0 END) as reviewed,
+            SUM(CASE WHEN status = 'shortlisted' THEN 1 ELSE 0 END) as shortlisted,
+            SUM(CASE WHEN status = 'interview' THEN 1 ELSE 0 END) as interview,
+            SUM(CASE WHEN status = 'accepted' THEN 1 ELSE 0 END) as accepted,
+            SUM(CASE WHEN status = 'rejected' THEN 1 ELSE 0 END) as rejected,
+            SUM(CASE WHEN status = 'withdrawn' THEN 1 ELSE 0 END) as withdrawn
+        ")
+        ->first();
 
         return [
             'total' => (int) $stats->total,
@@ -249,4 +247,32 @@ class ApplicationRepository implements ApplicationRepositoryInterface
         ];
     }
 
+    //Applicant Graph(Month)- Employer Dashboard
+    public function getApplicantYears(int $companyId): Collection
+    {
+        return Application::query()
+            ->whereHas('job', function ($query) use ($companyId) {
+                $query->where('company_id', $companyId);
+            })
+            ->selectRaw('YEAR(created_at) as year')
+            ->distinct()
+            ->orderByDesc('year')
+            ->pluck('year');
+    }
+
+    //Applicant Graph(Month)- Employer Dashboard
+    public function getMonthlyApplicantStats(
+    int $companyId,
+    int  $selectedYear
+    ): Collection {
+        return Application::query()
+            ->whereHas('job', function ($query) use ($companyId) {
+                $query->where('company_id', $companyId);
+            })
+            ->whereYear('created_at',  $selectedYear)
+            ->selectRaw('MONTH(created_at) as month, COUNT(*) as total')
+            ->groupByRaw('MONTH(created_at)')
+            ->orderBy('month')
+            ->get();
+    }
 }

@@ -248,16 +248,52 @@ class ApplicationService
     }
 
     // Employer Applicant Statistics -Employer Dashboard
-    public function getApplicantStats(
-    User $user,
-    int $month,
-    int $year
-    ): array {
+    public function getApplicantStats(User $user): array
+    {
         $company = $this->companyService->getCompanyByEmployer($user);
 
         abort_unless($company, 403, 'Please create your company profile first.');
 
         return $this->applicationRepository
-            ->getEmployerApplicantStats($company, $month, $year);
+            ->getEmployerApplicantStats($company);
     }
+
+    //Applicant Graph(Employer Dashborad)
+   public function getYearlyApplicantStats(
+    User $user,
+    ?int $year = null
+    ): array {
+    $company = $this->companyService->getCompanyByEmployer($user);
+
+    $companyId = $company->id;
+
+    // Get available years
+    $years = $this->applicationRepository
+        ->getApplicantYears($companyId);
+
+    // If frontend sends year, use that year.
+    // Otherwise, use current year.
+    $selectedYear = $year ?? now()->year;
+
+    // Get monthly applicant statistics
+    $monthlyData = $this->applicationRepository
+        ->getMonthlyApplicantStats($companyId, $selectedYear);
+
+    // Generate all 12 months
+    $monthlyStats = collect(range(1, 12))->map(function ($month) use ($monthlyData) {
+        $data = $monthlyData->firstWhere('month', $month);
+
+        return [
+            'month' => $month,
+            'label' => \Carbon\Carbon::create()->month($month)->format('M'),
+            'count' => (int) ($data->total ?? 0),
+        ];
+    });
+
+    return [
+        'years' => $years,
+        'selected_year' => $selectedYear,
+        'monthly_stats' => $monthlyStats,
+    ];
+}
 }

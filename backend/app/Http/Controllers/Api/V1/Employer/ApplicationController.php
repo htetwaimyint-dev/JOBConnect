@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Api\V1\Employer;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Applications\UpdateApplicationStatusRequest;
-use App\Http\Requests\Api\Employer\ApplicantStatsRequest;
 use App\Http\Resources\Api\Applications\ApplicationResource;
 use App\Models\Company;
 use App\Models\User;
@@ -12,7 +11,7 @@ use App\Services\Applications\ApplicationService;
 use App\Services\Employer\CompanyService;
 use Illuminate\Http\Request;
 use App\Enums\ApplicationStatus;
-
+ use App\Http\Requests\Api\Employer\YearlyApplicantStatsRequest;
 
 class ApplicationController extends Controller
 {
@@ -179,18 +178,31 @@ class ApplicationController extends Controller
     }
 
       // Employer Applicant Statistics -Employer Dashboard
-    public function stats(ApplicantStatsRequest $request)
+    public function stats(Request $request)
     {
         $stats = $this->applicationService->getApplicantStats(
-            $request->user(),
-            $request->validated('month'),
-            $request->validated('year')
+            $request->user()
         );
 
         return response()->json([
             'success' => true,
             'message' => 'Applicant statistics retrieved successfully.',
             'data' => $stats,
+        ]);
+    }
+
+    //Applicant Graph(Month)- Employer Dashboard
+    public function yearlyStats(YearlyApplicantStatsRequest $request)
+    {
+        $data = $this->applicationService->getYearlyApplicantStats(
+            $request->user(),
+            $request->validated('year')
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Yearly applicant statistics retrieved successfully.',
+            'data' => $data,
         ]);
     }
 }

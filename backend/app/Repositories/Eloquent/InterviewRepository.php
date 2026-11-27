@@ -8,6 +8,8 @@ use App\Models\Interviewer;
 use App\Repositories\Contracts\InterviewRepositoryInterface;
 use Illuminate\Support\Collection;
 
+use function Symfony\Component\Clock\now;
+
 class InterviewRepository implements InterviewRepositoryInterface
 {
     private function interviewRelations(): array
@@ -246,5 +248,43 @@ class InterviewRepository implements InterviewRepositoryInterface
         ]);
 
         return $interview->refresh()->load($this->interviewRelations());
+    }
+
+   // Today's Interviews
+    public function getTodayInterviews(int $companyId): Collection
+    {
+        return Interview::query()
+            ->whereHas('application.job', function ($query) use ($companyId) {
+                $query->where('company_id', $companyId);
+            })
+            ->whereDate('scheduled_at', today())  
+            ->where('scheduled_at', '>=', now())      
+            ->whereIn('status', ['scheduled', 'rescheduled'])
+            ->with([
+                'application.job',
+                'application.jobSeeker',
+                'interviewers',
+            ])
+            ->orderBy('scheduled_at', 'asc')
+            ->get();
+    }
+
+    // Upcoming Interviews
+    public function getUpcomingInterviews(int $companyId): Collection
+    {
+        return Interview::query()
+            ->whereHas('application.job', function ($query) use ($companyId) {
+                $query->where('company_id', $companyId);
+            })
+            ->whereDate('scheduled_at','>=', today())
+            ->where('scheduled_at', '>=', now())
+            ->whereIn('status', ['scheduled', 'rescheduled'])
+            ->with([
+                'application.job',
+                'application.jobSeeker',
+                'interviewers',
+            ])
+            ->orderBy('scheduled_at', 'asc')
+            ->get();
     }
 }

@@ -12,15 +12,18 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use App\Services\Employer\CompanyService;
 
 class JobOfferService
 {
+    protected CompanyService $companyService;
     protected JobOfferRepositoryInterface $jobOfferRepository;
 
     public function __construct(
-        JobOfferRepositoryInterface $jobOfferRepository,
+        JobOfferRepositoryInterface $jobOfferRepository, CompanyService $companyService
     ) {
         $this->jobOfferRepository = $jobOfferRepository;
+        $this->companyService = $companyService;
     }
 
     public function getEmployerContext(Company $company, int $jobSeekerId): array
@@ -162,5 +165,19 @@ class JobOfferService
     {
         return $this->jobOfferRepository
             ->findCandidateForOfferContext($candidateId);
+    }
+
+    //Direct offer(Employer Dashboard)
+     public function getOfferStats(User $user): array
+    {
+        $company = $this->companyService->getCompanyByEmployer($user);
+
+        abort_unless(
+            $company,
+            403,
+            'Please create your company profile first.'
+        );
+
+        return $this->jobOfferRepository->getEmployerOfferStats($company);
     }
 }

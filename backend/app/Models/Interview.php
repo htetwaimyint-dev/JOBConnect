@@ -38,4 +38,14 @@ class Interview extends Model
         return $this->belongsToMany(Interviewer::class, 'interview_interviewer')
             ->withTimestamps();
     }
+
+    public function job(): BelongsTo
+    {
+        return $this->belongsTo(Job::class, 'job_id');
+    }
+
+    public function jobSeeker(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'job_seeker_id');
+    }
 }

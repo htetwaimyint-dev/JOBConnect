@@ -11,11 +11,13 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use App\Services\Employer\CompanyService;
 
 class InterviewService
 {
     public function __construct(
-        private readonly InterviewRepositoryInterface $interviewRepository,
+        protected CompanyService $companyService,
+        private readonly InterviewRepositoryInterface $interviewRepository
     ) {}
 
     public function getInterviews(Company $company, array $filters = []): Collection
@@ -191,5 +193,27 @@ class InterviewService
         }
 
         return $found;
+    }
+
+    //Interview - Employer Dashboard
+    public function getDashboardInterviews(User $user): array
+    {
+        // Get employer's company
+        $company = $this->companyService->getCompanyByEmployer($user);
+
+        abort_unless(
+            $company,
+            403,
+            'Please create your company profile first.'
+        );
+
+        // Get today's and upcoming interviews
+        return [
+            'today_interviews' => $this->interviewRepository
+                ->getTodayInterviews($company->id),
+
+            'upcoming_interviews' => $this->interviewRepository
+                ->getUpcomingInterviews($company->id),
+        ];
     }
 }

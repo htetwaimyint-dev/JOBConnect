@@ -4,7 +4,7 @@ namespace App\Http\Requests\Api\Employer;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class ApplicantStatsRequest extends FormRequest
+class YearlyApplicantStatsRequest extends FormRequest
 {
     public function authorize(): bool
     {
@@ -14,8 +14,12 @@ class ApplicantStatsRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'month' => ['required', 'integer', 'between:1,12'],
-            'year' => ['required', 'integer', 'min:2020', 'max:2100'],
+            'year' => [
+                'nullable',
+                'integer',
+                'min:2000',
+                'max:2100',
+            ],
         ];
     }
 }

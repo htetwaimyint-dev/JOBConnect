@@ -80,4 +80,17 @@ class JobOfferController extends Controller
 
         return $company;
     }
+
+    public function stats(Request $request)
+    {
+        $stats = $this->jobOfferService->getOfferStats(
+            $request->user()
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Offer statistics retrieved successfully.',
+            'data' => $stats,
+        ]);
+    }
 }

@@ -39,4 +39,7 @@ interface JobOfferRepositoryInterface
         int $jobId,
         int $jobSeekerId
     ): bool;
+
+    //Direct Offer(Employer Dashboard)
+    public function getEmployerOfferStats(Company $company): array;
 }
