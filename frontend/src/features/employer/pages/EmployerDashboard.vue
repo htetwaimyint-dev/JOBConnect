@@ -136,27 +136,17 @@ const formatInterviewTime = (date: string) =>
 
 const upcomingInterviewItems = computed(() =>
   upcomingInterviews.value
-    // 1. Remove interviews without scheduled date
     .filter((interview: any) => {
       if (!interview.scheduled_at) return false;
-
-      // Only future interviews
       return new Date(interview.scheduled_at).getTime() > Date.now();
     })
-
-    // 2. Sort by nearest interview date
     .sort(
       (a: any, b: any) =>
         new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime(),
     )
-
-    // 3. Show only 5 upcoming interviews
     .slice(0, 5)
-
-    // 4. Format interview data for template
     .map((interview: any) => {
       const scheduledAt = interview.scheduled_at;
-
       const interviewType =
         interview.interview_type === "online"
           ? "Online"
@@ -166,25 +156,18 @@ const upcomingInterviewItems = computed(() =>
 
       return {
         id: interview.id,
-
         month: formatInterviewMonth(scheduledAt),
-
         day: formatInterviewDay(scheduledAt),
-
         candidate:
           interview.application?.applicant_name ??
           interview.application?.job_seeker?.name ??
           "Applicant",
-
         role: interview.application?.job?.title ?? "Job title unavailable",
-
         level: interviewType,
-
         tagColor:
           interview.interview_type === "online"
             ? "bg-blue-100 text-blue-700"
             : "bg-orange-100 text-orange-700",
-
         time: formatInterviewTime(scheduledAt),
       };
     }),
@@ -196,20 +179,17 @@ const upcomingInterviewItems = computed(() =>
 
 const getPercentage = (value: number, total: number = jobStats.value.total) => {
   if (total === 0) return "0%";
-
   return `${Math.min((value / total) * 100, 100)}%`;
 };
 
 const formatDateRange = (range: { from: string; to: string }) => {
   if (!range?.from || !range?.to) return "";
-
   const formatDate = (date: string) =>
     new Date(`${date}T00:00:00Z`).toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",
       timeZone: "UTC",
     });
-
   return `${formatDate(range.from)} – ${formatDate(range.to)}, ${range.to.slice(0, 4)}`;
 };
 
@@ -217,17 +197,13 @@ const formatDateRange = (range: { from: string; to: string }) => {
 // 7. YEARLY APPLICANT STATISTICS
 // ==================================
 
-// Default year = current year
 const currentYear = new Date().getFullYear();
-
 const selectedYear = ref<number>(currentYear);
 
-// Year options: current year back to 2020
 const yearOptions = computed(() =>
   Array.from({ length: currentYear - 2019 }, (_, index) => currentYear - index),
 );
 
-// Fetch yearly applicant statistics
 const {
   data: yearlyApplicantStatsData,
   isPending: isYearlyApplicantLoading,
@@ -256,14 +232,10 @@ const defaultMonths = [
 
 const monthlyStats = computed(() => {
   const apiStats = yearlyApplicantStatsData.value?.monthly_stats ?? [];
-
-  // Always display all 12 months.
-  // If a month is missing from API, its count will be 0.
   return defaultMonths.map((label, index) => {
     const monthData = apiStats.find(
       (item: { month: number; count: number }) => item.month === index + 1,
     );
-
     return {
       month: index + 1,
       label,
@@ -284,19 +256,14 @@ const yearlyApplicantTotal = computed(() =>
 // 10. CHART Y AXIS
 // ==================================
 
-// Maximum value for the chart
 const chartMax = computed(() => {
   const maxCount = Math.max(
     ...monthlyStats.value.map((month) => month.count),
     0,
   );
-
-  // Minimum chart scale = 4
-  // Round up to a multiple of 4
   return Math.max(4, Math.ceil(maxCount / 4) * 4);
 });
 
-// Y-axis labels
 const yAxisTicks = computed(() => [
   chartMax.value,
   (chartMax.value * 3) / 4,
@@ -345,7 +312,6 @@ const yAxisTicks = computed(() => [
         class="mb-4 rounded-xl bg-rose-50 p-4 text-rose-700"
       >
         <p>{{ error?.message || "Failed to load job statistics." }}</p>
-
         <button
           @click="refetch()"
           class="mt-2 rounded-lg bg-rose-600 px-4 py-2 text-white"
@@ -353,9 +319,10 @@ const yAxisTicks = computed(() => [
           Retry
         </button>
       </div>
-      <!-- ================= TOP STAT CARDS (Clickable Links) ================= -->
+
+      <!-- ================= TOP STAT CARDS ================= -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <!-- Card 1: Job Posts (Blue Theme) -->
+        <!-- Card 1: Job Posts -->
         <RouterLink
           to="/employer/jobs"
           class="block relative overflow-hidden bg-white rounded-3xl p-5 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 group hover:-translate-y-1 hover:shadow-[0_12px_40px_rgb(0,0,0,0.08)] transition-all duration-300"
@@ -364,7 +331,6 @@ const yAxisTicks = computed(() => [
             class="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-bl-full -z-0 opacity-50 group-hover:scale-110 transition-transform"
           ></div>
           <div class="relative z-10">
-            <!-- Header -->
             <div class="flex justify-between items-start mb-4">
               <div
                 class="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center shadow-inner group-hover:bg-blue-600 group-hover:text-white transition-colors"
@@ -377,7 +343,6 @@ const yAxisTicks = computed(() => [
               >
             </div>
 
-            <!-- Main Stat -->
             <div class="mb-5">
               <h2 class="text-3xl font-black text-slate-900 leading-none">
                 {{ jobStats.total }}
@@ -387,9 +352,7 @@ const yAxisTicks = computed(() => [
               </p>
             </div>
 
-            <!-- Progress Bar Style Breakdown -->
             <div class="space-y-3 pt-4 border-t border-slate-100/80">
-              <!-- Draft -->
               <div>
                 <div class="flex justify-between items-center mb-1">
                   <span
@@ -408,7 +371,6 @@ const yAxisTicks = computed(() => [
                 </div>
               </div>
 
-              <!-- Pending -->
               <div>
                 <div class="flex justify-between items-center mb-1">
                   <span
@@ -427,7 +389,6 @@ const yAxisTicks = computed(() => [
                 </div>
               </div>
 
-              <!-- Published & Rejected -->
               <div class="grid grid-cols-2 gap-3">
                 <div>
                   <div class="flex justify-between items-center mb-1">
@@ -468,8 +429,7 @@ const yAxisTicks = computed(() => [
           </div>
         </RouterLink>
 
-        <!-- Card 2: Applicants (Emerald Theme) -->
-
+        <!-- Card 2: Applicants -->
         <RouterLink
           to="/employer/applicants"
           class="block relative overflow-hidden bg-white rounded-3xl p-5 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 group hover:-translate-y-1 hover:shadow-[0_12px_40px_rgb(0,0,0,0.08)] transition-all duration-300"
@@ -477,47 +437,39 @@ const yAxisTicks = computed(() => [
           <div
             class="absolute top-0 right-0 w-32 h-32 bg-emerald-50 rounded-bl-full -z-0 opacity-50 group-hover:scale-110 transition-transform"
           ></div>
-
           <div class="relative z-10">
-            <!-- Header -->
             <div class="flex justify-between items-start mb-4">
               <div
                 class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center shadow-inner group-hover:bg-emerald-600 group-hover:text-white transition-colors"
               >
                 <Users class="w-5 h-5" />
               </div>
-
               <span
                 class="px-2.5 py-1 bg-white/60 backdrop-blur-sm text-emerald-700 text-[10px] font-bold rounded-lg uppercase tracking-wider border border-emerald-100"
+                >Applicants</span
               >
-                Applicants
-              </span>
             </div>
 
-            <!-- Main Stat -->
             <div class="mb-5">
               <h2 class="text-3xl font-black text-slate-900 leading-none">
                 {{ applicantStats.total }}
               </h2>
-
               <p class="text-xs font-semibold text-slate-500 mt-1.5">
                 Applicants (This Month)
               </p>
             </div>
 
-            <!-- All Applicant Status Breakdown -->
+            <!-- Simplified 3-Bar Breakdown to match other cards and stay clean -->
             <div class="space-y-3 pt-4 border-t border-slate-100/80">
-              <!-- Pending -->
               <div>
                 <div class="flex justify-between items-center mb-1">
                   <span
                     class="text-[10px] font-bold text-slate-400 uppercase tracking-wider"
+                    >Pending</span
                   >
-                    Pending
-                  </span>
-                  <span class="text-xs font-bold text-slate-700">
-                    {{ applicantStats.pending }}
-                  </span>
+                  <span class="text-xs font-bold text-slate-700">{{
+                    applicantStats.pending
+                  }}</span>
                 </div>
                 <div class="w-full bg-slate-100 rounded-full h-1.5">
                   <div
@@ -532,42 +484,15 @@ const yAxisTicks = computed(() => [
                 </div>
               </div>
 
-              <!-- Reviewed -->
               <div>
                 <div class="flex justify-between items-center mb-1">
                   <span
                     class="text-[10px] font-bold text-slate-400 uppercase tracking-wider"
+                    >Shortlisted</span
                   >
-                    Reviewed
-                  </span>
-                  <span class="text-xs font-bold text-slate-700">
-                    {{ applicantStats.reviewed }}
-                  </span>
-                </div>
-                <div class="w-full bg-slate-100 rounded-full h-1.5">
-                  <div
-                    class="bg-teal-500 h-1.5 rounded-full"
-                    :style="{
-                      width: getPercentage(
-                        applicantStats.reviewed,
-                        applicantStats.total,
-                      ),
-                    }"
-                  ></div>
-                </div>
-              </div>
-
-              <!-- Shortlisted -->
-              <div>
-                <div class="flex justify-between items-center mb-1">
-                  <span
-                    class="text-[10px] font-bold text-slate-400 uppercase tracking-wider"
-                  >
-                    Shortlisted
-                  </span>
-                  <span class="text-xs font-bold text-slate-700">
-                    {{ applicantStats.shortlisted }}
-                  </span>
+                  <span class="text-xs font-bold text-slate-700">{{
+                    applicantStats.shortlisted
+                  }}</span>
                 </div>
                 <div class="w-full bg-slate-100 rounded-full h-1.5">
                   <div
@@ -582,17 +507,15 @@ const yAxisTicks = computed(() => [
                 </div>
               </div>
 
-              <!-- Interview -->
               <div>
                 <div class="flex justify-between items-center mb-1">
                   <span
                     class="text-[10px] font-bold text-slate-400 uppercase tracking-wider"
+                    >Interview</span
                   >
-                    Interview
-                  </span>
-                  <span class="text-xs font-bold text-slate-700">
-                    {{ applicantStats.interview }}
-                  </span>
+                  <span class="text-xs font-bold text-slate-700">{{
+                    applicantStats.interview
+                  }}</span>
                 </div>
                 <div class="w-full bg-slate-100 rounded-full h-1.5">
                   <div
@@ -607,83 +530,33 @@ const yAxisTicks = computed(() => [
                 </div>
               </div>
 
-              <!-- Accepted -->
-              <div>
-                <div class="flex justify-between items-center mb-1">
-                  <span
-                    class="text-[10px] font-bold text-slate-400 uppercase tracking-wider"
-                  >
-                    Accepted
-                  </span>
-                  <span class="text-xs font-bold text-slate-700">
-                    {{ applicantStats.accepted }}
-                  </span>
-                </div>
-                <div class="w-full bg-slate-100 rounded-full h-1.5">
-                  <div
-                    class="bg-emerald-500 h-1.5 rounded-full"
-                    :style="{
-                      width: getPercentage(
-                        applicantStats.accepted,
-                        applicantStats.total,
-                      ),
-                    }"
-                  ></div>
-                </div>
+              <!-- Summary for the rest of the statuses including Reviewed -->
+              <div
+                class="flex flex-wrap justify-between gap-x-2 gap-y-1 pt-2 border-t border-slate-50"
+              >
+                <span
+                  class="text-[9px] text-slate-400 font-semibold whitespace-nowrap"
+                >
+                  Reviewed: {{ applicantStats.reviewed }}
+                </span>
+                <span
+                  class="text-[9px] text-slate-400 font-semibold whitespace-nowrap"
+                >
+                  Accepted: {{ applicantStats.accepted }}
+                </span>
+                <span
+                  class="text-[9px] text-slate-400 font-semibold whitespace-nowrap"
+                >
+                  Rejected: {{ applicantStats.rejected }}
+                </span>
+                <span
+                  class="text-[9px] text-slate-400 font-semibold whitespace-nowrap"
+                >
+                  Withdrawn: {{ applicantStats.withdrawn }}
+                </span>
               </div>
 
-              <!-- Rejected -->
-              <div>
-                <div class="flex justify-between items-center mb-1">
-                  <span
-                    class="text-[10px] font-bold text-slate-400 uppercase tracking-wider"
-                  >
-                    Rejected
-                  </span>
-                  <span class="text-xs font-bold text-slate-700">
-                    {{ applicantStats.rejected }}
-                  </span>
-                </div>
-                <div class="w-full bg-slate-100 rounded-full h-1.5">
-                  <div
-                    class="bg-rose-500 h-1.5 rounded-full"
-                    :style="{
-                      width: getPercentage(
-                        applicantStats.rejected,
-                        applicantStats.total,
-                      ),
-                    }"
-                  ></div>
-                </div>
-              </div>
-
-              <!-- Withdrawn -->
-              <div>
-                <div class="flex justify-between items-center mb-1">
-                  <span
-                    class="text-[10px] font-bold text-slate-400 uppercase tracking-wider"
-                  >
-                    Withdrawn
-                  </span>
-                  <span class="text-xs font-bold text-slate-700">
-                    {{ applicantStats.withdrawn }}
-                  </span>
-                </div>
-                <div class="w-full bg-slate-100 rounded-full h-1.5">
-                  <div
-                    class="bg-slate-500 h-1.5 rounded-full"
-                    :style="{
-                      width: getPercentage(
-                        applicantStats.withdrawn,
-                        applicantStats.total,
-                      ),
-                    }"
-                  ></div>
-                </div>
-              </div>
-
-              <!-- Date Range -->
-              <div class="pt-2">
+              <div class="pt-1">
                 <p
                   class="text-[10px] font-bold text-slate-400 uppercase tracking-wider"
                 >
@@ -693,8 +566,7 @@ const yAxisTicks = computed(() => [
             </div>
           </div>
         </RouterLink>
-
-        <!-- Card 3: Direct Offers (Purple Theme) -->
+        <!-- Card 3: Direct Offers -->
         <RouterLink
           to="/employer/job-offers"
           class="block relative overflow-hidden bg-white rounded-3xl p-5 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 group hover:-translate-y-1 hover:shadow-[0_12px_40px_rgb(0,0,0,0.08)] transition-all duration-300"
@@ -711,9 +583,8 @@ const yAxisTicks = computed(() => [
               </div>
               <span
                 class="px-2.5 py-1 bg-white/60 backdrop-blur-sm text-purple-700 text-[10px] font-bold rounded-lg uppercase tracking-wider border border-purple-100"
+                >Offers</span
               >
-                Offers
-              </span>
             </div>
 
             <div class="mb-5">
@@ -795,7 +666,7 @@ const yAxisTicks = computed(() => [
                 </div>
               </div>
 
-              <div class="grid grid-cols-2 gap-3 pt-1">
+              <div class="grid grid-cols-2 gap-3 pt-1 border-t border-slate-50">
                 <div class="flex justify-between items-center">
                   <span
                     class="text-[10px] font-bold text-slate-400 uppercase tracking-wider"
@@ -827,7 +698,7 @@ const yAxisTicks = computed(() => [
           </div>
         </RouterLink>
 
-        <!-- Card 4: Schedule (Orange Theme) -->
+        <!-- Card 4: Schedule -->
         <RouterLink
           to="/employer/interviews"
           class="block relative overflow-hidden bg-white rounded-3xl p-5 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 group hover:-translate-y-1 hover:shadow-[0_12px_40px_rgb(0,0,0,0.08)] transition-all duration-300"
@@ -844,9 +715,8 @@ const yAxisTicks = computed(() => [
               </div>
               <span
                 class="px-2.5 py-1 bg-white/60 backdrop-blur-sm text-orange-700 text-[10px] font-bold rounded-lg uppercase tracking-wider border border-orange-100"
+                >Schedule</span
               >
-                Schedule
-              </span>
             </div>
 
             <div class="mb-5">
@@ -862,40 +732,23 @@ const yAxisTicks = computed(() => [
               <div class="flex items-center justify-between">
                 <span
                   class="text-[10px] font-bold text-slate-400 uppercase tracking-wider"
+                  >Today</span
                 >
-                  Today
-                </span>
                 <span
                   class="text-xs font-bold text-slate-700 bg-orange-50 px-2 py-1 rounded-md"
+                  >{{ scheduleStats.today }}</span
                 >
-                  {{ scheduleStats.today }}
-                </span>
               </div>
 
               <div class="flex items-center justify-between">
                 <span
                   class="text-[10px] font-bold text-slate-400 uppercase tracking-wider"
+                  >Upcoming</span
                 >
-                  Upcoming
-                </span>
                 <span
                   class="text-xs font-bold text-slate-700 bg-slate-100 px-2 py-1 rounded-md"
+                  >{{ scheduleStats.total }}</span
                 >
-                  {{ scheduleStats.total }}
-                </span>
-              </div>
-
-              <div class="flex items-center justify-between pt-1">
-                <span
-                  class="text-[10px] font-bold text-slate-400 uppercase tracking-wider"
-                >
-                  Action
-                </span>
-                <span
-                  class="text-[10px] font-bold text-orange-600 flex items-center gap-1 group-hover:translate-x-1 transition-transform"
-                >
-                  View Calendar <ArrowRight class="w-3 h-3" />
-                </span>
               </div>
             </div>
           </div>
@@ -904,9 +757,8 @@ const yAxisTicks = computed(() => [
 
       <!-- Yearly Applicant Statistics Chart -->
       <div
-        class="bg-white rounded-3xl p-6 border border-slate-200/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex flex-col"
+        class="bg-white rounded-3xl p-6 border border-slate-200/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex flex-col mb-8"
       >
-        <!-- Chart Header -->
         <div
           class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8"
         >
@@ -919,15 +771,10 @@ const yAxisTicks = computed(() => [
             </p>
           </div>
 
-          <!-- Year Selector -->
           <div class="flex items-center gap-2">
-            <label
-              for="applicant-year"
-              class="text-xs font-bold text-slate-500"
+            <label for="applicant-year" class="text-xs font-bold text-slate-500"
+              >Year</label
             >
-              Year
-            </label>
-
             <select
               id="applicant-year"
               v-model.number="selectedYear"
@@ -940,12 +787,10 @@ const yAxisTicks = computed(() => [
           </div>
         </div>
 
-        <!-- Total Applicants -->
         <div class="mb-6">
           <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">
             Total Applicants in {{ selectedYear }}
           </p>
-
           <h2 class="text-3xl font-black text-slate-900 mt-1">
             {{ yearlyApplicantTotal }}
           </h2>
@@ -986,24 +831,18 @@ const yAxisTicks = computed(() => [
                 v-for="tick in yAxisTicks"
                 :key="tick"
                 class="text-[10px] font-semibold text-slate-400"
+                >{{ tick }}</span
               >
-                {{ tick }}
-              </span>
             </div>
 
             <!-- Chart Area -->
             <div class="relative flex-1 min-w-0">
-              <!-- Horizontal Grid Lines -->
               <div
                 v-for="tick in yAxisTicks"
                 :key="`grid-${tick}`"
                 class="absolute left-0 right-0 border-t border-dashed border-slate-200"
-                :style="{
-                  top: `${100 - (tick / chartMax) * 100}%`,
-                }"
+                :style="{ top: `${100 - (tick / chartMax) * 100}%` }"
               ></div>
-
-              <!-- Bars -->
               <div
                 class="absolute inset-0 flex items-end justify-around gap-1 sm:gap-3"
               >
@@ -1012,14 +851,10 @@ const yAxisTicks = computed(() => [
                   :key="month.month"
                   class="relative flex-1 min-w-0 h-full flex flex-col justify-end items-center"
                 >
-                  <!-- Count -->
                   <span
                     class="text-[10px] sm:text-xs font-bold text-slate-600 mb-1"
+                    >{{ month.count }}</span
                   >
-                    {{ month.count }}
-                  </span>
-
-                  <!-- Bar -->
                   <div
                     class="w-full max-w-10 bg-indigo-500 rounded-t-lg hover:bg-indigo-600 transition-all duration-300"
                     :style="{
@@ -1033,7 +868,7 @@ const yAxisTicks = computed(() => [
             </div>
           </div>
 
-          <!-- X Axis: Month Labels -->
+          <!-- X Axis -->
           <div class="flex ml-10 mt-2">
             <div
               v-for="month in monthlyStats"
@@ -1043,8 +878,6 @@ const yAxisTicks = computed(() => [
               {{ month.label }}
             </div>
           </div>
-
-          <!-- X Axis Label -->
           <p
             class="text-center text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-3"
           >
@@ -1052,7 +885,6 @@ const yAxisTicks = computed(() => [
           </p>
         </div>
 
-        <!-- Empty Information -->
         <p
           v-if="
             !isYearlyApplicantLoading &&
@@ -1069,7 +901,6 @@ const yAxisTicks = computed(() => [
       <div
         class="bg-white rounded-3xl border border-slate-200/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden"
       >
-        <!-- List Header -->
         <div
           class="px-8 py-6 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-50/50"
         >
@@ -1085,8 +916,7 @@ const yAxisTicks = computed(() => [
             to="/employer/interviews"
             class="text-sm font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-2 bg-indigo-50 hover:bg-indigo-100 px-4 py-2 rounded-xl transition-colors"
           >
-            View Full Schedule
-            <ArrowRight class="w-4 h-4" />
+            View Full Schedule <ArrowRight class="w-4 h-4" />
           </RouterLink>
         </div>
 
@@ -1098,14 +928,12 @@ const yAxisTicks = computed(() => [
             No upcoming interviews.
           </div>
 
-          <!-- Loop through Upcoming Interviews -->
           <div
             v-for="interview in upcomingInterviewItems"
             :key="interview.id"
             class="px-8 py-5 flex flex-col sm:flex-row sm:items-center justify-between hover:bg-slate-50/80 transition-colors group cursor-pointer gap-4"
           >
             <div class="flex items-center gap-5">
-              <!-- Date Box -->
               <div
                 class="flex flex-col items-center justify-center w-14 h-14 bg-white border-2 border-slate-100 rounded-2xl shadow-sm group-hover:border-indigo-400 transition-colors"
               >
@@ -1117,7 +945,6 @@ const yAxisTicks = computed(() => [
                   interview.day
                 }}</span>
               </div>
-              <!-- Candidate Info -->
               <div>
                 <h4
                   class="text-base font-bold text-slate-900 group-hover:text-indigo-600 transition-colors"
@@ -1127,16 +954,14 @@ const yAxisTicks = computed(() => [
                 <div class="flex items-center gap-2 mt-1">
                   <span
                     :class="`text-xs font-bold px-2 py-0.5 rounded ${interview.tagColor}`"
+                    >{{ interview.role }}</span
                   >
-                    {{ interview.role }}
-                  </span>
                   <span class="text-xs font-medium text-slate-400">{{
                     interview.level
                   }}</span>
                 </div>
               </div>
             </div>
-            <!-- Actions -->
             <div class="flex items-center gap-4 pl-[76px] sm:pl-0">
               <div
                 class="flex items-center gap-2 text-sm font-bold text-slate-600 bg-slate-100 px-3 py-1.5 rounded-lg"
