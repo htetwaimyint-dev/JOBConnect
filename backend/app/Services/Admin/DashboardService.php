@@ -26,6 +26,7 @@ class DashboardService
             'jobs_by_category' => $this->getJobsByCategory(),
             'monthly_jobs' => $this->getMonthlyJobs(),
             'recent_activities' => $this->getRecentActivities(),
+            'company_verification' => $this->getCompanyVerification(),
         ];
     }
 
@@ -194,6 +195,32 @@ class DashboardService
                     'total' => (int) (
                         $jobStatusCounts[$status->value] ?? 0
                     ),
+                ];
+            })
+            ->values();
+    }
+
+    /**
+     * Get company verification status statistics.
+     */
+    private function getCompanyVerification()
+    {
+        $companyCounts = Company::query()
+            ->selectRaw('verification_status, COUNT(*) as total')
+            ->groupBy('verification_status')
+            ->pluck('total', 'verification_status');
+
+        $statuses = [
+            'pending',
+            'verified',
+            'rejected',
+        ];
+
+        return collect($statuses)
+            ->map(function ($status) use ($companyCounts) {
+                return [
+                    'status' => $status,
+                    'total' => (int) ($companyCounts[$status] ?? 0),
                 ];
             })
             ->values();
