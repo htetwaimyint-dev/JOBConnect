@@ -15,6 +15,7 @@ use App\Notifications\InterviewScheduledNotification;
 use App\Notifications\InterviewRescheduledNotification;
 use App\Notifications\InterviewCancelledNotification;
 use App\Notifications\InterviewRescheduleRequestedNotification;
+use App\Services\Notifications\NotificationService;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -25,6 +26,7 @@ class InterviewService
 {
     public function __construct(
         private readonly InterviewRepositoryInterface $interviewRepository,
+        private readonly NotificationService $notificationService,
     ) {}
 
     public function getInterviews(Company $company, array $filters = []): Collection
@@ -47,7 +49,7 @@ class InterviewService
 
         $interview->loadMissing(['application.job.company.employer']);
 
-        $this->sendNotification(
+        $this->notificationService->send(
             $interview->application?->job?->company?->employer,
             new InterviewRescheduleRequestedNotification($interview)
         );
@@ -100,7 +102,7 @@ class InterviewService
 
         // Notify only after the scheduling transaction has committed.
         $interview->loadMissing(['application.job.company', 'application.jobSeeker']);
-        $this->sendNotification(
+        $this->notificationService->send(
             $interview->application?->jobSeeker,
             new InterviewScheduledNotification($interview)
         );
@@ -155,7 +157,7 @@ class InterviewService
         $explicitlyRescheduled = ($data['status'] ?? null) === 'rescheduled';
 
         if ($dateChanged || $explicitlyRescheduled) {
-            $this->sendNotification(
+            $this->notificationService->send(
                 $interview->application?->jobSeeker,
                 new InterviewRescheduledNotification($interview)
             );
@@ -196,7 +198,7 @@ class InterviewService
 
         if ($status === 'cancelled' && $previousStatus !== 'cancelled') {
             $interview->loadMissing(['application.jobSeeker']);
-            $this->sendNotification(
+            $this->notificationService->send(
                 $interview->application?->jobSeeker,
                 new InterviewCancelledNotification($interview)
             );
@@ -262,46 +264,5 @@ class InterviewService
         }
 
         return $found;
-    }
-
-    /**
-     * Persist the in-app notification immediately, then queue only the email.
-     */
-    private function sendNotification(?User $recipient, LaravelNotification $notification): void
-    {
-        if (! $recipient) {
-            return;
-        }
-
-        // 1. Persist the in-app notification synchronously.
-        $recipient->notifyNow($notification, ['database']);
-
-        // 2. Fetch the just-persisted DatabaseNotification model so we have its exact DB ID & data.
-        $persisted = $recipient->notifications()->whereKey($notification->id)->first();
-
-        // 3. Push to Reverb safely without failing the HTTP request if WebSockets are down.
-        if ($persisted) {
-            try {
-                event(new NotificationCreated(
-                    userId: (int) $recipient->getKey(),
-                    notification: [
-                        'id' => (string) $persisted->id,
-                        'type' => $persisted->type,
-                        'data' => $persisted->data,
-                        'read_at' => $persisted->read_at?->toISOString(),
-                        'created_at' => $persisted->created_at?->toISOString(),
-                    ],
-                ));
-            } catch (Throwable $exception) {
-                Log::warning('Unable to broadcast a user notification.', [
-                    'user_id' => $recipient->getKey(),
-                    'notification_id' => $persisted->id,
-                    'exception' => $exception->getMessage(),
-                ]);
-            }
-        }
-
-        // 4. Queue email delivery separately (relies on via() returning ['mail']).
-        $recipient->notify($notification);
     }
 }

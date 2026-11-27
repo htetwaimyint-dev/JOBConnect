@@ -2,25 +2,20 @@
 
 namespace App\Notifications;
 
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
+use App\Models\Application;
 use Illuminate\Notifications\Messages\MailMessage;
-use Illuminate\Notifications\Notification;
-use Illuminate\Support\Str;
 
-class NewApplicationReceivedNotification extends Notification implements ShouldQueue
+class NewApplicationReceivedNotification extends BaseAppNotification
 {
-    use Queueable;
-
-    public function __construct(public readonly \App\Models\Application $application) {}
-
-    public function via(object $notifiable): array
+    public function __construct(public readonly Application $application)
     {
-        return ['mail'];
+        parent::__construct();
     }
 
     public function toMail(object $notifiable): MailMessage
     {
+        $this->application->loadMissing(['job.company', 'jobSeeker']);
+
         $job = $this->application->job;
         $applicantName = $this->application->jobSeeker?->name
             ?? $this->application->applicant_name
@@ -32,7 +27,8 @@ class NewApplicationReceivedNotification extends Notification implements ShouldQ
             ->line($applicantName . ' has applied for your job.')
             ->line('Position: ' . ($job?->title ?? 'Job'))
             ->line('Company: ' . ($job?->company?->name ?? 'Your company'))
-            ->line('Sign in to your employer account to review the application.');
+            ->action('Review Applicants', $this->frontendUrl('/employer/applicants'))
+            ->line('Sign in to your employer account to review the candidate profile and resume.');
     }
 
     public function toArray(object $notifiable): array

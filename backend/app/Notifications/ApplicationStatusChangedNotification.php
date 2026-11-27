@@ -2,47 +2,49 @@
 
 namespace App\Notifications;
 
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
+use App\Models\Application;
 use Illuminate\Notifications\Messages\MailMessage;
-use Illuminate\Notifications\Notification;
 use Illuminate\Support\Str;
 
-class ApplicationStatusChangedNotification extends Notification implements ShouldQueue
+class ApplicationStatusChangedNotification extends BaseAppNotification
 {
-    use Queueable;
+    public readonly string $statusValue;
 
-    public function __construct(public readonly \App\Models\Application $application) {}
-
-    public function via(object $notifiable): array
-    {
-        return ['mail'];
+    public function __construct(
+        public readonly Application $application,
+        ?string $statusValue = null,
+    ) {
+        parent::__construct();
+        $this->statusValue = $statusValue
+            ?? ($application->status->value ?? (string) $application->status);
     }
 
     public function toMail(object $notifiable): MailMessage
     {
-        $status = Str::headline($this->application->status->value ?? (string) $this->application->status);
+        $this->application->loadMissing(['job.company']);
+
+        $statusLabel = Str::headline($this->statusValue);
 
         return (new MailMessage)
             ->subject('Your application status has been updated')
             ->greeting('Hello ' . $notifiable->name . ',')
             ->line('The status of your application has changed.')
             ->line('Position: ' . ($this->application->job?->title ?? 'Job'))
-            ->line('New status: ' . $status)
+            ->line('Company: ' . ($this->application->job?->company?->name ?? 'Company'))
+            ->line('New status: ' . $statusLabel)
+            ->action('View Application', $this->frontendUrl('/applications/' . $this->application->id))
             ->line('Sign in to your account to view the latest application details.');
     }
 
     public function toArray(object $notifiable): array
     {
-        $status = $this->application->status->value ?? (string) $this->application->status;
-
         return [
             'type' => 'application_status_changed',
             'title' => 'Application status updated',
-            'message' => 'Your application for ' . ($this->application->job?->title ?? 'a job') . ' is now ' . Str::headline($status) . '.',
+            'message' => 'Your application for ' . ($this->application->job?->title ?? 'a job') . ' is now ' . Str::headline($this->statusValue) . '.',
             'application_id' => $this->application->id,
             'job_id' => $this->application->job_id,
-            'status' => $status,
+            'status' => $this->statusValue,
         ];
     }
 }

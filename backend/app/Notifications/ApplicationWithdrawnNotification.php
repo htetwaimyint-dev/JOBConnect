@@ -2,31 +2,31 @@
 
 namespace App\Notifications;
 
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
+use App\Models\Application;
 use Illuminate\Notifications\Messages\MailMessage;
-use Illuminate\Notifications\Notification;
-use Illuminate\Support\Str;
 
-class ApplicationWithdrawnNotification extends Notification implements ShouldQueue
+class ApplicationWithdrawnNotification extends BaseAppNotification
 {
-    use Queueable;
-
-    public function __construct(public readonly \App\Models\Application $application) {}
-
-    public function via(object $notifiable): array
+    public function __construct(public readonly Application $application)
     {
-        return ['mail'];
+        parent::__construct();
     }
 
     public function toMail(object $notifiable): MailMessage
     {
+        $this->application->loadMissing(['job', 'jobSeeker']);
+
+        $candidateName = $this->application->jobSeeker?->name
+            ?? $this->application->applicant_name
+            ?? 'A candidate';
+
         return (new MailMessage)
             ->subject('A candidate withdrew their application')
             ->greeting('Hello ' . $notifiable->name . ',')
-            ->line(($this->application->jobSeeker?->name ?? $this->application->applicant_name ?? 'A candidate') . ' withdrew their application.')
+            ->line($candidateName . ' withdrew their application.')
             ->line('Position: ' . ($this->application->job?->title ?? 'Job'))
-            ->line('Sign in to your employer account to review your applications.');
+            ->action('View Applicants', $this->frontendUrl('/employer/applicants'))
+            ->line('Sign in to your employer account to review your remaining applications.');
     }
 
     public function toArray(object $notifiable): array

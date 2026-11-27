@@ -20,12 +20,14 @@ use App\Notifications\ApplicationSubmittedNotification;
 use App\Notifications\NewApplicationReceivedNotification;
 use App\Notifications\ApplicationStatusChangedNotification;
 use App\Notifications\ApplicationWithdrawnNotification;
+use App\Services\Notifications\NotificationService;
 
 class ApplicationService
 {
     public function __construct(
         protected ApplicationRepositoryInterface $applicationRepository,
-        protected ApplicantEvaluationInputBuilder $inputBuilder
+        protected ApplicantEvaluationInputBuilder $inputBuilder,
+        protected NotificationService $notificationService,
     ) {}
 
     /**
@@ -161,12 +163,12 @@ class ApplicationService
             'jobSeeker',
         ]);
 
-        $this->sendNotification(
+        $this->notificationService->send(
             $application->jobSeeker,
             new ApplicationSubmittedNotification($application)
         );
 
-        $this->sendNotification(
+        $this->notificationService->send(
             $application->job?->company?->employer,
             new NewApplicationReceivedNotification($application)
         );
@@ -277,9 +279,12 @@ class ApplicationService
             'jobSeeker',
         ]);
 
-        $this->sendNotification(
+        $this->notificationService->send(
             $updatedApplication->jobSeeker,
-            new ApplicationStatusChangedNotification($updatedApplication)
+            new ApplicationStatusChangedNotification(
+                $updatedApplication,
+                $updatedApplication->status->value ?? (string) $updatedApplication->status
+            )
         );
 
         return $updatedApplication;
@@ -320,53 +325,11 @@ class ApplicationService
             'jobSeeker',
         ]);
 
-        $this->sendNotification(
+        $this->notificationService->send(
             $updatedApplication->job?->company?->employer,
             new ApplicationWithdrawnNotification($updatedApplication)
         );
 
         return $updatedApplication;
-    }
-
-    /**
-     * Persist the in-app notification immediately, then queue only the email.
-     * This keeps the bell responsive even when the mail queue is busy.
-     */
-    private function sendNotification(?User $recipient, LaravelNotification $notification): void
-    {
-        if (! $recipient) {
-            return;
-        }
-
-        // 1. Persist the in-app notification synchronously.
-        $recipient->notifyNow($notification, ['database']);
-
-        // 2. Fetch the just-persisted DatabaseNotification model so we have its exact DB ID & data.
-        $persisted = $recipient->notifications()->whereKey($notification->id)->first();
-
-        // 3. Push to Reverb safely without failing the HTTP request if WebSockets are down.
-        if ($persisted) {
-            try {
-                event(new NotificationCreated(
-                    userId: (int) $recipient->getKey(),
-                    notification: [
-                        'id' => (string) $persisted->id,
-                        'type' => $persisted->type,
-                        'data' => $persisted->data,
-                        'read_at' => $persisted->read_at?->toISOString(),
-                        'created_at' => $persisted->created_at?->toISOString(),
-                    ],
-                ));
-            } catch (Throwable $exception) {
-                Log::warning('Unable to broadcast a user notification.', [
-                    'user_id' => $recipient->getKey(),
-                    'notification_id' => $persisted->id,
-                    'exception' => $exception->getMessage(),
-                ]);
-            }
-        }
-
-        // 4. Queue email delivery separately (relies on via() returning ['mail']).
-        $recipient->notify($notification);
     }
 }
