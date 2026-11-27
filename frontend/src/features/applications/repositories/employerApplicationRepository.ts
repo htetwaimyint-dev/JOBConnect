@@ -1,4 +1,3 @@
-
 import api from "@/services/api";
 
 import type {
@@ -42,10 +41,9 @@ const employerApplicationRepository = {
     async getApplicationDetail(
         applicationId: number,
     ): Promise<EmployerApplication> {
-        const response =
-            await api.get<EmployerApplicationDetailResponse>(
-                `/employer/applications/${applicationId}`,
-            );
+        const response = await api.get<EmployerApplicationDetailResponse>(
+            `/employer/applications/${applicationId}`,
+        );
 
         return response.data.data;
     },
@@ -55,11 +53,10 @@ const employerApplicationRepository = {
         applicationId: number,
         data: UpdateEmployerApplicationStatusData,
     ): Promise<EmployerApplication> {
-        const response =
-            await api.patch<EmployerApplicationDetailResponse>(
-                `/employer/applications/${applicationId}/status`,
-                data,
-            );
+        const response = await api.patch<EmployerApplicationDetailResponse>(
+            `/employer/applications/${applicationId}/status`,
+            data,
+        );
 
         return response.data.data;
     },
@@ -78,10 +75,9 @@ const employerApplicationRepository = {
     async evaluateAllApplicants(
         jobId: number,
     ): Promise<EmployerBatchAiEvaluationResponse> {
-        const response =
-            await api.post<EmployerBatchAiEvaluationResponse>(
-                `/employer/jobs/${jobId}/ai-screening`,
-            );
+        const response = await api.post<EmployerBatchAiEvaluationResponse>(
+            `/employer/jobs/${jobId}/ai-screening`,
+        );
 
         return response.data;
     },

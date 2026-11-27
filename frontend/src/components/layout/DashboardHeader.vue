@@ -1,556 +1,749 @@
 <script setup lang="ts">
-import { computed, ref, watch, onMounted, onBeforeUnmount } from "vue";
-import { useRoute, useRouter, RouterLink } from "vue-router";
+import { ref, computed, onMounted } from "vue";
+import type { Component } from "vue";
+import { RouterLink } from "vue-router";
+import { Line, Doughnut, Pie, Bar } from "vue-chartjs";
+import { formatDate } from "@/utils/formatDate";
+import { useDashboardCharts } from "@/features/admin/composables/useDashboardCharts";
+import { adminRepository } from "@/features/admin/repositories/adminRepository";
 
 import {
-  Menu,
-  Bell,
-  UserRound,
-  BriefcaseBusiness,
-  Settings,
-  LogOut,
-  ChevronDown,
-  X,
-  Building2,
-  UserSearch,
+    Chart as ChartJS,
+    Title,
+    Tooltip,
+    Legend,
+    LineElement,
+    PointElement,
+    CategoryScale,
+    LinearScale,
+    ArcElement,
+    BarElement,
+} from "chart.js";
+
+import {
+    Users,
+    Building2,
+    BriefcaseBusiness,
+    FileText,
+    ChartNoAxesCombined,
+    Activity,
+    ShieldCheck,
+    PieChart,
+    BarChart3,
 } from "lucide-vue-next";
 
-import { useAuthStore } from "@/stores/auth.store";
-import { useUiStore } from "@/stores/ui.store";
-import { useUserStore } from "@/stores/user.store";
-
-const route = useRoute();
-const router = useRouter();
-
-const authStore = useAuthStore();
-const uiStore = useUiStore();
-const userStore = useUserStore();
-
-// Dropdown States
-const isProfileOpen = ref(false);
-const isNotificationOpen = ref(false);
-const isUserMenuOpen = ref(false);
-
-// Profile Dropdown Reference
-const profileDropdownRef = ref<HTMLElement | null>(null);
-
-// User Roles
-const isAdmin = computed(() => authStore.user?.role === "admin");
-const isEmployer = computed(() => authStore.user?.role === "employer");
-
-// Active Navigation
-const activeMenuPath = computed(() => {
-  if (route.name === "jobdetail") {
-    const from = route.query.from;
-
-    if (from === "company-profile") {
-      return isAdmin.value ? "/admin/companies" : "/employer/profile";
-    }
-
-    if (from === "job-post") {
-      return "/employer/jobs";
-    }
-
-    if (from === "job-approval") {
-      return "/admin/job-approvals";
-    }
-  }
-
-  return route.path;
-});
-
-const isMenuActive = (path: string) => {
-  return activeMenuPath.value === path;
-};
-
-// Admin Navigation
-const adminNavigation = [
-  {
-    title: "Dashboard",
-    path: "/admin/dashboard",
-  },
-  {
-    title: "User",
-    path: "#",
-    children: [
-      { title: "Companies", path: "/admin/companies" },
-      { title: "Job Seekers", path: "/admin/job-seekers" },
-    ],
-  },
-  {
-    title: "Company Verify",
-    path: "/admin/company-approvals",
-  },
-  {
-    title: "Job Post Approval",
-    path: "/admin/job-approvals",
-  },
-  {
-    title: "Category",
-    path: "/admin/categories",
-  },
-  {
-    title: "Report",
-    path: "/admin/reports",
-  },
-];
-
-// Employer Navigation
-const employerNavigation = [
-  {
-    title: "Dashboard",
-    path: "/employer/dashboard",
-  },
-  {
-    title: "Job Post",
-    path: "/employer/jobs",
-  },
-  {
-    title: "Applicants",
-    path: "/employer/applicants",
-  },
-  {
-    title: "Comany Profile",
-    path: "/employer/profile",
-  },
-  {
-    title: "Job Seeker Profile",
-    path: "/employer/job-seekers",
-  },
-  {
-    title: "Direct Offer",
-    path: "/employer/job-offers",
-  },
-  {
-    title: "Interviews",
-    path: "/employer/interviews",
-  },
-];
-
-// User Information
-const userName = computed(() => authStore.user?.name || "User");
-
-const userInitial = computed(
-  () => userName.value.trim().charAt(0).toUpperCase() || "U",
+// Register Chart.js components
+ChartJS.register(
+    Title,
+    Tooltip,
+    Legend,
+    LineElement,
+    PointElement,
+    CategoryScale,
+    LinearScale,
+    ArcElement,
+    BarElement,
 );
 
-const profilePhoto = computed(() => userStore.profilePhoto);
+// Types
+interface StatCard {
+    title: string;
+    value: string;
+    description: string;
+    icon: Component;
+    iconStyle: string;
+    to?: string;
+}
 
-// Profile Paths
-const profilePath = computed(() => {
-  if (authStore.user?.role === "employer") {
-    return "/employer/profile";
-  }
+interface DashboardStats {
+    total_users: number;
+    total_companies: number;
+    total_jobs: number;
+    total_applications: number;
+}
 
-  if (authStore.user?.role === "admin") {
-    return "/admin/dashboard";
-  }
+interface UserGrowth {
+    date: string;
+    day: string;
+    job_seekers: number;
+    employers: number;
+}
 
-  return "/jobseeker/profile";
+interface JobStatus {
+    status: string;
+    total: number;
+}
+
+interface CompanyVerification {
+    status: string;
+    total: number;
+}
+
+interface RecentActivity {
+    id: number;
+    actor: string;
+    action: string;
+    description: string | null;
+    created_at: string | null;
+}
+
+interface JobsByCategory {
+    category: string;
+    total: number;
+}
+
+interface MonthlyJob {
+    date: string;
+    month: string;
+    total: number;
+}
+
+// Dashboard States
+const dashboardStats = ref<DashboardStats>({
+    total_users: 0,
+    total_companies: 0,
+    total_jobs: 0,
+    total_applications: 0,
 });
 
-const settingsPath = computed(() => {
-  const role = authStore.user?.role;
+const userGrowth = ref<UserGrowth[]>([]);
+const jobStatus = ref<JobStatus[]>([]);
+const companyVerification = ref<CompanyVerification[]>([]);
+const recentActivities = ref<RecentActivity[]>([]);
+const jobsByCategory = ref<JobsByCategory[]>([]);
+const monthlyJobs = ref<MonthlyJob[]>([]);
 
-  if (role === "employer") return "/employer/settings";
-  if (role === "admin") return "/admin/settings";
+const isLoading = ref(false);
+const errorMessage = ref("");
 
-  return "/jobseeker/settings";
-});
+// Chart Composable
+const {
+    userGrowthChartData,
+    userGrowthChartOptions,
 
-// Close Dropdowns
-const closeMenus = () => {
-  isProfileOpen.value = false;
-  isNotificationOpen.value = false;
-  isUserMenuOpen.value = false;
-};
+    jobStatusTotal,
+    jobStatusColors,
+    jobStatusChartData,
+    jobStatusChartOptions,
+    getJobStatusPercentage,
 
-// Toggle Profile
-const toggleProfile = () => {
-  isProfileOpen.value = !isProfileOpen.value;
-  isNotificationOpen.value = false;
-  isUserMenuOpen.value = false;
-};
+    companyVerificationTotal,
+    companyVerificationColors,
+    companyVerificationChartData,
+    companyVerificationChartOptions,
+    getCompanyVerificationPercentage,
 
-// Toggle User Submenu
-const toggleUserMenu = () => {
-  isUserMenuOpen.value = !isUserMenuOpen.value;
-  isProfileOpen.value = false;
-  isNotificationOpen.value = false;
-};
+    jobsByCategoryChartData,
+    jobsByCategoryChartOptions,
 
-// Toggle Notifications
-const toggleNotifications = () => {
-  isNotificationOpen.value = !isNotificationOpen.value;
-  isProfileOpen.value = false;
-  isUserMenuOpen.value = false;
-};
-
-// Outside Click
-const handleOutsideClick = (event: PointerEvent) => {
-  const target = event.target as Node;
-
-  if (profileDropdownRef.value && !profileDropdownRef.value.contains(target)) {
-    isProfileOpen.value = false;
-  }
-};
-
-onMounted(() => {
-  document.addEventListener("pointerdown", handleOutsideClick);
-});
-
-onBeforeUnmount(() => {
-  document.removeEventListener("pointerdown", handleOutsideClick);
-});
-
-// Close Dropdowns When Route Changes
-watch(
-  () => route.fullPath,
-  () => {
-    closeMenus();
-  },
+    monthlyJobsChartData,
+    monthlyJobsChartOptions,
+} = useDashboardCharts(
+    userGrowth,
+    jobStatus,
+    jobsByCategory,
+    monthlyJobs,
+    companyVerification,
 );
 
-// Logout
-const logout = async () => {
-  try {
-    closeMenus();
+// Statistics Cards
+const stats = computed<StatCard[]>(() => [
+    {
+        title: "Total Users",
+        value: String(dashboardStats.value.total_users),
+        description: "Job seekers and employers",
+        icon: Users,
+        iconStyle: "bg-blue-50 text-blue-600",
+    },
+    {
+        title: "Total Companies",
+        value: String(dashboardStats.value.total_companies),
+        description: "Registered companies",
+        icon: Building2,
+        iconStyle: "bg-violet-50 text-violet-600",
+    },
+    {
+        title: "Total Jobs",
+        value: String(dashboardStats.value.total_jobs),
+        description: "All posted job listings",
+        icon: BriefcaseBusiness,
+        iconStyle: "bg-emerald-50 text-emerald-600",
+    },
+    {
+        title: "Total Applications",
+        value: String(dashboardStats.value.total_applications),
+        description: "Applications received",
+        icon: FileText,
+        iconStyle: "bg-amber-50 text-amber-600",
+    },
+]);
 
-    await authStore.logout();
+// Fetch Dashboard API
+async function fetchDashboard() {
+    isLoading.value = true;
+    errorMessage.value = "";
 
-    userStore.clearProfilePhoto();
-    uiStore.closeSidebar();
+    try {
+        const response = await adminRepository.getDashboard();
+        const responseData = response.data ?? response;
+        const data = responseData.data ?? responseData;
 
-    await router.push("/login");
-  } catch (error) {
-    console.error("Logout failed:", error);
-  }
-};
+        dashboardStats.value = {
+            total_users: Number(data.stats?.total_users ?? 0),
+            total_companies: Number(data.stats?.total_companies ?? 0),
+            total_jobs: Number(data.stats?.total_jobs ?? 0),
+            total_applications: Number(data.stats?.total_applications ?? 0),
+        };
+
+        userGrowth.value = data.user_growth ?? [];
+        jobStatus.value = data.job_status ?? [];
+        companyVerification.value = data.company_verification ?? [];
+        recentActivities.value = data.recent_activities ?? [];
+        jobsByCategory.value = data.jobs_by_category ?? [];
+        monthlyJobs.value = data.monthly_jobs ?? [];
+    } catch (error) {
+        console.error("Failed to fetch dashboard data:", error);
+        errorMessage.value = "Failed to load dashboard data.";
+    } finally {
+        isLoading.value = false;
+    }
+}
+
+onMounted(fetchDashboard);
 </script>
 
 <template>
-  <header
-    class="sticky top-0 z-30 flex h-16 w-full items-center border-b border-slate-200 bg-white/95 px-3 shadow-sm backdrop-blur-md sm:px-5 xl:px-8"
-  >
-    <!-- Left Section -->
-    <div class="flex shrink-0 items-center gap-3 xl:gap-4">
-      <!-- Sidebar Toggle -->
-      <button
-        type="button"
-        class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-slate-600 transition hover:bg-slate-100 hover:text-blue-600 xl:hidden"
-        aria-label="Toggle sidebar"
-        :aria-expanded="uiStore.isSidebarOpen"
-        @click="uiStore.toggleSidebar()"
-      >
-        <Menu v-if="!uiStore.isSidebarOpen" :size="22" />
-        <X v-else :size="22" />
-      </button>
-
-      <!-- Logo -->
-      <RouterLink
-        to="/"
-        class="flex shrink-0 items-center gap-1 no-underline"
-        @click="closeMenus"
-      >
-        <span
-          class="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-600 text-white shadow-sm sm:h-10 sm:w-10"
+    <div class="space-y-6">
+        <!-- Welcome Section -->
+        <section
+            class="flex flex-col justify-between gap-4 sm:flex-row sm:items-center"
         >
-          <BriefcaseBusiness :size="21" />
-        </span>
-
-        <h2
-          class="m-0 whitespace-nowrap text-lg font-bold tracking-tight text-blue-600 sm:text-lg"
-        >
-          JobConnect
-        </h2>
-      </RouterLink>
-    </div>
-
-    <!-- Admin Navigation -->
-    <nav
-      v-if="isAdmin"
-      class="mx-2 hidden min-w-0 flex-1 items-center justify-center gap-2 xl:flex 2xl:mx-3"
-    >
-      <template v-for="item in adminNavigation" :key="item.title">
-        <div v-if="item.children" class="relative">
-          <button
-            type="button"
-            class="nav-link flex items-center gap-1"
-            :class="
-              isUserMenuOpen ||
-              route.path.includes('/admin/companies') ||
-              route.path.includes('/admin/job-seekers')
-                ? 'bg-blue-50 text-blue-700'
-                : 'text-slate-600 hover:bg-slate-100 hover:text-blue-600'
-            "
-            :aria-expanded="isUserMenuOpen"
-            @click="toggleUserMenu"
-          >
-            {{ item.title }}
-
-            <ChevronDown
-              :size="14"
-              class="transition-transform"
-              :class="{ 'rotate-180': isUserMenuOpen }"
-            />
-          </button>
-
-          <!-- User Dropdown -->
-          <Transition name="dropdown">
-            <div
-              v-if="isUserMenuOpen"
-              class="absolute left-1/2 top-full z-50 mt-2 w-48 -translate-x-1/2 overflow-hidden rounded-xl border border-slate-200 bg-white py-1 shadow-xl"
-            >
-              <RouterLink
-                v-for="child in item.children"
-                :key="child.path"
-                :to="child.path"
-                class="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 hover:text-blue-600"
-                :class="{
-                  'bg-blue-50 text-blue-700': route.path === child.path,
-                }"
-                @click="closeMenus"
-              >
-                <Building2
-                  v-if="child.title === 'Companies'"
-                  :size="18"
-                  class="shrink-0 text-slate-400"
-                />
-
-                <UserSearch
-                  v-else-if="child.title === 'Job Seekers'"
-                  :size="18"
-                  class="shrink-0 text-slate-400"
-                />
-
-                <span class="whitespace-nowrap">
-                  {{ child.title }}
-                </span>
-              </RouterLink>
+            <div>
+                <h1 class="text-2xl font-bold tracking-tight text-slate-800">
+                    Dashboard Overview
+                </h1>
+                <p class="mt-1 text-sm text-slate-500">
+                    Welcome back! Here's what's happening with JobConnect AI.
+                </p>
             </div>
-          </Transition>
+
+            <div
+                class="flex w-fit items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600"
+            >
+                <Activity :size="17" class="text-blue-600" />
+                <span>Platform Overview</span>
+            </div>
+        </section>
+
+        <!-- API Error -->
+        <div
+            v-if="errorMessage"
+            class="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-600"
+        >
+            {{ errorMessage }}
+            <button
+                class="ml-2 font-semibold underline"
+                @click="fetchDashboard"
+            >
+                Retry
+            </button>
         </div>
 
-        <!-- Admin Normal Links -->
-        <RouterLink
-          v-else
-          :to="item.path"
-          class="nav-link"
-          :class="
-            route.path === item.path
-              ? 'bg-blue-50 text-blue-700'
-              : 'text-slate-600 hover:bg-slate-100 hover:text-blue-600'
-          "
-          @click="closeMenus"
+        <!-- Statistics -->
+        <section>
+            <div class="mb-4 flex items-center justify-between">
+                <h2 class="text-base font-semibold text-slate-800">
+                    Platform Statistics
+                </h2>
+
+                <span class="text-xs text-slate-400">
+                    {{ isLoading ? "Loading..." : "Overview" }}
+                </span>
+            </div>
+
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                <template v-for="stat in stats" :key="stat.title">
+                    <RouterLink
+                        v-if="stat.to"
+                        :to="stat.to"
+                        class="block rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:bg-blue-50/30 hover:shadow-md"
+                    >
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-slate-600">
+                                    {{ stat.title }}
+                                </p>
+
+                                <p
+                                    class="mt-3 text-3xl font-bold tracking-tight text-slate-800"
+                                >
+                                    {{ isLoading ? "..." : stat.value }}
+                                </p>
+                            </div>
+
+                            <div
+                                class="flex h-11 w-11 items-center justify-center rounded-xl"
+                                :class="stat.iconStyle"
+                            >
+                                <component :is="stat.icon" :size="22" />
+                            </div>
+                        </div>
+
+                        <p class="mt-4 text-xs text-slate-500">
+                            {{ stat.description }}
+                        </p>
+                    </RouterLink>
+
+                    <article
+                        v-else
+                        class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm"
+                    >
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-slate-600">
+                                    {{ stat.title }}
+                                </p>
+
+                                <p
+                                    class="mt-3 text-3xl font-bold tracking-tight text-slate-800"
+                                >
+                                    {{ isLoading ? "..." : stat.value }}
+                                </p>
+                            </div>
+
+                            <div
+                                class="flex h-11 w-11 items-center justify-center rounded-xl"
+                                :class="stat.iconStyle"
+                            >
+                                <component :is="stat.icon" :size="22" />
+                            </div>
+                        </div>
+
+                        <p class="mt-4 text-xs text-slate-500">
+                            {{ stat.description }}
+                        </p>
+                    </article>
+                </template>
+            </div>
+        </section>
+
+        <!-- Analytics -->
+        <section class="grid grid-cols-1 gap-5 xl:grid-cols-3">
+            <!-- User Growth -->
+            <article
+                class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm"
+            >
+                <div class="flex items-center justify-between gap-3">
+                    <div>
+                        <h2 class="font-semibold text-slate-800">
+                            User Growth Overview
+                        </h2>
+                        <p class="mt-1 text-xs text-slate-400">
+                            Daily registration activity over the last 7 days
+                        </p>
+                    </div>
+
+                    <div
+                        class="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 text-blue-600"
+                    >
+                        <ChartNoAxesCombined :size="20" />
+                    </div>
+                </div>
+
+                <div class="mt-6 h-72 w-full">
+                    <Line
+                        v-if="userGrowth.length > 0"
+                        :data="userGrowthChartData"
+                        :options="userGrowthChartOptions"
+                    />
+
+                    <div
+                        v-else-if="!isLoading"
+                        class="flex h-full items-center justify-center rounded-lg bg-slate-50 text-sm text-slate-400"
+                    >
+                        No user growth data available.
+                    </div>
+
+                    <div
+                        v-else
+                        class="flex h-full items-center justify-center text-sm text-slate-400"
+                    >
+                        Loading chart...
+                    </div>
+                </div>
+            </article>
+
+            <!-- Job Status -->
+            <article
+                class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm"
+            >
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="font-semibold text-slate-800">Job Status</h2>
+                        <p class="mt-1 text-xs text-slate-400">
+                            Overview of job listings
+                        </p>
+                    </div>
+
+                    <div
+                        class="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600"
+                    >
+                        <BriefcaseBusiness :size="20" />
+                    </div>
+                </div>
+
+                <div class="relative mx-auto mt-5 h-52 w-full max-w-[230px]">
+                    <Doughnut
+                        v-if="jobStatus.length > 0"
+                        :data="jobStatusChartData"
+                        :options="jobStatusChartOptions"
+                    />
+
+                    <div
+                        class="pointer-events-none absolute inset-0 flex flex-col items-center justify-center"
+                    >
+                        <span class="text-3xl font-bold text-slate-800">
+                            {{ jobStatusTotal }}
+                        </span>
+                        <span class="mt-1 text-xs text-slate-400"
+                            >Total Jobs</span
+                        >
+                    </div>
+
+                    <div
+                        v-if="!isLoading && jobStatus.length === 0"
+                        class="absolute inset-0 flex items-center justify-center rounded-full text-xs text-slate-400"
+                    >
+                        No data
+                    </div>
+                </div>
+
+                <div class="mt-5 space-y-3">
+                    <div
+                        v-for="item in jobStatus"
+                        :key="item.status"
+                        class="flex items-center justify-between gap-3"
+                    >
+                        <div class="flex min-w-0 items-center gap-2">
+                            <span
+                                class="h-2.5 w-2.5 shrink-0 rounded-full"
+                                :style="{
+                                    backgroundColor:
+                                        jobStatusColors[
+                                            item.status.toLowerCase()
+                                        ] ?? '#64748B',
+                                }"
+                            ></span>
+
+                            <span
+                                class="truncate text-sm capitalize text-slate-600"
+                            >
+                                {{ item.status }}
+                            </span>
+                        </div>
+
+                        <div class="flex shrink-0 items-center gap-2">
+                            <span class="text-sm font-semibold text-slate-800">
+                                {{ item.total }}
+                            </span>
+                            <span
+                                class="w-10 text-right text-xs text-slate-400"
+                            >
+                                {{ getJobStatusPercentage(item.total) }}%
+                            </span>
+                        </div>
+                    </div>
+
+                    <p
+                        v-if="!isLoading && jobStatus.length === 0"
+                        class="py-3 text-center text-sm text-slate-400"
+                    >
+                        No job statistics available.
+                    </p>
+                </div>
+            </article>
+
+            <!-- Company Verification -->
+            <article
+                class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm"
+            >
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="font-semibold text-slate-800">
+                            Company Verification
+                        </h2>
+                        <p class="mt-1 text-xs text-slate-400">
+                            Overview of company approval statuses
+                        </p>
+                    </div>
+
+                    <div
+                        class="flex h-10 w-10 items-center justify-center rounded-lg bg-violet-50 text-violet-600"
+                    >
+                        <Building2 :size="20" />
+                    </div>
+                </div>
+
+                <div class="relative mx-auto mt-5 h-52 w-full max-w-[230px]">
+                    <Doughnut
+                        v-if="companyVerification.length > 0"
+                        :data="companyVerificationChartData"
+                        :options="companyVerificationChartOptions"
+                    />
+
+                    <div
+                        class="pointer-events-none absolute inset-0 flex flex-col items-center justify-center"
+                    >
+                        <span class="text-3xl font-bold text-slate-800">
+                            {{ companyVerificationTotal }}
+                        </span>
+                        <span class="mt-1 text-xs text-slate-400"
+                            >Total Companies</span
+                        >
+                    </div>
+
+                    <div
+                        v-if="!isLoading && companyVerification.length === 0"
+                        class="absolute inset-0 flex items-center justify-center rounded-full text-xs text-slate-400"
+                    >
+                        No data
+                    </div>
+                </div>
+
+                <div class="mt-5 space-y-3">
+                    <div
+                        v-for="item in companyVerification"
+                        :key="item.status"
+                        class="flex items-center justify-between gap-3"
+                    >
+                        <div class="flex min-w-0 items-center gap-2">
+                            <span
+                                class="h-2.5 w-2.5 shrink-0 rounded-full"
+                                :style="{
+                                    backgroundColor:
+                                        companyVerificationColors[
+                                            item.status.toLowerCase()
+                                        ] ?? '#64748B',
+                                }"
+                            ></span>
+
+                            <span
+                                class="truncate text-sm capitalize text-slate-600"
+                            >
+                                {{ item.status }}
+                            </span>
+                        </div>
+
+                        <div class="flex shrink-0 items-center gap-2">
+                            <span class="text-sm font-semibold text-slate-800">
+                                {{ item.total }}
+                            </span>
+                            <span
+                                class="w-10 text-right text-xs text-slate-400"
+                            >
+                                {{
+                                    getCompanyVerificationPercentage(
+                                        item.total,
+                                    )
+                                }}%
+                            </span>
+                        </div>
+                    </div>
+
+                    <p
+                        v-if="!isLoading && companyVerification.length === 0"
+                        class="py-3 text-center text-sm text-slate-400"
+                    >
+                        No company verification data available.
+                    </p>
+                </div>
+            </article>
+        </section>
+
+        <!-- Bottom Section -->
+        <section class="grid grid-cols-1 gap-5 xl:grid-cols-3">
+            <!-- Jobs By Category Pie Chart -->
+            <article
+                class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm"
+            >
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="font-semibold text-slate-800">
+                            Jobs By Category
+                        </h2>
+                        <p class="mt-1 text-xs text-slate-400">
+                            Job distribution by category
+                        </p>
+                    </div>
+
+                    <div
+                        class="flex h-10 w-10 items-center justify-center rounded-lg bg-violet-50 text-violet-600"
+                    >
+                        <PieChart :size="20" />
+                    </div>
+                </div>
+
+                <div class="mt-5 h-64 w-full">
+                    <Pie
+                        v-if="jobsByCategory.length > 0"
+                        :data="jobsByCategoryChartData"
+                        :options="jobsByCategoryChartOptions"
+                    />
+
+                    <div
+                        v-else-if="!isLoading"
+                        class="flex h-full items-center justify-center rounded-lg bg-slate-50 text-sm text-slate-400"
+                    >
+                        No category data available.
+                    </div>
+
+                    <div
+                        v-else
+                        class="flex h-full items-center justify-center text-sm text-slate-400"
+                    >
+                        Loading chart...
+                    </div>
+                </div>
+            </article>
+
+            <!-- Monthly Jobs Bar Chart -->
+            <article
+                class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm"
+            >
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="font-semibold text-slate-800">
+                            Monthly Job Posts
+                        </h2>
+                        <p class="mt-1 text-xs text-slate-400">
+                            Jobs posted over the last 6 months
+                        </p>
+                    </div>
+
+                    <div
+                        class="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 text-blue-600"
+                    >
+                        <BarChart3 :size="20" />
+                    </div>
+                </div>
+
+                <div class="mt-5 h-64 w-full">
+                    <Bar
+                        v-if="monthlyJobs.length > 0"
+                        :data="monthlyJobsChartData"
+                        :options="monthlyJobsChartOptions"
+                    />
+
+                    <div
+                        v-else-if="!isLoading"
+                        class="flex h-full items-center justify-center rounded-lg bg-slate-50 text-sm text-slate-400"
+                    >
+                        No monthly job data available.
+                    </div>
+
+                    <div
+                        v-else
+                        class="flex h-full items-center justify-center text-sm text-slate-400"
+                    >
+                        Loading chart...
+                    </div>
+                </div>
+            </article>
+
+            <!-- Recent Activities -->
+            <article
+                class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm"
+            >
+                <div class="flex items-center justify-between gap-3">
+                    <div>
+                        <h2 class="font-semibold text-slate-800">
+                            Recent Activities
+                        </h2>
+                        <p class="mt-1 text-xs text-slate-400">
+                            Latest 5 activities across the platform
+                        </p>
+                    </div>
+
+                    <RouterLink
+                        to="/admin/activity-logs"
+                        class="shrink-0 text-sm font-semibold text-blue-600 transition hover:text-blue-700"
+                    >
+                        View All
+                    </RouterLink>
+                </div>
+
+                <div class="mt-5 space-y-4">
+                    <div
+                        v-for="activity in recentActivities.slice(0, 5)"
+                        :key="activity.id"
+                        class="flex items-start gap-3 border-b border-slate-100 pb-4 last:border-0 last:pb-0"
+                    >
+                        <div
+                            class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-50 text-blue-600"
+                        >
+                            <Activity :size="17" />
+                        </div>
+
+                        <div class="min-w-0 flex-1">
+                            <div class="flex flex-wrap items-center gap-2">
+                                <p class="text-sm font-semibold text-slate-800">
+                                    {{ activity.action }}
+                                </p>
+
+                                <span class="text-xs text-slate-400">
+                                    {{ formatDate(activity.created_at) }}
+                                </span>
+                            </div>
+
+                            <p class="mt-1 text-sm text-slate-600">
+                                {{
+                                    activity.description ||
+                                    "No description available."
+                                }}
+                            </p>
+
+                            <p class="mt-1 text-xs text-slate-400">
+                                By {{ activity.actor || "System" }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <p
+                        v-if="!isLoading && recentActivities.length === 0"
+                        class="py-8 text-center text-sm text-slate-400"
+                    >
+                        No recent activities available.
+                    </p>
+
+                    <p
+                        v-if="isLoading"
+                        class="py-8 text-center text-sm text-slate-400"
+                    >
+                        Loading activities...
+                    </p>
+                </div>
+            </article>
+        </section>
+
+        <!-- System Status -->
+        <section
+            class="flex flex-col gap-3 rounded-xl border border-blue-100 bg-blue-50/60 p-4 sm:flex-row sm:items-center"
         >
-          {{ item.title }}
-        </RouterLink>
-      </template>
-    </nav>
-
-    <!-- Employer Navigation -->
-    <nav
-      v-if="isEmployer"
-      class="mx-2 hidden min-w-0 flex-1 items-center justify-center gap-2 xl:flex 2xl:mx-3"
-    >
-      <RouterLink
-        v-for="item in employerNavigation"
-        :key="item.path"
-        :to="item.path"
-        class="nav-link"
-        :class="
-          route.path === item.path
-            ? 'bg-blue-50 text-blue-700'
-            : 'text-slate-600 hover:bg-slate-100 hover:text-blue-600'
-        "
-        @click="closeMenus"
-      >
-        {{ item.title }}
-      </RouterLink>
-    </nav>
-
-    <!-- Right Section -->
-    <div class="ml-auto flex shrink-0 items-center gap-2 sm:gap-4">
-      <!-- Notification -->
-      <div class="relative">
-        <button
-          type="button"
-          aria-label="Notifications"
-          :aria-expanded="isNotificationOpen"
-          class="relative flex h-10 w-10 items-center justify-center rounded-full text-slate-600 transition hover:bg-slate-100 hover:text-blue-600"
-          @click="toggleNotifications"
-        >
-          <Bell :size="21" />
-        </button>
-
-        <!-- Notification Dropdown -->
-        <Transition name="dropdown">
-          <div
-            v-if="isNotificationOpen"
-            class="absolute right-0 top-12 z-50 w-72 rounded-xl border border-slate-200 bg-white p-4 shadow-xl sm:w-80"
-          >
             <div
-              class="flex items-center justify-between border-b border-slate-100 pb-3"
+                class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white text-blue-600"
             >
-              <h3 class="text-sm font-semibold text-slate-800">
-                Notifications
-              </h3>
-
-              <button
-                type="button"
-                aria-label="Close notifications"
-                class="text-slate-400 hover:text-slate-700"
-                @click="isNotificationOpen = false"
-              >
-                <X :size="18" />
-              </button>
+                <ShieldCheck :size="21" />
             </div>
 
-            <div class="py-6 text-center">
-              <Bell :size="28" class="mx-auto mb-2 text-slate-300" />
-              <p class="text-sm text-slate-500">No notifications yet.</p>
+            <div>
+                <p class="text-sm font-semibold text-slate-700">
+                    JobConnect AI Administration
+                </p>
+                <p class="mt-1 text-xs text-slate-500">
+                    Manage users, companies, job approvals, and platform
+                    activities from your admin dashboard.
+                </p>
             </div>
-          </div>
-        </Transition>
-      </div>
-
-      <!-- Profile Dropdown -->
-      <div ref="profileDropdownRef" class="relative">
-        <button
-          type="button"
-          class="flex items-center gap-2 rounded-xl p-1.5 transition hover:bg-slate-100 sm:gap-3 sm:px-2"
-          :aria-expanded="isProfileOpen"
-          aria-haspopup="true"
-          aria-label="Open profile menu"
-          @click="toggleProfile"
-        >
-          <img
-            v-if="profilePhoto"
-            :src="profilePhoto"
-            alt="Profile"
-            class="h-9 w-9 rounded-full object-cover"
-          />
-
-          <div
-            v-else
-            class="flex h-9 w-9 items-center justify-center rounded-full bg-blue-100 font-semibold text-blue-700"
-          >
-            {{ userInitial }}
-          </div>
-
-          <div class="hidden text-left sm:block">
-            <p class="max-w-32 truncate text-sm font-semibold text-slate-800">
-              {{ userName }}
-            </p>
-
-            <p class="text-xs capitalize text-slate-500">
-              {{ authStore.user?.role?.replace(/_/g, " ") || "User" }}
-            </p>
-          </div>
-
-          <ChevronDown
-            :size="16"
-            class="hidden text-slate-500 transition sm:block"
-            :class="{ 'rotate-180': isProfileOpen }"
-          />
-        </button>
-
-        <!-- Profile Dropdown Menu -->
-        <Transition name="dropdown">
-          <div
-            v-if="isProfileOpen"
-            class="absolute right-0 top-14 z-50 w-56 rounded-xl border border-slate-200 bg-white p-2 shadow-lg"
-          >
-            <div class="border-b border-slate-100 px-3 py-3">
-              <p class="truncate text-sm font-semibold text-slate-800">
-                {{ userName }}
-              </p>
-
-              <p class="mt-1 text-xs capitalize text-slate-500">
-                {{ authStore.user?.role?.replace(/_/g, " ") || "User" }}
-              </p>
-            </div>
-
-            <RouterLink
-              :to="profilePath"
-              class="dropdown-link"
-              @click="closeMenus"
-            >
-              <UserRound :size="17" />
-              My Profile
-            </RouterLink>
-
-            <RouterLink
-              :to="settingsPath"
-              class="dropdown-link"
-              @click="closeMenus"
-            >
-              <Settings :size="17" />
-              Settings
-            </RouterLink>
-
-            <button
-              type="button"
-              class="flex w-full items-center gap-3 rounded-lg px-3 py-3 text-sm text-red-600 transition hover:bg-red-50"
-              @click="logout"
-            >
-              <LogOut :size="17" />
-              Logout
-            </button>
-          </div>
-        </Transition>
-      </div>
+        </section>
     </div>
-  </header>
 </template>
-
-<style scoped>
-/* Shared Desktop Navigation Style */
-.nav-link {
-  display: flex;
-  flex-shrink: 0;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  padding: 8px 12px;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 500;
-  line-height: 20px;
-  white-space: nowrap;
-  transition:
-    background-color 0.2s ease,
-    color 0.2s ease;
-}
-
-/* Dropdown Links */
-.dropdown-link {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
-  border-radius: 8px;
-  color: #334155;
-  font-size: 14px;
-  text-decoration: none;
-  transition: background-color 0.2s ease;
-}
-
-.dropdown-link:hover {
-  background-color: #f1f5f9;
-}
-
-/* Dropdown Transition */
-.dropdown-enter-active,
-.dropdown-leave-active {
-  transition:
-    opacity 0.2s ease,
-    transform 0.2s ease;
-}
-
-.dropdown-enter-from,
-.dropdown-leave-to {
-  opacity: 0;
-  transform: translateY(-5px);
-}
-</style>
