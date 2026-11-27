@@ -54,7 +54,7 @@ class ApplicationRepository implements ApplicationRepositoryInterface
                 'job.category',
                 'resume',
                 'jobSeeker',
-                'latestSuccessfulAiAnalysis',
+
             ])
             ->whereHas('job', function ($query) use ($company, $categoryId) {
                 $query->where('company_id', $company->id)
@@ -95,7 +95,7 @@ class ApplicationRepository implements ApplicationRepositoryInterface
                 'job.company',
                 'resume',
                 'jobSeeker',
-                'latestSuccessfulAiAnalysis',
+
             ])
             ->whereHas('job', function ($query) use ($company, $jobId) {
                 $query->where('company_id', $company->id)
@@ -146,7 +146,7 @@ class ApplicationRepository implements ApplicationRepositoryInterface
                 'jobSeeker.experiences',
                 'answers.jobQuestion',
                 'statusHistories',
-                'latestSuccessfulAiAnalysis',
+
             ])
             ->whereHas('job', function ($query) use ($company) {
                 $query->where('company_id', $company->id);
@@ -201,7 +201,7 @@ class ApplicationRepository implements ApplicationRepositoryInterface
                 'jobSeeker.experiences',
                 'answers.jobQuestion',
                 'statusHistories',
-                'latestSuccessfulAiAnalysis',
+
             ]);
         });
     }

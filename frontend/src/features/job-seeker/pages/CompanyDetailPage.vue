@@ -552,7 +552,8 @@ onMounted(() => {
                   @click="activeTab = 'jobs'"
                   class="text-sm font-medium text-indigo-600 hover:text-indigo-800 flex items-center gap-1"
                 >
-                  View All Jobs <ArrowRight class="h-4 w-4" />
+                  View All Jobs
+                  <ArrowRight class="h-4 w-4" />
                 </button>
               </div>
 
@@ -723,7 +724,8 @@ onMounted(() => {
                   @click="activeTab = 'gallery'"
                   class="text-sm font-medium text-indigo-600 hover:text-indigo-800 flex items-center gap-1"
                 >
-                  View All Photos <ArrowRight class="h-4 w-4" />
+                  View All Photos
+                  <ArrowRight class="h-4 w-4" />
                 </button>
               </div>
 

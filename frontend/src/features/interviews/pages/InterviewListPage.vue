@@ -137,7 +137,7 @@ async function removeInterviewer(id: number) {
 
 <template>
     <div
-        class="flex h-full min-h-0 flex-1 flex-col overflow-hidden text-slate-800"
+        class="screen-locked flex h-full min-h-0 flex-1 flex-col overflow-hidden text-slate-800"
     >
         <!-- Header -->
         <div class="mb-2.5 flex shrink-0 items-center justify-between gap-3">

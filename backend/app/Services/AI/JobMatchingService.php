@@ -14,7 +14,8 @@ use RuntimeException;
 class JobMatchingService
 {
     public function __construct(
-        protected GroqService $groq
+        protected GroqService $groq,
+        protected ApplicantEvaluationInputBuilder $inputBuilder
     ) {}
 
     /**
@@ -24,6 +25,7 @@ class JobMatchingService
         Job $job,
         User $employer
     ): array {
+        // Get only applications eligible for AI screening.
         $applications = $job->applications()
             ->whereIn('status', [
                 ApplicationStatus::Pending->value,
@@ -41,9 +43,10 @@ class JobMatchingService
         $evaluations = [];
         $failures = [];
 
+        // Evaluate every eligible applicant.
         foreach ($applications as $application) {
             try {
-                $evaluations[] = $this->evaluateApplicant(
+                $evaluations[] = $this->evaluateSingleApplicant(
                     $job,
                     $application,
                     $employer
@@ -58,25 +61,46 @@ class JobMatchingService
             }
         }
 
+        // Count all successful evaluations before limiting results.
+        $totalSuccessful = count($evaluations);
+
+        // Sort by match score (highest first).
+        // Use application ID as a consistent tie-breaker.
+        usort($evaluations, function ($a, $b) {
+            $scoreComparison = $b['match_score'] <=> $a['match_score'];
+
+            if ($scoreComparison !== 0) {
+                return $scoreComparison;
+            }
+
+            return $a['application_id'] <=> $b['application_id'];
+        });
+
+        // Return only the top 10 applicants.
+        $topTenEvaluations = array_slice($evaluations, 0, 10);
+
         return [
             'job_id' => $job->id,
             'total_applicants' => $applications->count(),
-            'successful' => count($evaluations),
+            'successful' => $totalSuccessful,
             'failed' => count($failures),
-            'evaluations' => $evaluations,
+            'returned' => count($topTenEvaluations),
+            'evaluations' => $topTenEvaluations,
             'failures' => $failures,
         ];
     }
 
-
     /**
      * Evaluate one applicant for a specific job.
+     *
+     * This method is shared by individual and batch evaluation.
      */
     public function evaluateSingleApplicant(
         Job $job,
         Application $application,
         User $employer
     ): array {
+        // Check whether the application is eligible for AI screening.
         if (! in_array($application->status, [
             ApplicationStatus::Pending,
             ApplicationStatus::Reviewed,
@@ -86,10 +110,76 @@ class JobMatchingService
             );
         }
 
-        // Return existing successful evaluation instead of calling AI again.
-        $existingAnalysis = $application->latestSuccessfulAiAnalysis;
+        // Load applicant information required for evaluation.
+        $application->loadMissing([
+            'jobSeeker.jobSeekerProfile',
+            'jobSeeker.skills',
+            'jobSeeker.educations',
+            'jobSeeker.experiences',
+            'answers.jobQuestion',
+        ]);
 
-        if ($existingAnalysis) {
+        // Run the shared evaluation process.
+        return $this->evaluateApplicant(
+            $job,
+            $application,
+            $employer
+        );
+    }
+
+    /**
+     * Evaluate one applicant using Groq AI.
+     *
+     * Before calling Groq:
+     * 1. Build the current input data.
+     * 2. Generate its SHA-256 hash.
+     * 3. Check for an existing completed evaluation.
+     * 4. Reuse the result if the input hash is unchanged.
+     */
+    public function evaluateApplicant(
+        Job $job,
+        Application $application,
+        User $employer
+    ): array {
+        // Build the current evaluation input and its hash.
+        $evaluationInput = $this->inputBuilder->build(
+            $job,
+            $application
+        );
+
+        $inputData = $evaluationInput['input_data'];
+        $inputHash = $evaluationInput['input_hash'];
+
+        // Get the applicant account for the AI analysis record.
+        $applicant = $application->jobSeeker;
+
+        if (! $applicant) {
+            throw new RuntimeException(
+                'Applicant account could not be found.'
+            );
+        }
+
+        // Find a previously completed evaluation with exactly the same input hash.
+        // This also supports reusing an older result if input changes
+        // and later returns to a previously evaluated version.
+        $existingAnalysis = $application->aiAnalyses()
+            ->where('analysis_type', 'applicant_evaluation')
+            ->where('status', 'completed')
+            ->where('input_hash', $inputHash)
+            ->whereNotNull('result')
+            ->latest('id')
+            ->first();
+
+        // Reuse the existing result if the input has not changed.
+        if (
+            $existingAnalysis
+            && $existingAnalysis->input_hash === $inputHash
+            && is_array($existingAnalysis->result)
+            && isset(
+                $existingAnalysis->result['match_score'],
+                $existingAnalysis->result['recommendation']
+            )
+        ) {
             return [
                 'application_id' => $application->id,
                 'analysis_id' => $existingAnalysis->id,
@@ -99,97 +189,10 @@ class JobMatchingService
             ];
         }
 
-        $application->loadMissing([
-            'jobSeeker.jobSeekerProfile',
-            'jobSeeker.skills',
-            'jobSeeker.educations',
-            'jobSeeker.experiences',
-            'answers.jobQuestion',
-        ]);
-
-        return $this->evaluateApplicant(
-            $job,
-            $application,
-            $employer
-        );
-    }
-
-
-    /**
-     * Evaluate one applicant using Groq AI.
-     */
-    public function evaluateApplicant(
-        Job $job,
-        Application $application,
-        User $employer
-    ): array {
-        $applicant = $application->jobSeeker;
-
-        if (! $applicant) {
-            throw new RuntimeException(
-                'Applicant account could not be found.'
-            );
-        }
-
-        $profile = $applicant->jobSeekerProfile;
-
-        $inputData = [
-            'job' => [
-                'title' => $job->title,
-                'description' => $job->description_plain_text
-                    ?: strip_tags($job->description),
-                'requirements' => $job->requirements,
-                'responsibilities' => $job->responsibilities,
-                'employment_type' => $job->employment_type,
-                'workplace_type' => $job->workplace_type,
-            ],
-
-            'applicant' => [
-                'professional_title' => $profile?->professional_title,
-                'bio' => $profile?->bio,
-                'experience_years' => $profile?->experience_years,
-
-                'skills' => $applicant->skills
-                    ->map(fn($skill) => [
-                        'name' => $skill->name,
-                        'level' => $skill->skill_level,
-                    ])
-                    ->values()
-                    ->all(),
-
-                'educations' => $applicant->educations
-                    ->map(fn($education) => [
-                        'institution' => $education->institution,
-                        'degree' => $education->degree,
-                        'field_of_study' => $education->field_of_study,
-                        'description' => $education->description,
-                    ])
-                    ->values()
-                    ->all(),
-
-                'experiences' => $applicant->experiences
-                    ->map(fn($experience) => [
-                        'job_title' => $experience->job_title,
-                        'company_name' => $experience->company_name,
-                        'employment_type' => $experience->employment_type,
-                        'start_date' => $experience->start_date?->toDateString(),
-                        'end_date' => $experience->end_date?->toDateString(),
-                        'is_current' => $experience->is_current,
-                        'description' => $experience->description,
-                    ])
-                    ->values()
-                    ->all(),
-
-                'application_answers' => $application->answers
-                    ->map(fn($answer) => [
-                        'question' => $answer->jobQuestion?->question,
-                        'answer' => $answer->answer,
-                    ])
-                    ->values()
-                    ->all(),
-            ],
-        ];
-
+        // Create a new analysis record when:
+        // - No successful evaluation exists for this input.
+        // - The input hash is different.
+        // - The previous result is invalid.
         $analysis = AiAnalysis::create([
             'user_id' => $applicant->id,
             'job_id' => $job->id,
@@ -197,6 +200,7 @@ class JobMatchingService
             'requested_by' => $employer->id,
             'analysis_type' => 'applicant_evaluation',
             'input_data' => $inputData,
+            'input_hash' => $inputHash,
             'result' => null,
             'provider' => 'Groq',
             'model' => config('services.groq.model'),
@@ -204,10 +208,12 @@ class JobMatchingService
         ]);
 
         try {
+            // Send applicant and job information to Groq AI.
             $result = $this->groq->chatJson([
                 [
                     'role' => 'system',
                     'content' => <<<'PROMPT'
+
 You are an objective job applicant evaluation assistant.
 
 Evaluate the applicant using:
@@ -246,12 +252,28 @@ Return exactly these fields:
     "reasoning": "string"
 }
 
-match_score must be a number from 0 to 100.
+Output requirements:
+- match_score must be a number from 0 to 100.
+- matched_skills must be an array of strings.
+- missing_skills must be an array of strings.
+- relevant_experience must be an array of full, readable sentences, NOT JSON objects.
+- Each relevant_experience sentence must describe one relevant work experience using the available job title, company name, employment type, start date, end date, and description.
+- If the experience is current, use "Present" as the end date.
+- Do not include unavailable or null information as literal text.
+- Do not invent missing details or dates.
+- If no relevant work experience is available, return an empty array.
+- strengths must be an array of strings.
+- weaknesses must be an array of strings.
+- recommendation must be exactly one of:
+  "strong_match", "moderate_match", "low_match".
+- reasoning must be a clear, complete paragraph explaining the evaluation using evidence from the supplied data.
 
-recommendation should be one of:
-"strong_match", "moderate_match", "low_match".
+Example relevant_experience output:
+[
+    "The applicant worked as an AI Engineer at ABCD on a full-time basis from January 2023 to Present."
+]
 
-Explain the evaluation using evidence from the supplied data.
+Return only the JSON object without Markdown, code fences, or additional commentary.
 PROMPT,
                 ],
                 [
@@ -263,8 +285,12 @@ PROMPT,
                             | JSON_THROW_ON_ERROR
                     ),
                 ],
+            ], [
+                'max_completion_tokens' => 8192,
+                'reasoning_effort' => 'low',
             ]);
 
+            // Validate the match score.
             $score = $result['match_score'] ?? null;
 
             if (
@@ -277,6 +303,7 @@ PROMPT,
                 );
             }
 
+            // Validate required array fields.
             $requiredFields = [
                 'matched_skills',
                 'missing_skills',
@@ -296,6 +323,18 @@ PROMPT,
                 }
             }
 
+            // Ensure all evaluation array items are strings.
+            foreach ($requiredFields as $field) {
+                foreach ($result[$field] as $item) {
+                    if (! is_string($item) || trim($item) === '') {
+                        throw new RuntimeException(
+                            "AI returned an invalid item in {$field}."
+                        );
+                    }
+                }
+            }
+
+            // Validate the recommendation value.
             if (! in_array($result['recommendation'] ?? null, [
                 'strong_match',
                 'moderate_match',
@@ -306,6 +345,7 @@ PROMPT,
                 );
             }
 
+            // Validate the reasoning text.
             if (
                 ! isset($result['reasoning'])
                 || ! is_string($result['reasoning'])
@@ -316,8 +356,10 @@ PROMPT,
                 );
             }
 
+            // Ensure the match score is stored as a float.
             $result['match_score'] = (float) $score;
 
+            // Save the completed AI evaluation.
             $analysis->update([
                 'result' => $result,
                 'status' => 'completed',
@@ -331,6 +373,7 @@ PROMPT,
                 'result' => $result,
             ];
         } catch (Throwable $e) {
+            // Mark the analysis as failed if Groq or validation fails.
             $analysis->update([
                 'status' => 'failed',
                 'result' => [

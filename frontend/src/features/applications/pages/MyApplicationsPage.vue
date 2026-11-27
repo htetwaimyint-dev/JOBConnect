@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { RouterLink } from "vue-router";
 import { computed, onMounted } from "vue";
 
 import {
@@ -21,7 +20,7 @@ import RecommendedJobs from "../components/RecommendedJobs.vue";
 import CareerTip from "../components/CareerTip.vue";
 
 import { useApplications } from "../composables/useApplications";
-import { useJobs } from "@/features/jobs/composables/useJobs";
+import { useRecommendations } from "@/features/jobs/composables/useRecommendations.ts";
 
 // --------------------------------------------------
 // Application Composable
@@ -48,17 +47,28 @@ const {
 // Recommended / More Job Opportunities
 // --------------------------------------------------
 
-const { getJobs } = useJobs();
+const { getRecommendations } = useRecommendations();
 
-const jobsQuery = getJobs({
-    page: 1,
-});
+const recommendationsQuery = getRecommendations(4);
 
-const recommendedJobs = computed(() => {
-    return (jobsQuery.data.value?.data ?? [])
-        .filter((job) => job.status === "published")
-        .slice(0, 3);
+const recommendedJobs = computed(
+    () =>
+        recommendationsQuery.data.value?.recommendations
+            ?.map((recommendation) => recommendation.job)
+            .filter((job) => job != null) ?? [],
+);
+
+const isRefreshing = computed(
+    () => recommendationsQuery.data.value?.is_refreshing ?? false,
+);
+
+onMounted(() => {
+    fetchApplications();
 });
+function refresh() {
+    fetchApplications(currentPage.value);
+    recommendationsQuery.refetch();
+}
 
 // --------------------------------------------------
 // Initial Loading
@@ -278,7 +288,7 @@ onMounted(() => {
                         <button
                             type="button"
                             :disabled="loading"
-                            @click="fetchApplications(currentPage)"
+                            @click="refresh"
                             class="inline-flex w-fit items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 disabled:opacity-50"
                         >
                             <RefreshCw
@@ -402,6 +412,7 @@ onMounted(() => {
 
                                 <h3
                                     class="mt-4 text-lg font-bold tracking-tight text-white"
+                                    d
                                 >
                                     More Opportunities
                                 </h3>
@@ -418,12 +429,20 @@ onMounted(() => {
                         </div>
 
                         <!-- Recommended Job List -->
-
+                        <!-- <div v-if="isRefreshing" class="text-sm text-gray-500">
+                            <RefreshCw
+                                class="inline-block w-4 h-4 mr-1 animate-spin"
+                            />
+                            Finding newer job recommendations...
+                        </div> -->
                         <RecommendedJobs
                             :jobs="recommendedJobs"
-                            :loading="jobsQuery.isLoading.value"
-                            :error="jobsQuery.isError.value"
-                            @retry="jobsQuery.refetch()"
+                            :loading="
+                                recommendationsQuery.isPending.value ||
+                                isRefreshing
+                            "
+                            :error="recommendationsQuery.isError.value"
+                            @retry="recommendationsQuery.refetch()"
                         />
                     </div>
                     <!-- Career Tip -->

@@ -3,7 +3,10 @@
     "name": "laravel/laravel",
     "type": "project",
     "description": "The skeleton application for the Laravel framework.",
-    "keywords": ["laravel", "framework"],
+    "keywords": [
+        "laravel",
+        "framework"
+    ],
     "license": "MIT",
     "require": {
         "php": "^8.3",
@@ -44,7 +47,7 @@
         ],
         "dev": [
             "Composer\\Config::disableProcessTimeout",
-            "@php artisan dev"
+            "npx concurrently -c blue,magenta,red,green \"php artisan serve\" \"php artisan queue:listen --tries=1\" \"npm --prefix ../frontend run dev\" --names=server,queue,logs,frontend --kill-others"
         ],
         "test": [
             "@php artisan config:clear --ansi @no_additional_args",
