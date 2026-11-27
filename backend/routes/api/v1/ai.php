@@ -15,6 +15,12 @@ Route::prefix('employer')
             [JobMatchingController::class, 'evaluateApplicants']
         );
 
+        // Get AI applicant evaluation batch progress and top 10 results.
+        Route::get(
+            '/jobs/{jobId}/ai-screening/batches/{batchId}',
+            [JobMatchingController::class, 'getBatchProgress']
+        );
+
         // AI Applicant Screening for a single application
         Route::post(
             '/applications/{applicationId}/ai-screening',

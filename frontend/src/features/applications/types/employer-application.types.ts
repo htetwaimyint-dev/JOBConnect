@@ -166,29 +166,66 @@ export interface EmployerAiEvaluationResponse {
         result: EmployerAiEvaluationResult;
     };
 }
+
 // ==========================================
 // Batch AI Evaluation
 // ==========================================
 
+// Applicant result returned by the batch progress API.
 export interface EmployerBatchAiEvaluationItem {
     application_id: number;
+    applicant_id: number;
+    applicant_name: string;
+    professional_title: string | null;
+    city: string | null;
+    profile_photo: string | null;
     analysis_id: number;
     match_score: number;
     recommendation: "strong_match" | "moderate_match" | "low_match";
-    result: EmployerAiEvaluationResult;
+    matched_skills: string[];
+    missing_skills: string[];
+    strengths: string[];
+    weaknesses: string[];
+    reasoning: string;
 }
 
+// Response when starting a batch.
 export interface EmployerBatchAiEvaluationResponse {
     success: boolean;
     message: string;
     data: {
+        batch_id: number;
         job_id: number;
+        status: "queued" | "processing" | "completed";
         total_applicants: number;
-        successful: number;
-        failed: number;
-        returned: number;
-        evaluations: EmployerBatchAiEvaluationItem[];
-        failures: unknown[];
+        created: boolean;
+    };
+}
+
+// Response when checking batch progress.
+export interface EmployerBatchAiEvaluationProgressResponse {
+    success: boolean;
+    message: string;
+    data: {
+        batch_id: number;
+        job_id: number;
+        status:
+        | "queued"
+        | "processing"
+        | "completed"
+        | "completed_with_errors"
+        | "failed";
+        is_final: boolean;
+        total_applicants: number;
+        completed_count: number;
+        failed_count: number;
+        processing_count: number;
+        queued_count: number;
+        progress_percentage: number;
+        started_at: string | null;
+        completed_at: string | null;
+        completed_applicants: EmployerBatchAiEvaluationItem[];
+        top_applicants: EmployerBatchAiEvaluationItem[];
     };
 }
 

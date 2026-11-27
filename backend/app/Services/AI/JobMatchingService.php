@@ -159,21 +159,23 @@ class JobMatchingService
             );
         }
 
-        // Find a previously completed evaluation with exactly the same input hash.
-        // This also supports reusing an older result if input changes
-        // and later returns to a previously evaluated version.
+
+        // Find an existing analysis with the same input hash.
         $existingAnalysis = $application->aiAnalyses()
             ->where('analysis_type', 'applicant_evaluation')
-            ->where('status', 'completed')
             ->where('input_hash', $inputHash)
-            ->whereNotNull('result')
+            ->whereIn('status', ['completed', 'pending'])
+            ->where(function ($query) {
+                $query->where('status', 'pending')
+                    ->orWhereNotNull('result');
+            })
             ->latest('id')
             ->first();
 
-        // Reuse the existing result if the input has not changed.
+        // Reuse a valid completed evaluation.
         if (
             $existingAnalysis
-            && $existingAnalysis->input_hash === $inputHash
+            && $existingAnalysis->status === 'completed'
             && is_array($existingAnalysis->result)
             && isset(
                 $existingAnalysis->result['match_score'],
@@ -189,27 +191,85 @@ class JobMatchingService
             ];
         }
 
-        // Create a new analysis record when:
-        // - No successful evaluation exists for this input.
-        // - The input hash is different.
-        // - The previous result is invalid.
-        $analysis = AiAnalysis::create([
-            'user_id' => $applicant->id,
-            'job_id' => $job->id,
-            'application_id' => $application->id,
-            'requested_by' => $employer->id,
-            'analysis_type' => 'applicant_evaluation',
-            'input_data' => $inputData,
-            'input_hash' => $inputHash,
-            'result' => null,
-            'provider' => 'Groq',
-            'model' => config('services.groq.model'),
-            'status' => 'pending',
-        ]);
+        // Reuse a pending analysis after a temporary interruption.
+        if (
+            $existingAnalysis
+            && $existingAnalysis->status === 'pending'
+        ) {
+            $analysis = $existingAnalysis;
+        } else {
+            // Create a new analysis only when no reusable record exists.
+            $analysis = AiAnalysis::create([
+                'user_id' => $applicant->id,
+                'job_id' => $job->id,
+                'application_id' => $application->id,
+                'requested_by' => $employer->id,
+                'analysis_type' => 'applicant_evaluation',
+                'input_data' => $inputData,
+                'input_hash' => $inputHash,
+                'result' => null,
+                'provider' => 'Groq',
+                'model' => config('services.groq.model'),
+                'status' => 'pending',
+            ]);
+        }
+
+
+
+        $evaluationSchema = [
+            'type' => 'object',
+            'properties' => [
+                'match_score' => [
+                    'type' => 'number',
+                ],
+                'matched_skills' => [
+                    'type' => 'array',
+                    'items' => ['type' => 'string'],
+                ],
+                'missing_skills' => [
+                    'type' => 'array',
+                    'items' => ['type' => 'string'],
+                ],
+                'relevant_experience' => [
+                    'type' => 'array',
+                    'items' => ['type' => 'string'],
+                ],
+                'strengths' => [
+                    'type' => 'array',
+                    'items' => ['type' => 'string'],
+                ],
+                'weaknesses' => [
+                    'type' => 'array',
+                    'items' => ['type' => 'string'],
+                ],
+                'recommendation' => [
+                    'type' => 'string',
+                    'enum' => [
+                        'strong_match',
+                        'moderate_match',
+                        'low_match',
+                    ],
+                ],
+                'reasoning' => [
+                    'type' => 'string',
+                ],
+            ],
+            'required' => [
+                'match_score',
+                'matched_skills',
+                'missing_skills',
+                'relevant_experience',
+                'strengths',
+                'weaknesses',
+                'recommendation',
+                'reasoning',
+            ],
+            'additionalProperties' => false,
+        ];
 
         try {
             // Send applicant and job information to Groq AI.
-            $result = $this->groq->chatJson([
+            $result = $this->groq->chatStructuredJson([
                 [
                     'role' => 'system',
                     'content' => <<<'PROMPT'
@@ -238,19 +298,7 @@ Rules:
 - Do not penalize applicants for information they did not provide.
 - Do not evaluate age, gender, race, religion or other protected traits.
 - Use only the supplied information.
-- Return a valid JSON object only.
 
-Return exactly these fields:
-{
-    "match_score": 0,
-    "matched_skills": [],
-    "missing_skills": [],
-    "relevant_experience": [],
-    "strengths": [],
-    "weaknesses": [],
-    "recommendation": "string",
-    "reasoning": "string"
-}
 
 Output requirements:
 - match_score must be a number from 0 to 100.
@@ -273,7 +321,7 @@ Example relevant_experience output:
     "The applicant worked as an AI Engineer at ABCD on a full-time basis from January 2023 to Present."
 ]
 
-Return only the JSON object without Markdown, code fences, or additional commentary.
+
 PROMPT,
                 ],
                 [
@@ -285,7 +333,7 @@ PROMPT,
                             | JSON_THROW_ON_ERROR
                     ),
                 ],
-            ], [
+            ], $evaluationSchema, [
                 'max_completion_tokens' => 8192,
                 'reasoning_effort' => 'low',
             ]);
@@ -373,7 +421,14 @@ PROMPT,
                 'result' => $result,
             ];
         } catch (Throwable $e) {
-            // Mark the analysis as failed if Groq or validation fails.
+            // Keep the analysis pending when Groq rate limits the request.
+            if ($e instanceof GroqRateLimitException) {
+                report($e);
+
+                throw $e;
+            }
+
+            // Mark other errors as failed.
             $analysis->update([
                 'status' => 'failed',
                 'result' => [
