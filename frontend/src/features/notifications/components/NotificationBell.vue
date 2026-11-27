@@ -124,7 +124,7 @@ onBeforeUnmount(() =>
                     </button>
                 </header>
 
-                <div class="max-h-[26rem] overflow-y-auto">
+                <div class="max-h-104 overflow-y-auto">
                     <div
                         v-if="isPending"
                         class="px-4 py-10 text-center text-sm text-slate-500"

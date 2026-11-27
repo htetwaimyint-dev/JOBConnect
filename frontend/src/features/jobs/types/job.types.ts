@@ -32,6 +32,7 @@ export type JobStatus =
 export interface Job {
     id: number;
     company_id: number;
+    applications_count?: number;
 
     company: JobCompany;
     category: JobCategory | null;

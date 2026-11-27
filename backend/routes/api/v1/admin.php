@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\V1\Admin\CompanyApprovalController;
 use App\Http\Controllers\Api\V1\Admin\JobApprovalController;
 use App\Http\Controllers\Api\V1\Admin\UserManagementController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\V1\Admin\DashboardController;
 use App\Http\Controllers\Api\V1\JobSeeker\CompanyProfileViewController;
 
 Route::middleware(['auth:sanctum', 'admin'])->group(function () {
@@ -25,6 +26,12 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     // Admin Management
     Route::prefix('admin')->group(function () {
 
+        // Admin Dashboard
+        Route::get('/dashboard', [
+            DashboardController::class,
+            'index'
+        ]);
+
         //User Management
         Route::get('/companies', [UserManagementController::class, 'companies']);
         Route::get('/job-seekers', [UserManagementController::class, 'jobSeekers']);
@@ -40,16 +47,16 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
         ]);
 
         Route::patch(
-        '/job-seekers/{id}/suspend',
-        [UserManagementController::class, 'suspendJobSeeker']
-    );
+            '/job-seekers/{id}/suspend',
+            [UserManagementController::class, 'suspendJobSeeker']
+        );
 
-    Route::patch(
-        '/job-seekers/{id}/restore',
-        [UserManagementController::class, 'restoreJobSeeker']
-    );
+        Route::patch(
+            '/job-seekers/{id}/restore',
+            [UserManagementController::class, 'restoreJobSeeker']
+        );
 
-        // Company Approval Management
+        // Company_Approval Management
         Route::get('/companies/pending', [
             CompanyApprovalController::class,
             'index'
@@ -83,12 +90,10 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
             'show'
         ]);
 
-        // Approve / Reject job
+        // Approve and Reject job
         Route::patch('/jobs/{jobId}/approval', [
             JobApprovalController::class,
             'update'
         ]);
-
-        
     });
 });

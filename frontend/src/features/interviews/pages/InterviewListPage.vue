@@ -99,6 +99,7 @@ function openScheduleModal(slot?: { date: Date; hour: number }) {
     }
 
     selectedScheduleSlot.value = slot ?? null;
+    applicationsQuery.refetch();
     showScheduleModal.value = true;
 }
 
