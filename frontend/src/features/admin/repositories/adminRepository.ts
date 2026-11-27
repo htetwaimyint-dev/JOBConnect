@@ -1,78 +1,83 @@
 import api from "@/services/api";
 
 export const adminRepository = {
-  // Company Management
-  async getCompanies(
-    params: {
-      page?: number;
-      search?: string;
-      status?: string;
-      per_page?: number;
-    } = {},
-  ) {
-    const res = await api.get("/admin/companies", {
-      params: {
-        page: params.page ?? 1,
-        search: params.search,
-        status: params.status,
-        per_page: params.per_page ?? 5,
-      },
-    });
+    async getDashBoard() {
+        const res = await api.get("/admin/dashboard");
+        return res.data;
+    },
 
-    return res.data;
-  },
+    // Company Management
+    async getCompanies(
+        params: {
+            page?: number;
+            search?: string;
+            status?: string;
+            per_page?: number;
+        } = {},
+    ) {
+        const res = await api.get("/admin/companies", {
+            params: {
+                page: params.page ?? 1,
+                search: params.search,
+                status: params.status,
+                per_page: params.per_page ?? 5,
+            },
+        });
+
+        return res.data;
+    },
     // Activity Logs
-  async getActivityLogs(
-    params: {
-      page?: number;
-      per_page?: number;
-    } = {},
-  ) {
-    const res = await api.get("/admin/activity-logs", {
-      params: {
-        page: params.page ?? 1,
-        per_page: params.per_page ?? 5,
-      },
-    });
+    async getActivityLogs(
+        params: {
+            page?: number;
+            per_page?: number;
+        } = {},
+    ) {
+        const res = await api.get("/admin/activity-logs", {
+            params: {
+                page: params.page ?? 1,
+                per_page: params.per_page ?? 5,
+            },
+        });
 
-    return res.data;
-  },
+        return res.data;
+    },
 
-  async suspendCompany(id: number) {
-    return await api.patch(`/admin/companies/${id}/suspend`);
-  },
+    async suspendCompany(id: number) {
+        return await api.patch(`/admin/companies/${id}/suspend`);
+    },
 
-  async restoreCompany(id: number) {
-    return await api.patch(`/admin/companies/${id}/restore`);
-  },
+    async restoreCompany(id: number) {
+        return await api.patch(`/admin/companies/${id}/restore`);
+    },
 
-  // Job Seeker Management
+    // Job Seeker Management
 
-  async getJobSeekers(
-    params: {
-      page?: number;
-      search?: string;
-      status?: string;
-      per_page?: number;
-    } = {},
-  ) {
-    const res = await api.get("/admin/job-seekers", {
-      params: {
-        page: params.page ?? 1,
-        search: params.search,
-        status: params.status,
-        per_page: params.per_page ?? 5,
-      },
-    });
+    async getJobSeekers(
+        params: {
+            page?: number;
+            search?: string;
+            status?: string;
+            per_page?: number;
+        } = {},
+    ) {
+        const res = await api.get("/admin/job-seekers", {
+            params: {
+                page: params.page ?? 1,
+                search: params.search,
+                status: params.status,
+                per_page: params.per_page ?? 5,
+            },
+        });
 
-    return res.data;
-  },
+        return res.data;
+    },
 
-  async suspendJobSeeker(id: number) {
-    return await api.patch(`/admin/job-seekers/${id}/suspend`);
-  },
+    async suspendJobSeeker(id: number) {
+        return await api.patch(`/admin/job-seekers/${id}/suspend`);
+    },
 
-  async restoreJobSeeker(id: number) {
-    return await api.patch(`/admin/job-seekers/${id}/restore`);
-  },
+    async restoreJobSeeker(id: number) {
+        return await api.patch(`/admin/job-seekers/${id}/restore`);
+    },
 };
