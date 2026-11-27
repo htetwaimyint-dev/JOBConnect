@@ -321,28 +321,36 @@ const yAxisTicks = computed(() => [
       </div>
 
       <!-- ================= TOP STAT CARDS ================= -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+
+      <div
+        class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-8 items-stretch"
+      >
         <!-- Card 1: Job Posts -->
         <RouterLink
           to="/employer/jobs"
-          class="block relative overflow-hidden bg-white rounded-3xl p-5 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 group hover:-translate-y-1 hover:shadow-[0_12px_40px_rgb(0,0,0,0.08)] transition-all duration-300"
+          class="block relative overflow-hidden bg-white rounded-3xl p-5 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 group hover:-translate-y-1 hover:shadow-[0_12px_40px_rgb(0,0,0,0.08)] transition-all duration-300 h-full min-h-[430px]"
         >
           <div
             class="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-bl-full -z-0 opacity-50 group-hover:scale-110 transition-transform"
           ></div>
-          <div class="relative z-10">
+
+          <div class="relative z-10 flex flex-col h-full">
+            <!-- Header -->
             <div class="flex justify-between items-start mb-4">
               <div
                 class="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center shadow-inner group-hover:bg-blue-600 group-hover:text-white transition-colors"
               >
                 <Briefcase class="w-5 h-5" />
               </div>
+
               <span
                 class="px-2.5 py-1 bg-white/60 backdrop-blur-sm text-blue-700 text-[10px] font-bold rounded-lg uppercase tracking-wider border border-blue-100"
-                >Jobs</span
               >
+                Jobs
+              </span>
             </div>
 
+            <!-- Main Stat -->
             <div class="mb-5">
               <h2 class="text-3xl font-black text-slate-900 leading-none">
                 {{ jobStats.total }}
@@ -352,77 +360,106 @@ const yAxisTicks = computed(() => [
               </p>
             </div>
 
-            <div class="space-y-3 pt-4 border-t border-slate-100/80">
+            <!-- Job Status Summary -->
+            <div class="flex-1 space-y-4 pt-4 border-t border-slate-100/80">
+              <!-- Stacked Progress Bar -->
               <div>
-                <div class="flex justify-between items-center mb-1">
+                <div class="flex justify-between items-center mb-2">
                   <span
                     class="text-[10px] font-bold text-slate-400 uppercase tracking-wider"
-                    >Draft</span
                   >
-                  <span class="text-xs font-bold text-slate-700">{{
-                    jobStats.draft
-                  }}</span>
+                    Job Breakdown
+                  </span>
+                  <span class="text-[10px] font-bold text-slate-500">
+                    {{ jobStats.total }} Total
+                  </span>
                 </div>
-                <div class="w-full bg-slate-100 rounded-full h-1.5">
+
+                <div
+                  class="flex w-full h-2.5 bg-slate-100 rounded-full overflow-hidden"
+                >
                   <div
-                    class="bg-blue-500 h-1.5 rounded-full"
-                    :style="{ width: getPercentage(jobStats.draft) }"
+                    class="bg-blue-500 transition-all duration-500"
+                    :style="{
+                      width: getPercentage(jobStats.draft, jobStats.total),
+                    }"
+                  ></div>
+
+                  <div
+                    class="bg-amber-500 transition-all duration-500"
+                    :style="{
+                      width: getPercentage(jobStats.pending, jobStats.total),
+                    }"
+                  ></div>
+
+                  <div
+                    class="bg-emerald-500 transition-all duration-500"
+                    :style="{
+                      width: getPercentage(jobStats.published, jobStats.total),
+                    }"
+                  ></div>
+
+                  <div
+                    class="bg-rose-500 transition-all duration-500"
+                    :style="{
+                      width: getPercentage(jobStats.rejected, jobStats.total),
+                    }"
                   ></div>
                 </div>
               </div>
 
-              <div>
-                <div class="flex justify-between items-center mb-1">
-                  <span
-                    class="text-[10px] font-bold text-slate-400 uppercase tracking-wider"
-                    >Pending</span
-                  >
-                  <span class="text-xs font-bold text-slate-700">{{
-                    jobStats.pending
-                  }}</span>
+              <!-- Status Grid -->
+              <div class="grid grid-cols-2 gap-x-4 gap-y-4">
+                <!-- Draft -->
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-1.5">
+                    <span
+                      class="w-2 h-2 rounded-full bg-blue-500 shrink-0"
+                    ></span>
+                    <span class="text-xs text-slate-500">Draft</span>
+                  </div>
+                  <span class="text-sm font-bold text-slate-800">
+                    {{ jobStats.draft }}
+                  </span>
                 </div>
-                <div class="w-full bg-slate-100 rounded-full h-1.5">
-                  <div
-                    class="bg-amber-500 h-1.5 rounded-full"
-                    :style="{ width: getPercentage(jobStats.pending) }"
-                  ></div>
-                </div>
-              </div>
 
-              <div class="grid grid-cols-2 gap-3">
-                <div>
-                  <div class="flex justify-between items-center mb-1">
+                <!-- Pending -->
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-1.5">
                     <span
-                      class="text-[10px] font-bold text-slate-400 uppercase tracking-wider"
-                      >Pub</span
-                    >
-                    <span class="text-xs font-bold text-slate-700">{{
-                      jobStats.published
-                    }}</span>
+                      class="w-2 h-2 rounded-full bg-amber-500 shrink-0"
+                    ></span>
+                    <span class="text-xs text-slate-500">Pending</span>
                   </div>
-                  <div class="w-full bg-slate-100 rounded-full h-1.5">
-                    <div
-                      class="bg-emerald-500 h-1.5 rounded-full"
-                      :style="{ width: getPercentage(jobStats.published) }"
-                    ></div>
-                  </div>
+                  <span class="text-sm font-bold text-slate-800">
+                    {{ jobStats.pending }}
+                  </span>
                 </div>
-                <div>
-                  <div class="flex justify-between items-center mb-1">
+
+                <!-- Published -->
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-1.5">
                     <span
-                      class="text-[10px] font-bold text-slate-400 uppercase tracking-wider"
-                      >Rej</span
-                    >
-                    <span class="text-xs font-bold text-slate-700">{{
-                      jobStats.rejected
-                    }}</span>
+                      class="w-2 h-2 rounded-full bg-emerald-500 shrink-0"
+                    ></span>
+                    <span class="text-xs text-slate-500">Published</span>
                   </div>
-                  <div class="w-full bg-slate-100 rounded-full h-1.5">
-                    <div
-                      class="bg-rose-500 h-1.5 rounded-full"
-                      :style="{ width: getPercentage(jobStats.rejected) }"
-                    ></div>
+                  <span class="text-sm font-bold text-slate-800">
+                    {{ jobStats.published }}
+                  </span>
+                </div>
+
+                <!-- Rejected -->
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-1.5">
+                    <span
+                      class="w-2 h-2 rounded-full bg-rose-500 shrink-0"
+                    ></span>
+                    <span class="text-xs text-slate-500">Rejected</span>
                   </div>
+                  <span class="text-sm font-bold text-slate-800">
+                    {{ jobStats.rejected }}
+                  </span>
                 </div>
               </div>
             </div>
@@ -432,24 +469,29 @@ const yAxisTicks = computed(() => [
         <!-- Card 2: Applicants -->
         <RouterLink
           to="/employer/applicants"
-          class="block relative overflow-hidden bg-white rounded-3xl p-5 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 group hover:-translate-y-1 hover:shadow-[0_12px_40px_rgb(0,0,0,0.08)] transition-all duration-300"
+          class="block relative overflow-hidden bg-white rounded-3xl p-5 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 group hover:-translate-y-1 hover:shadow-[0_12px_40px_rgb(0,0,0,0.08)] transition-all duration-300 h-full min-h-[430px]"
         >
           <div
             class="absolute top-0 right-0 w-32 h-32 bg-emerald-50 rounded-bl-full -z-0 opacity-50 group-hover:scale-110 transition-transform"
           ></div>
-          <div class="relative z-10">
+
+          <div class="relative z-10 flex flex-col h-full">
+            <!-- Header -->
             <div class="flex justify-between items-start mb-4">
               <div
                 class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center shadow-inner group-hover:bg-emerald-600 group-hover:text-white transition-colors"
               >
                 <Users class="w-5 h-5" />
               </div>
+
               <span
                 class="px-2.5 py-1 bg-white/60 backdrop-blur-sm text-emerald-700 text-[10px] font-bold rounded-lg uppercase tracking-wider border border-emerald-100"
-                >Applicants</span
               >
+                Applicants
+              </span>
             </div>
 
+            <!-- Main Stat -->
             <div class="mb-5">
               <h2 class="text-3xl font-black text-slate-900 leading-none">
                 {{ applicantStats.total }}
@@ -459,21 +501,26 @@ const yAxisTicks = computed(() => [
               </p>
             </div>
 
-            <!-- Simplified 3-Bar Breakdown to match other cards and stay clean -->
-            <div class="space-y-3 pt-4 border-t border-slate-100/80">
+            <!-- Applicant Status Summary -->
+            <div class="flex-1 space-y-4 pt-4 border-t border-slate-100/80">
+              <!-- Stacked Progress Bar -->
               <div>
-                <div class="flex justify-between items-center mb-1">
+                <div class="flex justify-between items-center mb-2">
                   <span
                     class="text-[10px] font-bold text-slate-400 uppercase tracking-wider"
-                    >Pending</span
                   >
-                  <span class="text-xs font-bold text-slate-700">{{
-                    applicantStats.pending
-                  }}</span>
+                    Application Breakdown
+                  </span>
+                  <span class="text-[10px] font-bold text-slate-500">
+                    {{ applicantStats.total }} Total
+                  </span>
                 </div>
-                <div class="w-full bg-slate-100 rounded-full h-1.5">
+
+                <div
+                  class="flex w-full h-2.5 bg-slate-100 rounded-full overflow-hidden"
+                >
                   <div
-                    class="bg-amber-500 h-1.5 rounded-full"
+                    class="bg-amber-500 transition-all duration-500"
                     :style="{
                       width: getPercentage(
                         applicantStats.pending,
@@ -481,22 +528,17 @@ const yAxisTicks = computed(() => [
                       ),
                     }"
                   ></div>
-                </div>
-              </div>
-
-              <div>
-                <div class="flex justify-between items-center mb-1">
-                  <span
-                    class="text-[10px] font-bold text-slate-400 uppercase tracking-wider"
-                    >Shortlisted</span
-                  >
-                  <span class="text-xs font-bold text-slate-700">{{
-                    applicantStats.shortlisted
-                  }}</span>
-                </div>
-                <div class="w-full bg-slate-100 rounded-full h-1.5">
                   <div
-                    class="bg-blue-500 h-1.5 rounded-full"
+                    class="bg-teal-500 transition-all duration-500"
+                    :style="{
+                      width: getPercentage(
+                        applicantStats.reviewed,
+                        applicantStats.total,
+                      ),
+                    }"
+                  ></div>
+                  <div
+                    class="bg-blue-500 transition-all duration-500"
                     :style="{
                       width: getPercentage(
                         applicantStats.shortlisted,
@@ -504,22 +546,8 @@ const yAxisTicks = computed(() => [
                       ),
                     }"
                   ></div>
-                </div>
-              </div>
-
-              <div>
-                <div class="flex justify-between items-center mb-1">
-                  <span
-                    class="text-[10px] font-bold text-slate-400 uppercase tracking-wider"
-                    >Interview</span
-                  >
-                  <span class="text-xs font-bold text-slate-700">{{
-                    applicantStats.interview
-                  }}</span>
-                </div>
-                <div class="w-full bg-slate-100 rounded-full h-1.5">
                   <div
-                    class="bg-purple-500 h-1.5 rounded-full"
+                    class="bg-purple-500 transition-all duration-500"
                     :style="{
                       width: getPercentage(
                         applicantStats.interview,
@@ -527,66 +555,161 @@ const yAxisTicks = computed(() => [
                       ),
                     }"
                   ></div>
+                  <div
+                    class="bg-emerald-500 transition-all duration-500"
+                    :style="{
+                      width: getPercentage(
+                        applicantStats.accepted,
+                        applicantStats.total,
+                      ),
+                    }"
+                  ></div>
+                  <div
+                    class="bg-rose-500 transition-all duration-500"
+                    :style="{
+                      width: getPercentage(
+                        applicantStats.rejected,
+                        applicantStats.total,
+                      ),
+                    }"
+                  ></div>
+                  <div
+                    class="bg-slate-500 transition-all duration-500"
+                    :style="{
+                      width: getPercentage(
+                        applicantStats.withdrawn,
+                        applicantStats.total,
+                      ),
+                    }"
+                  ></div>
                 </div>
               </div>
 
-              <!-- Summary for the rest of the statuses including Reviewed -->
-              <div
-                class="flex flex-wrap justify-between gap-x-2 gap-y-1 pt-2 border-t border-slate-50"
-              >
-                <span
-                  class="text-[9px] text-slate-400 font-semibold whitespace-nowrap"
-                >
-                  Reviewed: {{ applicantStats.reviewed }}
-                </span>
-                <span
-                  class="text-[9px] text-slate-400 font-semibold whitespace-nowrap"
-                >
-                  Accepted: {{ applicantStats.accepted }}
-                </span>
-                <span
-                  class="text-[9px] text-slate-400 font-semibold whitespace-nowrap"
-                >
-                  Rejected: {{ applicantStats.rejected }}
-                </span>
-                <span
-                  class="text-[9px] text-slate-400 font-semibold whitespace-nowrap"
-                >
-                  Withdrawn: {{ applicantStats.withdrawn }}
-                </span>
-              </div>
+              <!-- Status Grid -->
+              <div class="grid grid-cols-2 gap-x-3 gap-y-3">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-1.5">
+                    <span
+                      class="w-2 h-2 rounded-full bg-amber-500 shrink-0"
+                    ></span>
+                    <span class="text-xs text-slate-500">Pending</span>
+                  </div>
+                  <span class="text-sm font-bold text-slate-800">
+                    {{ applicantStats.pending }}
+                  </span>
+                </div>
 
-              <div class="pt-1">
-                <p
-                  class="text-[10px] font-bold text-slate-400 uppercase tracking-wider"
-                >
-                  Range: {{ formatDateRange(applicantStats.date_range) }}
-                </p>
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-1.5">
+                    <span
+                      class="w-2 h-2 rounded-full bg-teal-500 shrink-0"
+                    ></span>
+                    <span class="text-xs text-slate-500">Reviewed</span>
+                  </div>
+                  <span class="text-sm font-bold text-slate-800">
+                    {{ applicantStats.reviewed }}
+                  </span>
+                </div>
+
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-1.5">
+                    <span
+                      class="w-2 h-2 rounded-full bg-blue-500 shrink-0"
+                    ></span>
+                    <span class="text-xs text-slate-500">Shortlisted</span>
+                  </div>
+                  <span class="text-sm font-bold text-slate-800">
+                    {{ applicantStats.shortlisted }}
+                  </span>
+                </div>
+
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-1.5">
+                    <span
+                      class="w-2 h-2 rounded-full bg-purple-500 shrink-0"
+                    ></span>
+                    <span class="text-xs text-slate-500">Interview</span>
+                  </div>
+                  <span class="text-sm font-bold text-slate-800">
+                    {{ applicantStats.interview }}
+                  </span>
+                </div>
+
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-1.5">
+                    <span
+                      class="w-2 h-2 rounded-full bg-emerald-500 shrink-0"
+                    ></span>
+                    <span class="text-xs text-slate-500">Accepted</span>
+                  </div>
+                  <span class="text-sm font-bold text-slate-800">
+                    {{ applicantStats.accepted }}
+                  </span>
+                </div>
+
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-1.5">
+                    <span
+                      class="w-2 h-2 rounded-full bg-rose-500 shrink-0"
+                    ></span>
+                    <span class="text-xs text-slate-500">Rejected</span>
+                  </div>
+                  <span class="text-sm font-bold text-slate-800">
+                    {{ applicantStats.rejected }}
+                  </span>
+                </div>
+
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-1.5">
+                    <span
+                      class="w-2 h-2 rounded-full bg-slate-500 shrink-0"
+                    ></span>
+                    <span class="text-xs text-slate-500">Withdrawn</span>
+                  </div>
+                  <span class="text-sm font-bold text-slate-800">
+                    {{ applicantStats.withdrawn }}
+                  </span>
+                </div>
               </div>
+            </div>
+
+            <!-- Date Range -->
+            <div class="pt-3 mt-auto border-t border-slate-100">
+              <p
+                class="text-[10px] font-bold text-slate-400 uppercase tracking-wider"
+              >
+                Range: {{ formatDateRange(applicantStats.date_range) }}
+              </p>
             </div>
           </div>
         </RouterLink>
+
         <!-- Card 3: Direct Offers -->
         <RouterLink
           to="/employer/job-offers"
-          class="block relative overflow-hidden bg-white rounded-3xl p-5 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 group hover:-translate-y-1 hover:shadow-[0_12px_40px_rgb(0,0,0,0.08)] transition-all duration-300"
+          class="block relative overflow-hidden bg-white rounded-3xl p-5 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 group hover:-translate-y-1 hover:shadow-[0_12px_40px_rgb(0,0,0,0.08)] transition-all duration-300 h-full min-h-[430px]"
         >
           <div
             class="absolute top-0 right-0 w-32 h-32 bg-purple-50 rounded-bl-full -z-0 opacity-50 group-hover:scale-110 transition-transform"
           ></div>
-          <div class="relative z-10">
+
+          <div class="relative z-10 flex flex-col h-full">
+            <!-- Header -->
             <div class="flex justify-between items-start mb-4">
               <div
                 class="w-10 h-10 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center shadow-inner group-hover:bg-purple-600 group-hover:text-white transition-colors"
               >
                 <Send class="w-5 h-5" />
               </div>
+
               <span
                 class="px-2.5 py-1 bg-white/60 backdrop-blur-sm text-purple-700 text-[10px] font-bold rounded-lg uppercase tracking-wider border border-purple-100"
-                >Offers</span
               >
+                Direct Offers
+              </span>
             </div>
 
+            <!-- Main Stat -->
             <div class="mb-5">
               <h2 class="text-3xl font-black text-slate-900 leading-none">
                 {{ offerStats.total }}
@@ -596,20 +719,26 @@ const yAxisTicks = computed(() => [
               </p>
             </div>
 
-            <div class="space-y-3 pt-4 border-t border-slate-100/80">
+            <!-- Offer Status Summary -->
+            <div class="flex-1 space-y-4 pt-4 border-t border-slate-100/80">
+              <!-- Stacked Progress Bar -->
               <div>
-                <div class="flex justify-between items-center mb-1">
+                <div class="flex justify-between items-center mb-2">
                   <span
                     class="text-[10px] font-bold text-slate-400 uppercase tracking-wider"
-                    >Pending</span
                   >
-                  <span class="text-xs font-bold text-slate-700">{{
-                    offerStats.pending
-                  }}</span>
+                    Offer Breakdown
+                  </span>
+                  <span class="text-[10px] font-bold text-slate-500">
+                    {{ offerStats.total }} Total
+                  </span>
                 </div>
-                <div class="w-full bg-slate-100 rounded-full h-1.5">
+
+                <div
+                  class="flex w-full h-2.5 bg-slate-100 rounded-full overflow-hidden"
+                >
                   <div
-                    class="bg-amber-500 h-1.5 rounded-full"
+                    class="bg-amber-500 transition-all duration-500"
                     :style="{
                       width: getPercentage(
                         offerStats.pending,
@@ -617,22 +746,8 @@ const yAxisTicks = computed(() => [
                       ),
                     }"
                   ></div>
-                </div>
-              </div>
-
-              <div>
-                <div class="flex justify-between items-center mb-1">
-                  <span
-                    class="text-[10px] font-bold text-slate-400 uppercase tracking-wider"
-                    >Accepted</span
-                  >
-                  <span class="text-xs font-bold text-slate-700">{{
-                    offerStats.accepted
-                  }}</span>
-                </div>
-                <div class="w-full bg-slate-100 rounded-full h-1.5">
                   <div
-                    class="bg-emerald-500 h-1.5 rounded-full"
+                    class="bg-emerald-500 transition-all duration-500"
                     :style="{
                       width: getPercentage(
                         offerStats.accepted,
@@ -640,22 +755,8 @@ const yAxisTicks = computed(() => [
                       ),
                     }"
                   ></div>
-                </div>
-              </div>
-
-              <div>
-                <div class="flex justify-between items-center mb-1">
-                  <span
-                    class="text-[10px] font-bold text-slate-400 uppercase tracking-wider"
-                    >Rejected</span
-                  >
-                  <span class="text-xs font-bold text-slate-700">{{
-                    offerStats.rejected
-                  }}</span>
-                </div>
-                <div class="w-full bg-slate-100 rounded-full h-1.5">
                   <div
-                    class="bg-rose-500 h-1.5 rounded-full"
+                    class="bg-rose-500 transition-all duration-500"
                     :style="{
                       width: getPercentage(
                         offerStats.rejected,
@@ -663,37 +764,98 @@ const yAxisTicks = computed(() => [
                       ),
                     }"
                   ></div>
+                  <div
+                    class="bg-orange-500 transition-all duration-500"
+                    :style="{
+                      width: getPercentage(
+                        offerStats.expired,
+                        offerStats.total,
+                      ),
+                    }"
+                  ></div>
+                  <div
+                    class="bg-slate-500 transition-all duration-500"
+                    :style="{
+                      width: getPercentage(
+                        offerStats.withdrawn,
+                        offerStats.total,
+                      ),
+                    }"
+                  ></div>
                 </div>
               </div>
 
-              <div class="grid grid-cols-2 gap-3 pt-1 border-t border-slate-50">
-                <div class="flex justify-between items-center">
-                  <span
-                    class="text-[10px] font-bold text-slate-400 uppercase tracking-wider"
-                    >Expired</span
-                  >
-                  <span class="text-xs font-bold text-slate-700">{{
-                    offerStats.expired
-                  }}</span>
+              <!-- Status Grid -->
+              <div class="grid grid-cols-2 gap-x-3 gap-y-4">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-1.5">
+                    <span
+                      class="w-2 h-2 rounded-full bg-amber-500 shrink-0"
+                    ></span>
+                    <span class="text-xs text-slate-500">Pending</span>
+                  </div>
+                  <span class="text-sm font-bold text-slate-800">
+                    {{ offerStats.pending }}
+                  </span>
                 </div>
-                <div class="flex justify-between items-center">
-                  <span
-                    class="text-[10px] font-bold text-slate-400 uppercase tracking-wider"
-                    >Withdrawn</span
-                  >
-                  <span class="text-xs font-bold text-slate-700">{{
-                    offerStats.withdrawn
-                  }}</span>
-                </div>
-              </div>
 
-              <div class="pt-2">
-                <p
-                  class="text-[10px] font-bold text-slate-400 uppercase tracking-wider"
-                >
-                  Range: {{ formatDateRange(offerStats.date_range) }}
-                </p>
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-1.5">
+                    <span
+                      class="w-2 h-2 rounded-full bg-emerald-500 shrink-0"
+                    ></span>
+                    <span class="text-xs text-slate-500">Accepted</span>
+                  </div>
+                  <span class="text-sm font-bold text-slate-800">
+                    {{ offerStats.accepted }}
+                  </span>
+                </div>
+
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-1.5">
+                    <span
+                      class="w-2 h-2 rounded-full bg-rose-500 shrink-0"
+                    ></span>
+                    <span class="text-xs text-slate-500">Rejected</span>
+                  </div>
+                  <span class="text-sm font-bold text-slate-800">
+                    {{ offerStats.rejected }}
+                  </span>
+                </div>
+
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-1.5">
+                    <span
+                      class="w-2 h-2 rounded-full bg-orange-500 shrink-0"
+                    ></span>
+                    <span class="text-xs text-slate-500">Expired</span>
+                  </div>
+                  <span class="text-sm font-bold text-slate-800">
+                    {{ offerStats.expired }}
+                  </span>
+                </div>
+
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-1.5">
+                    <span
+                      class="w-2 h-2 rounded-full bg-slate-500 shrink-0"
+                    ></span>
+                    <span class="text-xs text-slate-500">Withdrawn</span>
+                  </div>
+                  <span class="text-sm font-bold text-slate-800">
+                    {{ offerStats.withdrawn }}
+                  </span>
+                </div>
               </div>
+            </div>
+
+            <!-- Date Range -->
+            <div class="pt-3 mt-auto border-t border-slate-100">
+              <p
+                class="text-[10px] font-bold text-slate-400 uppercase tracking-wider"
+              >
+                Range: {{ formatDateRange(offerStats.date_range) }}
+              </p>
             </div>
           </div>
         </RouterLink>
@@ -701,24 +863,29 @@ const yAxisTicks = computed(() => [
         <!-- Card 4: Schedule -->
         <RouterLink
           to="/employer/interviews"
-          class="block relative overflow-hidden bg-white rounded-3xl p-5 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 group hover:-translate-y-1 hover:shadow-[0_12px_40px_rgb(0,0,0,0.08)] transition-all duration-300"
+          class="block relative overflow-hidden bg-white rounded-3xl p-5 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 group hover:-translate-y-1 hover:shadow-[0_12px_40px_rgb(0,0,0,0.08)] transition-all duration-300 h-full min-h-[430px]"
         >
           <div
             class="absolute top-0 right-0 w-32 h-32 bg-orange-50 rounded-bl-full -z-0 opacity-50 group-hover:scale-110 transition-transform"
           ></div>
-          <div class="relative z-10">
+
+          <div class="relative z-10 flex flex-col h-full">
+            <!-- Header -->
             <div class="flex justify-between items-start mb-4">
               <div
                 class="w-10 h-10 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center shadow-inner group-hover:bg-orange-600 group-hover:text-white transition-colors"
               >
                 <CalendarDays class="w-5 h-5" />
               </div>
+
               <span
                 class="px-2.5 py-1 bg-white/60 backdrop-blur-sm text-orange-700 text-[10px] font-bold rounded-lg uppercase tracking-wider border border-orange-100"
-                >Schedule</span
               >
+                Schedule
+              </span>
             </div>
 
+            <!-- Main Stat -->
             <div class="mb-5">
               <h2 class="text-3xl font-black text-slate-900 leading-none">
                 {{ scheduleStats.total }}
@@ -728,28 +895,62 @@ const yAxisTicks = computed(() => [
               </p>
             </div>
 
-            <div class="space-y-3 pt-4 border-t border-slate-100/80">
-              <div class="flex items-center justify-between">
-                <span
-                  class="text-[10px] font-bold text-slate-400 uppercase tracking-wider"
-                  >Today</span
-                >
-                <span
-                  class="text-xs font-bold text-slate-700 bg-orange-50 px-2 py-1 rounded-md"
-                  >{{ scheduleStats.today }}</span
-                >
+            <!-- Schedule Summary -->
+            <div class="flex-1 space-y-4 pt-4 border-t border-slate-100/80">
+              <!-- Today -->
+              <div
+                class="flex items-center justify-between p-3 rounded-xl bg-orange-50/70"
+              >
+                <div class="flex items-center gap-2">
+                  <div
+                    class="w-8 h-8 rounded-lg bg-orange-100 text-orange-600 flex items-center justify-center"
+                  >
+                    <CalendarDays class="w-4 h-4" />
+                  </div>
+                  <div>
+                    <p class="text-xs font-bold text-slate-700">Today</p>
+                    <p class="text-[10px] text-slate-400">
+                      Scheduled interviews
+                    </p>
+                  </div>
+                </div>
+
+                <span class="text-lg font-black text-orange-600">
+                  {{ scheduleStats.today }}
+                </span>
               </div>
 
-              <div class="flex items-center justify-between">
-                <span
-                  class="text-[10px] font-bold text-slate-400 uppercase tracking-wider"
-                  >Upcoming</span
-                >
-                <span
-                  class="text-xs font-bold text-slate-700 bg-slate-100 px-2 py-1 rounded-md"
-                  >{{ scheduleStats.total }}</span
-                >
+              <!-- Upcoming -->
+              <div
+                class="flex items-center justify-between p-3 rounded-xl bg-slate-50"
+              >
+                <div class="flex items-center gap-2">
+                  <div
+                    class="w-8 h-8 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center"
+                  >
+                    <Clock class="w-4 h-4" />
+                  </div>
+                  <div>
+                    <p class="text-xs font-bold text-slate-700">Upcoming</p>
+                    <p class="text-[10px] text-slate-400">
+                      Today & future schedule
+                    </p>
+                  </div>
+                </div>
+
+                <span class="text-lg font-black text-slate-700">
+                  {{ scheduleStats.total }}
+                </span>
               </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="pt-3 mt-auto border-t border-slate-100">
+              <p
+                class="text-[10px] font-bold text-slate-400 uppercase tracking-wider"
+              >
+                Interview Schedule
+              </p>
             </div>
           </div>
         </RouterLink>
