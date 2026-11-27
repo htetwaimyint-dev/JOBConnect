@@ -13,8 +13,9 @@ class NotificationController extends Controller
     public function index(Request $request): JsonResponse
     {
         $perPage = min(max($request->integer('per_page', 10), 1), 50);
+        // Return unread notifications only.
         $paginator = $request->user()
-            ->notifications()
+            ->unreadNotifications()
             ->latest()
             ->paginate($perPage);
 
@@ -40,6 +41,7 @@ class NotificationController extends Controller
             'message' => 'Unread notification count retrieved successfully.',
             'data' => [
                 'unread_count' => $request->user()->unreadNotifications()->count(),
+                'user_id' => (int) $request->user()->getKey(),
             ],
         ]);
     }

@@ -25,3 +25,8 @@ export interface NotificationListData {
     notifications: AppNotification[];
     meta: NotificationPagination;
 }
+
+export interface NotificationUnreadSummary {
+    unread_count: number;
+    user_id: number;
+}

@@ -2,6 +2,10 @@
 
 namespace App\Services\Interviews;
 
+use App\Events\Notifications\NotificationCreated;
+use Illuminate\Support\Facades\Log;
+use Throwable;
+
 use App\Models\Company;
 use App\Models\Interview;
 use App\Models\Interviewer;
@@ -15,6 +19,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Notifications\Notification as LaravelNotification;
 
 class InterviewService
 {
@@ -42,7 +47,8 @@ class InterviewService
 
         $interview->loadMissing(['application.job.company.employer']);
 
-        $interview->application?->job?->company?->employer?->notify(
+        $this->sendNotification(
+            $interview->application?->job?->company?->employer,
             new InterviewRescheduleRequestedNotification($interview)
         );
 
@@ -94,7 +100,8 @@ class InterviewService
 
         // Notify only after the scheduling transaction has committed.
         $interview->loadMissing(['application.job.company', 'application.jobSeeker']);
-        $interview->application?->jobSeeker?->notify(
+        $this->sendNotification(
+            $interview->application?->jobSeeker,
             new InterviewScheduledNotification($interview)
         );
 
@@ -148,7 +155,8 @@ class InterviewService
         $explicitlyRescheduled = ($data['status'] ?? null) === 'rescheduled';
 
         if ($dateChanged || $explicitlyRescheduled) {
-            $interview->application?->jobSeeker?->notify(
+            $this->sendNotification(
+                $interview->application?->jobSeeker,
                 new InterviewRescheduledNotification($interview)
             );
         }
@@ -188,7 +196,8 @@ class InterviewService
 
         if ($status === 'cancelled' && $previousStatus !== 'cancelled') {
             $interview->loadMissing(['application.jobSeeker']);
-            $interview->application?->jobSeeker?->notify(
+            $this->sendNotification(
+                $interview->application?->jobSeeker,
                 new InterviewCancelledNotification($interview)
             );
         }
@@ -253,5 +262,46 @@ class InterviewService
         }
 
         return $found;
+    }
+
+    /**
+     * Persist the in-app notification immediately, then queue only the email.
+     */
+    private function sendNotification(?User $recipient, LaravelNotification $notification): void
+    {
+        if (! $recipient) {
+            return;
+        }
+
+        // 1. Persist the in-app notification synchronously.
+        $recipient->notifyNow($notification, ['database']);
+
+        // 2. Fetch the just-persisted DatabaseNotification model so we have its exact DB ID & data.
+        $persisted = $recipient->notifications()->whereKey($notification->id)->first();
+
+        // 3. Push to Reverb safely without failing the HTTP request if WebSockets are down.
+        if ($persisted) {
+            try {
+                event(new NotificationCreated(
+                    userId: (int) $recipient->getKey(),
+                    notification: [
+                        'id' => (string) $persisted->id,
+                        'type' => $persisted->type,
+                        'data' => $persisted->data,
+                        'read_at' => $persisted->read_at?->toISOString(),
+                        'created_at' => $persisted->created_at?->toISOString(),
+                    ],
+                ));
+            } catch (Throwable $exception) {
+                Log::warning('Unable to broadcast a user notification.', [
+                    'user_id' => $recipient->getKey(),
+                    'notification_id' => $persisted->id,
+                    'exception' => $exception->getMessage(),
+                ]);
+            }
+        }
+
+        // 4. Queue email delivery separately (relies on via() returning ['mail']).
+        $recipient->notify($notification);
     }
 }

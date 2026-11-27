@@ -2,6 +2,10 @@
 
 namespace App\Services\Applications;
 
+use App\Events\Notifications\NotificationCreated;
+use Illuminate\Support\Facades\Log;
+use Throwable;
+
 use App\Enums\ApplicationStatus;
 use App\Models\Application;
 use App\Models\Company;
@@ -10,6 +14,7 @@ use App\Models\User;
 use App\Repositories\Contracts\ApplicationRepositoryInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Notifications\Notification as LaravelNotification;
 use App\Services\AI\ApplicantEvaluationInputBuilder;
 use App\Notifications\ApplicationSubmittedNotification;
 use App\Notifications\NewApplicationReceivedNotification;
@@ -156,11 +161,13 @@ class ApplicationService
             'jobSeeker',
         ]);
 
-        $application->jobSeeker?->notify(
+        $this->sendNotification(
+            $application->jobSeeker,
             new ApplicationSubmittedNotification($application)
         );
 
-        $application->job?->company?->employer?->notify(
+        $this->sendNotification(
+            $application->job?->company?->employer,
             new NewApplicationReceivedNotification($application)
         );
 
@@ -270,7 +277,8 @@ class ApplicationService
             'jobSeeker',
         ]);
 
-        $updatedApplication->jobSeeker?->notify(
+        $this->sendNotification(
+            $updatedApplication->jobSeeker,
             new ApplicationStatusChangedNotification($updatedApplication)
         );
 
@@ -312,10 +320,53 @@ class ApplicationService
             'jobSeeker',
         ]);
 
-        $updatedApplication->job?->company?->employer?->notify(
+        $this->sendNotification(
+            $updatedApplication->job?->company?->employer,
             new ApplicationWithdrawnNotification($updatedApplication)
         );
 
         return $updatedApplication;
+    }
+
+    /**
+     * Persist the in-app notification immediately, then queue only the email.
+     * This keeps the bell responsive even when the mail queue is busy.
+     */
+    private function sendNotification(?User $recipient, LaravelNotification $notification): void
+    {
+        if (! $recipient) {
+            return;
+        }
+
+        // 1. Persist the in-app notification synchronously.
+        $recipient->notifyNow($notification, ['database']);
+
+        // 2. Fetch the just-persisted DatabaseNotification model so we have its exact DB ID & data.
+        $persisted = $recipient->notifications()->whereKey($notification->id)->first();
+
+        // 3. Push to Reverb safely without failing the HTTP request if WebSockets are down.
+        if ($persisted) {
+            try {
+                event(new NotificationCreated(
+                    userId: (int) $recipient->getKey(),
+                    notification: [
+                        'id' => (string) $persisted->id,
+                        'type' => $persisted->type,
+                        'data' => $persisted->data,
+                        'read_at' => $persisted->read_at?->toISOString(),
+                        'created_at' => $persisted->created_at?->toISOString(),
+                    ],
+                ));
+            } catch (Throwable $exception) {
+                Log::warning('Unable to broadcast a user notification.', [
+                    'user_id' => $recipient->getKey(),
+                    'notification_id' => $persisted->id,
+                    'exception' => $exception->getMessage(),
+                ]);
+            }
+        }
+
+        // 4. Queue email delivery separately (relies on via() returning ['mail']).
+        $recipient->notify($notification);
     }
 }

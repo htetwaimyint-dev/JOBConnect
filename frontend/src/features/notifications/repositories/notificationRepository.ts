@@ -2,6 +2,7 @@ import api from "@/services/api";
 import type {
     AppNotification,
     NotificationListData,
+    NotificationUnreadSummary,
 } from "../types/notification.types";
 
 interface ApiResponse<T> {
@@ -18,7 +19,7 @@ const notificationRepository = {
     },
 
     getUnreadCount() {
-        return api.get<ApiResponse<{ unread_count: number }>>(
+        return api.get<ApiResponse<NotificationUnreadSummary>>(
             "/notifications/unread-count",
         );
     },

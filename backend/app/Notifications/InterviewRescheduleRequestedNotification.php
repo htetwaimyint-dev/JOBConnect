@@ -16,7 +16,7 @@ class InterviewRescheduleRequestedNotification extends Notification implements S
 
     public function via(object $notifiable): array
     {
-        return ['mail', 'database'];
+        return ['mail'];
     }
 
     public function toMail(object $notifiable): MailMessage
