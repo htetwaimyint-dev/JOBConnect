@@ -265,14 +265,14 @@ class DashboardService
     }
 
     /**
-     * Get the latest 5 activities.
+     * Get the latest 4 activities.
      */
     private function getRecentActivities()
     {
         return ActivityLog::query()
             ->with('actor:id,name')
             ->latest()
-            ->take(5)
+            ->take(4)
             ->get()
             ->map(function ($activity) {
                 return [

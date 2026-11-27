@@ -22,7 +22,23 @@ export const adminRepository = {
         page: params.page ?? 1,
         search: params.search,
         status: params.status,
-        per_page: params.per_page ?? 10,
+        per_page: params.per_page ?? 5,
+      },
+    });
+
+    return res.data;
+  },
+    // Activity Logs
+  async getActivityLogs(
+    params: {
+      page?: number;
+      per_page?: number;
+    } = {},
+  ) {
+    const res = await api.get("/admin/activity-logs", {
+      params: {
+        page: params.page ?? 1,
+        per_page: params.per_page ?? 5,
       },
     });
 
@@ -52,7 +68,7 @@ export const adminRepository = {
         page: params.page ?? 1,
         search: params.search,
         status: params.status,
-        per_page: params.per_page ?? 10,
+        per_page: params.per_page ?? 5,
       },
     });
 

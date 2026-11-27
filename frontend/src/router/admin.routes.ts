@@ -10,6 +10,7 @@ import JobApprovalPage from "@/features/admin/pages/JobApprovalPage.vue";
 import CategoriesPage from "@/features/admin/pages/CategoriesPage.vue";
 import ReportsPage from "@/features/admin/pages/ReportsPage.vue";
 import CompanyDetailPage from "@/features/job-seeker/pages/CompanyDetailPage.vue";
+import ActivityLogsPage from "@/features/admin/pages/ActivityLogsPage.vue";
 
 export const adminRoutes: RouteRecordRaw[] = [
   {
@@ -56,6 +57,12 @@ export const adminRoutes: RouteRecordRaw[] = [
         path: "reports",
         name: "AdminReports",
         component: ReportsPage,
+      },
+      {
+        path: "activity-logs",
+        name: "AdminActivityLogs",
+        component: ActivityLogsPage,
+        meta: { title: "Activity Logs" },
       },
       {
         path: "settings",

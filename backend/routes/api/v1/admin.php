@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\V1\Admin\JobApprovalController;
 use App\Http\Controllers\Api\V1\Admin\UserManagementController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\V1\Admin\DashboardController;
+use App\Http\Controllers\Api\V1\Admin\ActivityLogController;
 use App\Http\Controllers\Api\V1\JobSeeker\CompanyProfileViewController;
 
 Route::middleware(['auth:sanctum', 'admin'])->group(function () {
@@ -29,6 +30,12 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
         // Admin Dashboard
         Route::get('/dashboard', [
             DashboardController::class,
+            'index'
+        ]);
+
+        // Activity Logs
+        Route::get('/activity-logs', [
+            ActivityLogController::class,
             'index'
         ]);
 

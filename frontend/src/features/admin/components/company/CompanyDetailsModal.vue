@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import { computed } from "vue";
+import DOMPurify from "dompurify";
+
 import {
   Building2,
   X,
@@ -16,7 +19,7 @@ import {
 
 import type { Company } from "../../types/company-approval.types";
 
-defineProps<{
+const props = defineProps<{
   company: Company | null;
   statusClass: (status: Company["verification_status"]) => string;
   statusDotClass: (status: Company["verification_status"]) => string;
@@ -29,6 +32,11 @@ const emit = defineEmits<{
   approve: [company: Company];
   reject: [company: Company];
 }>();
+
+// Sanitize company description before rendering HTML
+const sanitizedDescription = computed(() =>
+  DOMPurify.sanitize(props.company?.description || ""),
+);
 </script>
 
 <template>
@@ -115,8 +123,15 @@ const emit = defineEmits<{
           <!-- Description -->
           <div>
             <h4 class="mb-2 font-semibold text-slate-900">About Company</h4>
-            <p class="whitespace-pre-line text-sm leading-7 text-slate-600">
-              {{ company.description || "No company description provided." }}
+
+            <div
+              v-if="sanitizedDescription"
+              class="company-html-content text-sm leading-7 text-slate-600"
+              v-html="sanitizedDescription"
+            ></div>
+
+            <p v-else class="text-sm text-slate-400">
+              No company description provided.
             </p>
           </div>
 
@@ -127,6 +142,7 @@ const emit = defineEmits<{
             </h4>
 
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <!-- Industry -->
               <div class="rounded-xl bg-slate-50 p-4">
                 <div class="flex items-center gap-2 text-xs text-slate-500">
                   <BriefcaseBusiness :size="15" />
@@ -137,6 +153,7 @@ const emit = defineEmits<{
                 </p>
               </div>
 
+              <!-- Founded Year -->
               <div class="rounded-xl bg-slate-50 p-4">
                 <div class="flex items-center gap-2 text-xs text-slate-500">
                   <CalendarDays :size="15" />
@@ -147,6 +164,7 @@ const emit = defineEmits<{
                 </p>
               </div>
 
+              <!-- Employee Count -->
               <div class="rounded-xl bg-slate-50 p-4">
                 <div class="flex items-center gap-2 text-xs text-slate-500">
                   <Users :size="15" />
@@ -157,6 +175,7 @@ const emit = defineEmits<{
                 </p>
               </div>
 
+              <!-- Location -->
               <div class="rounded-xl bg-slate-50 p-4">
                 <div class="flex items-center gap-2 text-xs text-slate-500">
                   <MapPin :size="15" />
@@ -310,3 +329,42 @@ const emit = defineEmits<{
     </div>
   </Teleport>
 </template>
+
+<style scoped>
+.company-html-content :deep(p) {
+  margin-bottom: 0.5rem;
+}
+
+.company-html-content :deep(p:last-child) {
+  margin-bottom: 0;
+}
+
+.company-html-content :deep(ul) {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+  padding-left: 1.5rem;
+  list-style-type: disc;
+}
+
+.company-html-content :deep(ol) {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+  padding-left: 1.5rem;
+  list-style-type: decimal;
+}
+
+.company-html-content :deep(li) {
+  margin-top: 0.25rem;
+  margin-bottom: 0.25rem;
+}
+
+.company-html-content :deep(strong),
+.company-html-content :deep(b) {
+  font-weight: 600;
+}
+
+.company-html-content :deep(a) {
+  color: #2563eb;
+  text-decoration: underline;
+}
+</style>

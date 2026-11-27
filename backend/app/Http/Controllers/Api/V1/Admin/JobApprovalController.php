@@ -9,13 +9,16 @@ use App\Http\Resources\Api\Jobs\JobResource;
 use App\Services\Jobs\AdminJobService;
 use Illuminate\Http\JsonResponse;
 use App\Enums\JobStatus;
+use App\Services\Activity\ActivityLogService;
 
 class JobApprovalController extends Controller
 {
     protected AdminJobService $jobService;
 
-    public function __construct(AdminJobService $jobService)
-    {
+    public function __construct(
+        AdminJobService $jobService,
+        protected ActivityLogService $activityLogService
+    ) {
         $this->jobService = $jobService;
     }
 
@@ -82,7 +85,7 @@ class JobApprovalController extends Controller
     }
 
     /**
-     * Approve or reject a job .
+     * Approve or reject a job.
      */
     public function update(
         JobApprovalRequest $request,
@@ -96,9 +99,26 @@ class JobApprovalController extends Controller
             $request->validated()
         );
 
+        // Log job approval or rejection
+        $isApproved = $updatedJob->status === JobStatus::Published;
+
+        $action = $isApproved
+            ? 'Approved Job'
+            : 'Rejected Job';
+
+        $description = $isApproved
+            ? "Approved job: {$updatedJob->title}"
+            : "Rejected job: {$updatedJob->title}";
+
+        $this->activityLogService->log(
+            $action,
+            $description,
+            $updatedJob
+        );
+
         return response()->json([
             'success' => true,
-            'message' => $updatedJob->status === JobStatus::Published
+            'message' => $isApproved
                 ? 'Job approved successfully.'
                 : 'Job rejected successfully.',
             'data' => new JobResource($updatedJob),

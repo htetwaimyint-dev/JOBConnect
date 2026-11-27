@@ -431,25 +431,32 @@ onMounted(fetchDashboard);
     <!-- Bottom Section -->
     <section class="grid grid-cols-1 gap-5 xl:grid-cols-3">
       <!-- Recent Activities -->
+
+      <!-- Recent Activities -->
       <article
         class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm"
       >
-        <div class="flex items-center justify-between">
+        <div class="flex items-center justify-between gap-3">
           <div>
             <h2 class="font-semibold text-slate-800">Recent Activities</h2>
             <p class="mt-1 text-xs text-slate-400">
-              Latest activities across the platform
+              Latest 5 activities across the platform
             </p>
           </div>
 
-          <Clock3 :size="19" class="text-slate-400" />
+          <RouterLink
+            to="/admin/activity-logs"
+            class="shrink-0 text-sm font-semibold text-blue-600 transition hover:text-blue-700"
+          >
+            View All
+          </RouterLink>
         </div>
 
         <div class="mt-5 space-y-4">
           <div
-            v-for="activity in recentActivities"
+            v-for="activity in recentActivities.slice(0, 5)"
             :key="activity.id"
-            class="flex items-start gap-3 border-b border-slate-100 pb-4 last:border-0"
+            class="flex items-start gap-3 border-b border-slate-100 pb-4 last:border-0 last:pb-0"
           >
             <div
               class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-50 text-blue-600"
@@ -458,16 +465,22 @@ onMounted(fetchDashboard);
             </div>
 
             <div class="min-w-0 flex-1">
-              <div class="text-sm font-semibold text-slate-800">
-                {{ activity.actor }}
+              <div class="flex flex-wrap items-center gap-2">
+                <p class="text-sm font-semibold text-slate-800">
+                  {{ activity.action }}
+                </p>
 
-                <span class="mt-1 text-xs text-slate-400">
-                  ({{ formatDate(activity.created_at) }})
+                <span class="text-xs text-slate-400">
+                  {{ formatDate(activity.created_at) }}
                 </span>
               </div>
 
               <p class="mt-1 text-sm text-slate-600">
                 {{ activity.description || "No description available." }}
+              </p>
+
+              <p class="mt-1 text-xs text-slate-400">
+                By {{ activity.actor || "System" }}
               </p>
             </div>
           </div>
