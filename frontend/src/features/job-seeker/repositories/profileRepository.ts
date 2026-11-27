@@ -7,7 +7,7 @@ import type {
 
 interface ProfileResponse {
     success: boolean;
-    message: string;
+    message: string
     data: JobSeekerProfile;
 }
 
