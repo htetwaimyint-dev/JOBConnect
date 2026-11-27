@@ -133,14 +133,6 @@ async function refreshOffers() {
                         Review offers from employers and manage your responses.
                     </p>
                 </div>
-
-                <button
-                    type="button"
-                    class="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
-                    @click="refreshOffers"
-                >
-                    Refresh offers
-                </button>
             </header>
 
             <div

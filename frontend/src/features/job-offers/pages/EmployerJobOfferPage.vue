@@ -15,6 +15,7 @@ import type {
     JobOffer,
     JobOfferFilter,
 } from "../types/jobOffer.types";
+import router from "@/router/index.ts";
 
 const route = useRoute();
 
@@ -116,14 +117,8 @@ function apiErrorMessage(error: unknown): string {
     );
 }
 
-function openCreateForm() {
-    form.value = {
-        job_id: availableJobs.value[0] ? String(availableJobs.value[0].id) : "",
-        salary_offered: "",
-        expires_in_days: 7,
-        offer_details: "",
-    };
-    formVisible.value = true;
+function handleDirectOffer() {
+    router.push({ name: "EmployerJobSeekerProfiles" });
 }
 
 async function submitCreate() {
@@ -228,9 +223,8 @@ async function refreshOffers() {
 
                 <button
                     type="button"
-                    :disabled="!candidate || !availableJobs.length"
                     class="rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
-                    @click="openCreateForm"
+                    @click="handleDirectOffer"
                 >
                     + New Direct Offer
                 </button>

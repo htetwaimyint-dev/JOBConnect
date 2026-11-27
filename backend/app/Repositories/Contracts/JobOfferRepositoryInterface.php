@@ -10,7 +10,7 @@ use Illuminate\Support\Collection;
 
 interface JobOfferRepositoryInterface
 {
-    public function getPublishedJobsForCompany(Company $company): Collection;
+    public function getPublishedJobsForCompany(Company $company, int $jobSeekerId): Collection;
 
     public function findPublishedJobForCompany(Company $company, int $jobId): ?Job;
 
