@@ -1,9 +1,13 @@
+
 import type {
     ApplicationStatus,
     ApplicationPagination,
 } from "./application.types";
 
-export type { ApplicationStatus, ApplicationPagination };
+export type {
+    ApplicationStatus,
+    ApplicationPagination,
+};
 
 // ==========================================
 // Employer Application Job
@@ -43,12 +47,65 @@ export interface EmployerApplicationAnswer {
     answer: string;
 }
 
+
 // ==========================================
 // Job Seeker Profile
 // ==========================================
 
 export interface EmployerJobSeekerProfile {
-    [key: string]: unknown;
+    id: number;
+    job_seeker_id: number;
+    profile_photo: string | null;
+    phone: string | null;
+    date_of_birth: string | null;
+    gender: string | null;
+    address: string | null;
+    city: string | null;
+    professional_title: string | null;
+    bio: string | null;
+    expected_salary: string | null;
+    experience_years: string | null;
+    linkedin_url: string | null;
+    portfolio_url: string | null;
+}
+
+// ==========================================
+// Job Seeker Skill
+// ==========================================
+
+export interface EmployerJobSeekerSkill {
+    id: number;
+    name: string;
+    skill_level: string;
+}
+
+// ==========================================
+// Job Seeker Education
+// ==========================================
+
+export interface EmployerJobSeekerEducation {
+    id: number;
+    institution: string;
+    degree: string | null;
+    field_of_study: string | null;
+    start_date: string | null;
+    end_date: string | null;
+    description: string | null;
+}
+
+// ==========================================
+// Job Seeker Experience
+// ==========================================
+
+export interface EmployerJobSeekerExperience {
+    id: number;
+    job_title: string;
+    company_name: string;
+    employment_type: string | null;
+    start_date: string;
+    end_date: string | null;
+    is_current: boolean;
+    description: string | null;
 }
 
 // ==========================================
@@ -60,11 +117,10 @@ export interface EmployerJobSeeker {
     name: string;
     email: string;
     profile?: EmployerJobSeekerProfile | null;
-    skills?: Record<string, unknown>[] | null;
-    educations?: Record<string, unknown>[] | null;
-    experiences?: Record<string, unknown>[] | null;
+    skills?: EmployerJobSeekerSkill[] | null;
+    educations?: EmployerJobSeekerEducation[] | null;
+    experiences?: EmployerJobSeekerExperience[] | null;
 }
-
 // ==========================================
 // Application Status History
 // ==========================================
@@ -81,6 +137,7 @@ export interface EmployerApplicationStatusHistory {
 // ==========================================
 // AI Evaluation Result
 // ==========================================
+
 
 export interface EmployerAiEvaluationResult {
     analysis_id?: number;
@@ -153,11 +210,11 @@ export interface EmployerBatchAiEvaluationProgressResponse {
         batch_id: number;
         job_id: number;
         status:
-            | "queued"
-            | "processing"
-            | "completed"
-            | "completed_with_errors"
-            | "failed";
+        | "queued"
+        | "processing"
+        | "completed"
+        | "completed_with_errors"
+        | "failed";
         is_final: boolean;
         total_applicants: number;
         completed_count: number;
@@ -235,6 +292,9 @@ export interface EmployerApplicationParams {
 // ==========================================
 
 export interface UpdateEmployerApplicationStatusData {
-    new_status: Exclude<ApplicationStatus, "pending" | "withdrawn">;
+    new_status: Exclude<
+        ApplicationStatus,
+        "pending" | "withdrawn"
+    >;
     note?: string;
 }

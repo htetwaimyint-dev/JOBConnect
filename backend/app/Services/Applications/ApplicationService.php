@@ -2,10 +2,6 @@
 
 namespace App\Services\Applications;
 
-use App\Events\Notifications\NotificationCreated;
-use Illuminate\Support\Facades\Log;
-use Throwable;
-
 use App\Enums\ApplicationStatus;
 use App\Models\Application;
 use App\Models\Company;
@@ -14,20 +10,13 @@ use App\Models\User;
 use App\Repositories\Contracts\ApplicationRepositoryInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Validation\ValidationException;
-use Illuminate\Notifications\Notification as LaravelNotification;
 use App\Services\AI\ApplicantEvaluationInputBuilder;
-use App\Notifications\ApplicationSubmittedNotification;
-use App\Notifications\NewApplicationReceivedNotification;
-use App\Notifications\ApplicationStatusChangedNotification;
-use App\Notifications\ApplicationWithdrawnNotification;
-use App\Services\Notifications\NotificationService;
 
 class ApplicationService
 {
     public function __construct(
         protected ApplicationRepositoryInterface $applicationRepository,
-        protected ApplicantEvaluationInputBuilder $inputBuilder,
-        protected NotificationService $notificationService,
+        protected ApplicantEvaluationInputBuilder $inputBuilder
     ) {}
 
     /**
@@ -151,29 +140,11 @@ class ApplicationService
         // Remove answers from application data.
         unset($data['answers']);
 
-        // Save application and answers first. The repository transaction
-        // completes before any queued notification is dispatched.
-        $application = $this->applicationRepository->createWithAnswers(
+        // Save application and answers together.
+        return $this->applicationRepository->createWithAnswers(
             $data,
             $answers
         );
-
-        $application->loadMissing([
-            'job.company.employer',
-            'jobSeeker',
-        ]);
-
-        $this->notificationService->send(
-            $application->jobSeeker,
-            new ApplicationSubmittedNotification($application)
-        );
-
-        $this->notificationService->send(
-            $application->job?->company?->employer,
-            new NewApplicationReceivedNotification($application)
-        );
-
-        return $application;
     }
 
     /**
@@ -269,25 +240,10 @@ class ApplicationService
             ]);
         }
 
-        $updatedApplication = $this->applicationRepository->updateStatus(
+        return $this->applicationRepository->updateStatus(
             $application,
             $data
         );
-
-        $updatedApplication->loadMissing([
-            'job.company',
-            'jobSeeker',
-        ]);
-
-        $this->notificationService->send(
-            $updatedApplication->jobSeeker,
-            new ApplicationStatusChangedNotification(
-                $updatedApplication,
-                $updatedApplication->status->value ?? (string) $updatedApplication->status
-            )
-        );
-
-        return $updatedApplication;
     }
 
     /**
@@ -311,7 +267,7 @@ class ApplicationService
         }
 
         // Update status and create history.
-        $updatedApplication = $this->applicationRepository->updateStatus(
+        return $this->applicationRepository->updateStatus(
             $application,
             [
                 'new_status' => ApplicationStatus::Withdrawn->value,
@@ -319,17 +275,5 @@ class ApplicationService
                 'note' => 'Withdrawn by job seeker.',
             ]
         );
-
-        $updatedApplication->loadMissing([
-            'job.company.employer',
-            'jobSeeker',
-        ]);
-
-        $this->notificationService->send(
-            $updatedApplication->job?->company?->employer,
-            new ApplicationWithdrawnNotification($updatedApplication)
-        );
-
-        return $updatedApplication;
     }
 }

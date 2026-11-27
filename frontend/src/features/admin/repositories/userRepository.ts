@@ -1,4 +1,3 @@
-
 import type { Employer, JobSeeker } from "../types/user.types";
 
 const employers: Employer[] = [
@@ -8,16 +7,11 @@ const employers: Employer[] = [
     email: "contact@techcorp.com",
     role: "Employer",
     logo: "https://images.unsplash.com/photo-1549923746-c502d488b3ea?w=100&h=100&fit=crop",
-    company: {
-      id: 1,
-      name: "TechCorp Solutions",
-      logo: "https://images.unsplash.com/photo-1549923746-c502d488b3ea?w=100&h=100&fit=crop",
-    },
+    company: "TechCorp Solutions",
     companyLogo:
       "https://images.unsplash.com/photo-1549923746-c502d488b3ea?w=100&h=100&fit=crop",
     jobCount: 12,
     isDeleted: false,
-    status: "active",
     joinedDate: "Mar 12, 2024",
   },
   {
@@ -26,16 +20,11 @@ const employers: Employer[] = [
     email: "hello@creativestudio.com",
     role: "Employer",
     logo: "https://images.unsplash.com/photo-1572044162444-ad60f128bdea?w=100&h=100&fit=crop",
-    company: {
-      id: 2,
-      name: "Creative Studio",
-      logo: "https://images.unsplash.com/photo-1572044162444-ad60f128bdea?w=100&h=100&fit=crop",
-    },
+    company: "Creative Studio",
     companyLogo:
       "https://images.unsplash.com/photo-1572044162444-ad60f128bdea?w=100&h=100&fit=crop",
     jobCount: 5,
     isDeleted: false,
-    status: "active",
     joinedDate: "Mar 10, 2024",
   },
   {
@@ -44,16 +33,11 @@ const employers: Employer[] = [
     email: "hr@globalfinance.com",
     role: "Employer",
     logo: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=100&h=100&fit=crop",
-    company: {
-      id: 3,
-      name: "Global Finance",
-      logo: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=100&h=100&fit=crop",
-    },
+    company: "Global Finance",
     companyLogo:
       "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=100&h=100&fit=crop",
     jobCount: 0,
     isDeleted: true,
-    status: "suspended",
     joinedDate: "Feb 28, 2024",
   },
   {
@@ -62,16 +46,11 @@ const employers: Employer[] = [
     email: "jobs@startupinc.com",
     role: "Employer",
     logo: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=100&h=100&fit=crop",
-    company: {
-      id: 4,
-      name: "Startup Inc.",
-      logo: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=100&h=100&fit=crop",
-    },
+    company: "Startup Inc.",
     companyLogo:
       "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=100&h=100&fit=crop",
     jobCount: 3,
     isDeleted: false,
-    status: "active",
     joinedDate: "Feb 15, 2024",
   },
   {
@@ -80,16 +59,11 @@ const employers: Employer[] = [
     email: "hr@nextgen.com",
     role: "Employer",
     logo: "https://images.unsplash.com/photo-1497366754035-f200968a6e72?w=100&h=100&fit=crop",
-    company: {
-      id: 5,
-      name: "NextGen Digital",
-      logo: "https://images.unsplash.com/photo-1497366754035-f200968a6e72?w=100&h=100&fit=crop",
-    },
+    company: "NextGen Digital",
     companyLogo:
       "https://images.unsplash.com/photo-1497366754035-f200968a6e72?w=100&h=100&fit=crop",
     jobCount: 8,
     isDeleted: false,
-    status: "active",
     joinedDate: "Feb 02, 2024",
   },
 ];
@@ -103,7 +77,6 @@ const jobSeekers: JobSeeker[] = [
     logo: "https://images.unsplash.com/photo-1500649468467-7b1f7a2a4a?auto=format&fit=crop&w=100&h=100",
     profileTitle: "Frontend Developer",
     isDeleted: false,
-    status: "active",
     joinedDate: "Mar 12, 2024",
   },
   {
@@ -114,7 +87,6 @@ const jobSeekers: JobSeeker[] = [
     logo: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop",
     profileTitle: "UI/UX Designer",
     isDeleted: false,
-    status: "active",
     joinedDate: "Mar 10, 2024",
   },
   {
@@ -125,7 +97,6 @@ const jobSeekers: JobSeeker[] = [
     logo: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&h=100&fit=crop",
     profileTitle: "Backend Developer",
     isDeleted: true,
-    status: "suspended",
     joinedDate: "Feb 28, 2024",
   },
   {
@@ -136,7 +107,6 @@ const jobSeekers: JobSeeker[] = [
     logo: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop",
     profileTitle: "Product Designer",
     isDeleted: false,
-    status: "active",
     joinedDate: "Feb 15, 2024",
   },
   {
@@ -147,7 +117,6 @@ const jobSeekers: JobSeeker[] = [
     logo: "https://images.unsplash.com/photo-1507591064344-4c6ce005b128?w=100&h=100&fit=crop",
     profileTitle: "Software Engineer",
     isDeleted: false,
-    status: "active",
     joinedDate: "Feb 02, 2024",
   },
 ];
@@ -157,16 +126,13 @@ const userRepository = {
   async getEmployers(): Promise<Employer[]> {
     return employers.map((user) => ({ ...user }));
   },
-
   async getJobSeekers(): Promise<JobSeeker[]> {
     return jobSeekers.map((user) => ({ ...user }));
   },
-
   async toggleEmployerStatus(id: number): Promise<void> {
     const user = employers.find((item) => item.id === id);
     if (user) user.isDeleted = !user.isDeleted;
   },
-
   async toggleJobSeekerStatus(id: number): Promise<void> {
     const user = jobSeekers.find((item) => item.id === id);
     if (user) user.isDeleted = !user.isDeleted;

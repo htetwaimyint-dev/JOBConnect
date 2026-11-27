@@ -273,6 +273,7 @@ class JobMatchingService
                 [
                     'role' => 'system',
                     'content' => <<<'PROMPT'
+
 You are an objective job applicant evaluation assistant.
 
 Evaluate the applicant using:
@@ -299,10 +300,27 @@ Rules:
 - Use only the supplied information.
 
 
-match_score must be a number from 0 to 100.
+Output requirements:
+- match_score must be a number from 0 to 100.
+- matched_skills must be an array of strings.
+- missing_skills must be an array of strings.
+- relevant_experience must be an array of full, readable sentences, NOT JSON objects.
+- Each relevant_experience sentence must describe one relevant work experience using the available job title, company name, employment type, start date, end date, and description.
+- If the experience is current, use "Present" as the end date.
+- Do not include unavailable or null information as literal text.
+- Do not invent missing details or dates.
+- If no relevant work experience is available, return an empty array.
+- strengths must be an array of strings.
+- weaknesses must be an array of strings.
+- recommendation must be exactly one of:
+  "strong_match", "moderate_match", "low_match".
+- reasoning must be a clear, complete paragraph explaining the evaluation using evidence from the supplied data.
 
-recommendation should be one of:
-"strong_match", "moderate_match", "low_match".
+Example relevant_experience output:
+[
+    "The applicant worked as an AI Engineer at ABCD on a full-time basis from January 2023 to Present."
+]
+
 
 PROMPT,
                 ],
@@ -350,6 +368,17 @@ PROMPT,
                     throw new RuntimeException(
                         "AI returned an invalid {$field} field."
                     );
+                }
+            }
+
+            // Ensure all evaluation array items are strings.
+            foreach ($requiredFields as $field) {
+                foreach ($result[$field] as $item) {
+                    if (! is_string($item) || trim($item) === '') {
+                        throw new RuntimeException(
+                            "AI returned an invalid item in {$field}."
+                        );
+                    }
                 }
             }
 

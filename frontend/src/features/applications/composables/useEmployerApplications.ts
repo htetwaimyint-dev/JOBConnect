@@ -1,3 +1,4 @@
+
 import { computed, onScopeDispose, ref } from "vue";
 
 import employerApplicationRepository from "../repositories/employerApplicationRepository";
@@ -47,7 +48,9 @@ export function useEmployerApplications() {
     const batchStatus = ref<string | null>(null);
     const batchProgress = ref(0);
 
-    const batchEvaluationResults = ref<EmployerBatchAiEvaluationItem[]>([]);
+    const batchEvaluationResults = ref<
+        EmployerBatchAiEvaluationItem[]
+    >([]);
 
     const batchEvaluationSummary = ref({
         total_applicants: 0,
@@ -131,10 +134,12 @@ export function useEmployerApplications() {
 
             const response = selectedJobId.value
                 ? await employerApplicationRepository.getJobApplications(
-                      selectedJobId.value,
-                      params,
-                  )
-                : await employerApplicationRepository.getApplications(params);
+                    selectedJobId.value,
+                    params,
+                )
+                : await employerApplicationRepository.getApplications(
+                    params,
+                );
 
             applications.value = response.data;
             pagination.value = response.meta;
@@ -246,7 +251,9 @@ export function useEmployerApplications() {
         }
 
         if (
-            !["pending", "reviewed"].includes(selectedApplication.value.status)
+            !["pending", "reviewed"].includes(
+                selectedApplication.value.status,
+            )
         ) {
             evaluationError.value =
                 "This application is not eligible for AI evaluation.";
@@ -283,9 +290,9 @@ export function useEmployerApplications() {
             applications.value = applications.value.map((application) =>
                 application.id === applicationId
                     ? {
-                          ...application,
-                          ai_evaluation: evaluation,
-                      }
+                        ...application,
+                        ai_evaluation: evaluation,
+                    }
                     : application,
             );
 
@@ -333,7 +340,10 @@ export function useEmployerApplications() {
         batchEvaluationResults.value = data.completed_applicants;
 
         // Convert batch result into the application AI evaluation format.
-        const evaluationMap = new Map<number, EmployerAiEvaluationResult>(
+        const evaluationMap = new Map<
+            number,
+            EmployerAiEvaluationResult
+        >(
             data.completed_applicants.map((item) => [
                 item.application_id,
                 {
@@ -366,7 +376,9 @@ export function useEmployerApplications() {
 
         // Update the currently selected applicant.
         if (selectedApplication.value) {
-            const evaluation = evaluationMap.get(selectedApplication.value.id);
+            const evaluation = evaluationMap.get(
+                selectedApplication.value.id,
+            );
 
             if (evaluation) {
                 selectedApplication.value = {
@@ -437,7 +449,9 @@ export function useEmployerApplications() {
     // Start Batch AI Evaluation
     // ==========================================
 
-    const evaluateAllApplicants = async (jobId: number): Promise<boolean> => {
+    const evaluateAllApplicants = async (
+        jobId: number,
+    ): Promise<boolean> => {
         if (!Number.isInteger(jobId) || jobId <= 0) {
             batchEvaluationError.value = "Invalid job ID.";
 
@@ -519,8 +533,9 @@ export function useEmployerApplications() {
     const pageStats = computed(() => ({
         total: pagination.value.total,
 
-        pending: applications.value.filter((item) => item.status === "pending")
-            .length,
+        pending: applications.value.filter(
+            (item) => item.status === "pending",
+        ).length,
 
         shortlisted: applications.value.filter(
             (item) => item.status === "shortlisted",
@@ -548,7 +563,6 @@ export function useEmployerApplications() {
         searchKeyword.value = "";
         selectedStatus.value = "";
         selectedCategory.value = "";
-        selectedJobId.value = null;
 
         fetchApplications(1);
     };
@@ -558,7 +572,11 @@ export function useEmployerApplications() {
     // ==========================================
 
     const changePage = (page: number) => {
-        if (page < 1 || page > pagination.value.last_page || loading.value) {
+        if (
+            page < 1 ||
+            page > pagination.value.last_page ||
+            loading.value
+        ) {
             return;
         }
 

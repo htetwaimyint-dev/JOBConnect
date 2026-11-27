@@ -247,7 +247,7 @@ class GroqService
     }
 
     /**
-     * Generate a JSON response from Groq.
+     * Generate a structured JSON response from Groq.
      *
      * @throws JsonException
      */
