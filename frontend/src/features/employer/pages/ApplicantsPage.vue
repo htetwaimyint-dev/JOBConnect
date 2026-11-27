@@ -37,6 +37,9 @@ const {
     // Batch AI Evaluation
     evaluatingAllApplicants,
     batchEvaluationError,
+    activeBatchId,
+    batchStatus,
+    batchProgress,
     batchEvaluationSummary,
     topTenEvaluations,
     evaluateAllApplicants,
@@ -219,7 +222,7 @@ const runApplicantEvaluation = async () => {
 
     const success = await evaluateSingleApplicant(applicationId);
 
-    console.log("Evaluation Success:", success);
+    console.log("Evaluation  Success:", success);
     console.log("After Evaluation:", selectedApplication.value);
     console.log(
         "AI Evaluation:",
@@ -274,6 +277,7 @@ onMounted(() => {
             <ApplicantsFilters v-model:search-keyword="searchKeyword" v-model:selected-status="selectedStatus"
                 :status-options="statusOptions" :loading="loading" @search="applyFilters" @reset="resetFilters" />
 
+
             <!-- Batch AI Evaluation -->
             <section v-if="selectedJobId" class="rounded-2xl border border-blue-100 bg-white p-5 shadow-sm">
                 <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -298,9 +302,10 @@ onMounted(() => {
                         <span v-if="evaluatingAllApplicants"
                             class="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
 
-                        {{ evaluatingAllApplicants
-                            ? "Evaluating Applicants..."
-                            : "Evaluate All & Get Top 10"
+                        {{
+                            evaluatingAllApplicants
+                                ? "Evaluating Applicants..."
+                                : "Evaluate All & Get Top 10"
                         }}
                     </button>
                 </div>
@@ -311,18 +316,54 @@ onMounted(() => {
                     {{ batchEvaluationError }}
                 </div>
 
+                <!-- Batch Progress -->
+                <div v-if="activeBatchId && batchEvaluationSummary.total_applicants > 0"
+                    class="mt-5 rounded-xl border border-blue-100 bg-blue-50/50 p-4">
+                    <div class="flex items-center justify-between gap-3">
+                        <div>
+                            <p class="text-sm font-semibold text-slate-800">
+                                Evaluation Progress
+                            </p>
+
+                            <p class="mt-1 text-xs text-slate-500">
+                                Batch #{{ activeBatchId }}
+                            </p>
+                        </div>
+
+                        <span class="text-lg font-bold text-blue-700">
+                            {{ Math.round(batchProgress) }}%
+                        </span>
+                    </div>
+
+                    <div class="mt-3 h-2.5 overflow-hidden rounded-full bg-blue-100">
+                        <div class="h-full rounded-full bg-blue-600 transition-all duration-500"
+                            :style="{ width: `${Math.min(100, Math.max(0, batchProgress))}%` }" />
+                    </div>
+
+                    <div class="mt-2 flex flex-wrap items-center justify-between gap-2">
+                        <span class="text-xs font-medium capitalize text-slate-600">
+                            {{ batchStatus?.replaceAll("_", " ") }}
+                        </span>
+
+                        <span class="text-xs text-slate-500">
+                            {{ batchEvaluationSummary.successful + batchEvaluationSummary.failed }}
+                            / {{ batchEvaluationSummary.total_applicants }} processed
+                        </span>
+                    </div>
+                </div>
+
                 <!-- Evaluation Summary -->
-                <div v-if="batchEvaluationSummary.returned > 0 || batchEvaluationSummary.total_applicants > 0"
-                    class="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                <div v-if="batchEvaluationSummary.total_applicants > 0"
+                    class="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
                     <div class="rounded-xl bg-slate-50 p-3">
-                        <p class="text-xs text-slate-500">Total Applicants</p>
+                        <p class="text-xs text-slate-500">Total</p>
                         <p class="mt-1 text-xl font-bold text-slate-900">
                             {{ batchEvaluationSummary.total_applicants }}
                         </p>
                     </div>
 
                     <div class="rounded-xl bg-emerald-50 p-3">
-                        <p class="text-xs text-emerald-700">Successful</p>
+                        <p class="text-xs text-emerald-700">Completed</p>
                         <p class="mt-1 text-xl font-bold text-emerald-800">
                             {{ batchEvaluationSummary.successful }}
                         </p>
@@ -335,6 +376,20 @@ onMounted(() => {
                         </p>
                     </div>
 
+                    <div class="rounded-xl bg-amber-50 p-3">
+                        <p class="text-xs text-amber-700">Processing</p>
+                        <p class="mt-1 text-xl font-bold text-amber-800">
+                            {{ batchEvaluationSummary.processing }}
+                        </p>
+                    </div>
+
+                    <div class="rounded-xl bg-slate-100 p-3">
+                        <p class="text-xs text-slate-600">Queued</p>
+                        <p class="mt-1 text-xl font-bold text-slate-800">
+                            {{ batchEvaluationSummary.queued }}
+                        </p>
+                    </div>
+
                     <div class="rounded-xl bg-blue-50 p-3">
                         <p class="text-xs text-blue-700">Top Results</p>
                         <p class="mt-1 text-xl font-bold text-blue-800">
@@ -343,7 +398,7 @@ onMounted(() => {
                     </div>
                 </div>
 
-                <!-- Top 10 Results -->
+                <!-- Incremental Top 10 Results -->
                 <div v-if="topTenEvaluations.length > 0" class="mt-6">
                     <div class="mb-4">
                         <h3 class="font-bold text-slate-900">
@@ -351,7 +406,7 @@ onMounted(() => {
                         </h3>
 
                         <p class="mt-1 text-xs text-slate-500">
-                            Ranked by AI match score. Review each applicant before making a decision.
+                            Live ranking of completed evaluations, sorted by AI match score.
                         </p>
                     </div>
 
@@ -369,18 +424,24 @@ onMounted(() => {
                                         {{
                                             applications.find(
                                                 (item) => item.id === evaluation.application_id
-                                            )?.applicant_name || `Applicant #${evaluation.application_id}`
+                                            )?.applicant_name ||
+                                            evaluation.applicant_name ||
+                                            `Applicant #${evaluation.application_id}`
                                         }}
                                     </h4>
 
                                     <p class="mt-1 text-xs text-slate-500">
                                         Application #{{ evaluation.application_id }}
                                         ·
-                                        {{ evaluation.recommendation.replace("_", " ") }}
+                                        {{ evaluation.recommendation.replaceAll("_", " ") }}
+                                    </p>
+
+                                    <p v-if="evaluation.professional_title" class="mt-1 text-xs text-slate-500">
+                                        {{ evaluation.professional_title }}
                                     </p>
 
                                     <div class="mt-2 flex flex-wrap gap-1.5">
-                                        <span v-for="skill in evaluation.result.matched_skills.slice(0, 4)" :key="skill"
+                                        <span v-for="skill in evaluation.matched_skills.slice(0, 4)" :key="skill"
                                             class="rounded-md bg-emerald-50 px-2 py-1 text-xs text-emerald-700">
                                             {{ skill }}
                                         </span>
@@ -411,6 +472,29 @@ onMounted(() => {
                         AI evaluations are recommendations only. The employer must review
                         applicant details and manually decide whether to shortlist or reject.
                     </p>
+                </div>
+
+                <!-- No completed results yet -->
+                <div v-else-if="evaluatingAllApplicants"
+                    class="mt-5 rounded-xl border border-dashed border-slate-300 p-6 text-center">
+                    <div
+                        class="mx-auto h-7 w-7 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" />
+
+                    <p class="mt-3 text-sm font-semibold text-slate-700">
+                        Waiting for the first evaluation...
+                    </p>
+
+                    <p class="mt-1 text-xs text-slate-500">
+                        Completed applicants will appear here automatically.
+                    </p>
+                </div>
+
+                <!-- Final batch status -->
+                <div v-if="
+                    !evaluatingAllApplicants &&
+                    batchStatus === 'completed_with_errors'
+                " class="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+                    Evaluation finished with some failed applicants. Review the completed results above.
                 </div>
             </section>
 

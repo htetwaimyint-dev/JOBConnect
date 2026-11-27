@@ -1,5 +1,5 @@
 
-import { computed, ref } from "vue";
+import { computed, onScopeDispose, ref } from "vue";
 
 import employerApplicationRepository from "../repositories/employerApplicationRepository";
 
@@ -8,27 +8,45 @@ import type {
     EmployerApplicationParams,
     ApplicationStatus,
     UpdateEmployerApplicationStatusData,
+    EmployerAiEvaluationResult,
     EmployerBatchAiEvaluationItem,
+    EmployerBatchAiEvaluationProgressResponse,
 } from "../types/employer-application.types";
 
 export function useEmployerApplications() {
+    // ==========================================
     // Application Data
+    // ==========================================
+
     const applications = ref<EmployerApplication[]>([]);
     const selectedApplication = ref<EmployerApplication | null>(null);
 
+    // ==========================================
     // Loading and Error
+    // ==========================================
+
     const loading = ref(false);
     const detailLoading = ref(false);
     const updatingStatus = ref(false);
     const errorMessage = ref("");
 
-    // AI Evaluation
+    // ==========================================
+    // Single AI Evaluation
+    // ==========================================
+
     const evaluatingApplicant = ref(false);
     const evaluationError = ref("");
 
+    // ==========================================
     // Batch AI Evaluation
+    // ==========================================
+
     const evaluatingAllApplicants = ref(false);
     const batchEvaluationError = ref("");
+
+    const activeBatchId = ref<number | null>(null);
+    const batchStatus = ref<string | null>(null);
+    const batchProgress = ref(0);
 
     const batchEvaluationResults = ref<
         EmployerBatchAiEvaluationItem[]
@@ -38,9 +56,13 @@ export function useEmployerApplications() {
         total_applicants: 0,
         successful: 0,
         failed: 0,
+        processing: 0,
+        queued: 0,
         returned: 0,
     });
 
+    // Rank all completed applicants by match score.
+    // Only the first 10 are displayed.
     const topTenEvaluations = computed(() =>
         [...batchEvaluationResults.value]
             .sort((a, b) => {
@@ -53,7 +75,26 @@ export function useEmployerApplications() {
             .slice(0, 10),
     );
 
+    // ==========================================
+    // Batch Polling
+    // ==========================================
+
+    let batchPollingTimer: ReturnType<typeof setTimeout> | null = null;
+
+    const stopBatchPolling = () => {
+        if (batchPollingTimer !== null) {
+            clearTimeout(batchPollingTimer);
+            batchPollingTimer = null;
+        }
+    };
+
+    // Clean up polling when the component scope is disposed.
+    onScopeDispose(stopBatchPolling);
+
+    // ==========================================
     // Search and Filters
+    // ==========================================
+
     const searchKeyword = ref("");
     const selectedStatus = ref<ApplicationStatus | "">("");
     const selectedCategory = ref<number | "">("");
@@ -61,7 +102,10 @@ export function useEmployerApplications() {
     // Job Filter
     const selectedJobId = ref<number | null>(null);
 
+    // ==========================================
     // Pagination
+    // ==========================================
+
     const currentPage = ref(1);
 
     const pagination = ref({
@@ -71,7 +115,10 @@ export function useEmployerApplications() {
         total: 0,
     });
 
+    // ==========================================
     // Fetch Applications
+    // ==========================================
+
     const fetchApplications = async (page = 1) => {
         loading.value = true;
         errorMessage.value = "";
@@ -114,7 +161,10 @@ export function useEmployerApplications() {
         }
     };
 
+    // ==========================================
     // Fetch Application Detail
+    // ==========================================
+
     const fetchApplicationDetail = async (applicationId: number) => {
         detailLoading.value = true;
         errorMessage.value = "";
@@ -144,7 +194,10 @@ export function useEmployerApplications() {
         }
     };
 
+    // ==========================================
     // Update Application Status
+    // ==========================================
+
     const updateApplicationStatus = async (
         applicationId: number,
         data: UpdateEmployerApplicationStatusData,
@@ -183,7 +236,10 @@ export function useEmployerApplications() {
         }
     };
 
-    // Evaluate one applicant using AI
+    // ==========================================
+    // Single Applicant AI Evaluation
+    // ==========================================
+
     const evaluateSingleApplicant = async (
         applicationId: number,
     ): Promise<boolean> => {
@@ -217,16 +273,28 @@ export function useEmployerApplications() {
             console.log("AI Evaluation API Response:", response);
             console.log("AI Evaluation Result:", response.data.result);
 
-            // Update only the currently selected applicant.
+            const evaluation: EmployerAiEvaluationResult = {
+                ...response.data.result,
+                analysis_id: response.data.analysis_id,
+            };
+
+            // Update the currently selected applicant.
             if (selectedApplication.value?.id === applicationId) {
                 selectedApplication.value = {
                     ...selectedApplication.value,
-                    ai_evaluation: {
-                        ...response.data.result,
-                        analysis_id: response.data.analysis_id,
-                    },
+                    ai_evaluation: evaluation,
                 };
             }
+
+            // Also update the application list.
+            applications.value = applications.value.map((application) =>
+                application.id === applicationId
+                    ? {
+                        ...application,
+                        ai_evaluation: evaluation,
+                    }
+                    : application,
+            );
 
             return true;
         } catch (error: unknown) {
@@ -248,12 +316,145 @@ export function useEmployerApplications() {
         }
     };
 
-    // Evaluate all eligible applicants for a job
+    // ==========================================
+    // Apply Batch Progress
+    // ==========================================
+
+    const applyBatchProgress = (
+        data: EmployerBatchAiEvaluationProgressResponse["data"],
+    ) => {
+        batchStatus.value = data.status;
+        batchProgress.value = data.progress_percentage;
+
+        batchEvaluationSummary.value = {
+            total_applicants: data.total_applicants,
+            successful: data.completed_count,
+            failed: data.failed_count,
+            processing: data.processing_count,
+            queued: data.queued_count,
+            returned: data.top_applicants.length,
+        };
+
+        // Keep all valid completed results.
+        // Top 10 is calculated separately.
+        batchEvaluationResults.value = data.completed_applicants;
+
+        // Convert batch result into the application AI evaluation format.
+        const evaluationMap = new Map<
+            number,
+            EmployerAiEvaluationResult
+        >(
+            data.completed_applicants.map((item) => [
+                item.application_id,
+                {
+                    analysis_id: item.analysis_id,
+                    match_score: item.match_score,
+                    matched_skills: item.matched_skills,
+                    missing_skills: item.missing_skills,
+                    relevant_experience: [],
+                    strengths: item.strengths,
+                    weaknesses: item.weaknesses,
+                    recommendation: item.recommendation,
+                    reasoning: item.reasoning,
+                },
+            ]),
+        );
+
+        // Update applicants already loaded in the current list.
+        applications.value = applications.value.map((application) => {
+            const evaluation = evaluationMap.get(application.id);
+
+            if (!evaluation) {
+                return application;
+            }
+
+            return {
+                ...application,
+                ai_evaluation: evaluation,
+            };
+        });
+
+        // Update the currently selected applicant.
+        if (selectedApplication.value) {
+            const evaluation = evaluationMap.get(
+                selectedApplication.value.id,
+            );
+
+            if (evaluation) {
+                selectedApplication.value = {
+                    ...selectedApplication.value,
+                    ai_evaluation: evaluation,
+                };
+            }
+        }
+    };
+
+    // ==========================================
+    // Poll Batch Progress
+    // ==========================================
+
+    const pollBatchProgress = async (
+        jobId: number,
+        batchId: number,
+    ): Promise<void> => {
+        try {
+            const response =
+                await employerApplicationRepository.getBatchProgress(
+                    jobId,
+                    batchId,
+                );
+
+            if (!response.success) {
+                throw new Error(response.message);
+            }
+
+            applyBatchProgress(response.data);
+
+            // Stop polling when every batch item is processed.
+            if (response.data.is_final) {
+                stopBatchPolling();
+
+                evaluatingAllApplicants.value = false;
+
+                return;
+            }
+
+            // Schedule the next request after the current one finishes.
+            batchPollingTimer = setTimeout(() => {
+                void pollBatchProgress(jobId, batchId);
+            }, 2500);
+        } catch (error: unknown) {
+            const apiError = error as {
+                response?: {
+                    data?: {
+                        message?: string;
+                    };
+                };
+                message?: string;
+            };
+
+            batchEvaluationError.value =
+                apiError.response?.data?.message ??
+                apiError.message ??
+                "Unable to retrieve batch progress. Retrying...";
+
+            // Retry after a temporary request failure.
+            batchPollingTimer = setTimeout(() => {
+                void pollBatchProgress(jobId, batchId);
+            }, 5000);
+        }
+    };
+
+    // ==========================================
+    // Start Batch AI Evaluation
+    // ==========================================
+
     const evaluateAllApplicants = async (
         jobId: number,
     ): Promise<boolean> => {
         if (!Number.isInteger(jobId) || jobId <= 0) {
             batchEvaluationError.value = "Invalid job ID.";
+
             return false;
         }
 
@@ -261,81 +462,46 @@ export function useEmployerApplications() {
             return false;
         }
 
+        stopBatchPolling();
+
         evaluatingAllApplicants.value = true;
         batchEvaluationError.value = "";
         batchEvaluationResults.value = [];
+
+        activeBatchId.value = null;
+        batchStatus.value = null;
+        batchProgress.value = 0;
 
         batchEvaluationSummary.value = {
             total_applicants: 0,
             successful: 0,
             failed: 0,
+            processing: 0,
+            queued: 0,
             returned: 0,
         };
 
         try {
+            // Start the batch.
             const response =
                 await employerApplicationRepository.evaluateAllApplicants(
                     jobId,
                 );
 
-            const { data } = response;
-
-            batchEvaluationSummary.value = {
-                total_applicants: data.total_applicants,
-                successful: data.successful,
-                failed: data.failed,
-                returned: data.returned,
-            };
-
-            batchEvaluationResults.value = [...data.evaluations]
-                .sort((a, b) => {
-                    if (b.match_score !== a.match_score) {
-                        return b.match_score - a.match_score;
-                    }
-
-                    return a.application_id - b.application_id;
-                })
-                .slice(0, 10);
-
-            // Update AI evaluation data for applicants
-            // already available in the current application list.
-            const evaluationMap = new Map(
-                batchEvaluationResults.value.map((item) => [
-                    item.application_id,
-                    item,
-                ]),
-            );
-
-            applications.value = applications.value.map((application) => {
-                const evaluation = evaluationMap.get(application.id);
-
-                if (!evaluation) return application;
-
-                return {
-                    ...application,
-                    ai_evaluation: {
-                        ...evaluation.result,
-                        analysis_id: evaluation.analysis_id,
-                    },
-                };
-            });
-
-            // Update the currently selected applicant if applicable.
-            if (selectedApplication.value) {
-                const evaluation = evaluationMap.get(
-                    selectedApplication.value.id,
-                );
-
-                if (evaluation) {
-                    selectedApplication.value = {
-                        ...selectedApplication.value,
-                        ai_evaluation: {
-                            ...evaluation.result,
-                            analysis_id: evaluation.analysis_id,
-                        },
-                    };
-                }
+            if (!response.success) {
+                throw new Error(response.message);
             }
+
+            const batch = response.data;
+
+            activeBatchId.value = batch.batch_id;
+            batchStatus.value = batch.status;
+
+            batchEvaluationSummary.value.total_applicants =
+                batch.total_applicants;
+
+            // Fetch the first progress response immediately.
+            await pollBatchProgress(jobId, batch.batch_id);
 
             return true;
         } catch (error: unknown) {
@@ -345,19 +511,25 @@ export function useEmployerApplications() {
                         message?: string;
                     };
                 };
+                message?: string;
             };
 
             batchEvaluationError.value =
                 apiError.response?.data?.message ??
-                "Batch AI evaluation failed. Please try again.";
+                apiError.message ??
+                "Unable to start batch AI evaluation.";
+
+            stopBatchPolling();
+            evaluatingAllApplicants.value = false;
 
             return false;
-        } finally {
-            evaluatingAllApplicants.value = false;
         }
     };
 
+    // ==========================================
     // Statistics
+    // ==========================================
+
     const pageStats = computed(() => ({
         total: pagination.value.total,
 
@@ -378,13 +550,15 @@ export function useEmployerApplications() {
         ).length,
     }));
 
+    // ==========================================
     // Search and Filter Changes
+    // ==========================================
+
     const applyFilters = () => {
         fetchApplications(1);
     };
 
-    // Reset search and status/category filters.
-    // Keep selectedJobId so the current job filter remains active.
+    // Keep selectedJobId when resetting other filters.
     const resetFilters = () => {
         searchKeyword.value = "";
         selectedStatus.value = "";
@@ -393,7 +567,10 @@ export function useEmployerApplications() {
         fetchApplications(1);
     };
 
+    // ==========================================
     // Pagination
+    // ==========================================
+
     const changePage = (page: number) => {
         if (
             page < 1 ||
@@ -406,9 +583,14 @@ export function useEmployerApplications() {
         fetchApplications(page);
     };
 
+    // ==========================================
     // Date Formatting
+    // ==========================================
+
     const formatDate = (date: string | null | undefined): string => {
-        if (!date) return "Date unavailable";
+        if (!date) {
+            return "Date unavailable";
+        }
 
         const parsedDate = new Date(date);
 
@@ -423,32 +605,47 @@ export function useEmployerApplications() {
         });
     };
 
+    // ==========================================
+    // Return
+    // ==========================================
+
     return {
         applications,
         selectedApplication,
+
         loading,
         detailLoading,
         updatingStatus,
         errorMessage,
+
         searchKeyword,
         selectedStatus,
         selectedCategory,
         selectedJobId,
+
         currentPage,
         pagination,
         pageStats,
+
         evaluatingApplicant,
         evaluationError,
+
         evaluatingAllApplicants,
         batchEvaluationError,
+        activeBatchId,
+        batchStatus,
+        batchProgress,
         batchEvaluationResults,
         batchEvaluationSummary,
         topTenEvaluations,
+
         evaluateAllApplicants,
         evaluateSingleApplicant,
+
         fetchApplications,
         fetchApplicationDetail,
         updateApplicationStatus,
+
         applyFilters,
         resetFilters,
         changePage,
