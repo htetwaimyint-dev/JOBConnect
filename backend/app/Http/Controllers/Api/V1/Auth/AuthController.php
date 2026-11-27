@@ -11,7 +11,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Resources\Api\UserResource;
+use App\Mail\WelcomeUserMail;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Auth\Events\Registered;
 
 class AuthController extends Controller
 {
@@ -41,6 +43,8 @@ class AuthController extends Controller
             'role'     => $validatedData['role'],
             'status'   => 'active',
         ]);
+
+        Mail::to($user->email)->send(new WelcomeUserMail($user));
 
         // Generate token
         // $token = $user->createToken('auth_token')->plainTextToken;
