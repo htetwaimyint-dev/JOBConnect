@@ -1,12 +1,20 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
+import { useRouter } from "vue-router";
 import { useNotifications } from "../composables/useNotifications";
+import type { AppNotification } from "../types/notification.types";
 
+const router = useRouter();
 const isOpen = ref(false);
 const panel = ref<HTMLElement | null>(null);
 
-const { getNotifications, getUnreadCount, markAsRead, markAllAsRead } =
-    useNotifications();
+const {
+    getNotifications,
+    getUnreadCount,
+    markAsRead,
+    markAllAsRead,
+    listenForNotifications,
+} = useNotifications();
 
 const {
     data: notificationData,
@@ -14,7 +22,22 @@ const {
     isError,
     refetch,
 } = getNotifications(isOpen);
-const { data: unreadCount } = getUnreadCount();
+const { data: unreadSummary } = getUnreadCount();
+const unreadCount = computed(() => unreadSummary.value?.unread_count ?? 0);
+let stopListening: (() => void) | null = null;
+
+watch(
+    () => unreadSummary.value?.user_id,
+    (userId) => {
+        stopListening?.();
+        stopListening = null;
+
+        if (userId) {
+            stopListening = listenForNotifications(userId);
+        }
+    },
+    { immediate: true },
+);
 
 const notifications = computed(
     () => notificationData.value?.notifications ?? [],
@@ -37,8 +60,70 @@ function formatDate(value: string | null): string {
     }).format(date);
 }
 
-function openNotification(id: string, readAt: string | null) {
-    if (!readAt) markAsRead.mutate(id);
+/**
+ * Resolve only routes that exist in the supplied router configuration.
+ * Notifications without a supported destination are still marked as read.
+ */
+function getNotificationDestination(notification: AppNotification) {
+    const data = notification.data;
+    const applicationId = data.application_id;
+    const interviewId = data.interview_id;
+
+    switch (data.type) {
+        case "application_submitted":
+        case "application_status_changed":
+            return applicationId
+                ? {
+                      name: "JobSeekerApplicationDetail",
+                      params: { id: String(applicationId) },
+                  }
+                : { name: "JobSeekerApplications" };
+
+        case "new_application_received":
+        case "application_withdrawn":
+            return { name: "EmployerApplicants" };
+
+        case "interview_scheduled":
+        case "interview_rescheduled":
+        case "interview_cancelled":
+            return {
+                name: "JobSeekerInterviews",
+                query: interviewId ? { interview_id: String(interviewId) } : {},
+            };
+
+        case "interview_reschedule_requested":
+            return {
+                name: "employer.interviews",
+                query: interviewId ? { interview_id: String(interviewId) } : {},
+            };
+
+        default:
+            return null;
+    }
+}
+
+async function openNotification(notification: AppNotification) {
+    try {
+        // Mark it read first. The unread-only list/count are invalidated by the mutation.
+        await markAsRead.mutateAsync(notification.id);
+        isOpen.value = false;
+
+        const destination = getNotificationDestination(notification);
+        if (destination) {
+            await router.push(destination);
+        }
+    } catch (error) {
+        // Keep the panel open if marking as read fails so the user can retry.
+        console.error("Unable to open notification:", error);
+    }
+}
+
+async function markEverythingAsRead() {
+    try {
+        await markAllAsRead.mutateAsync();
+    } catch (error) {
+        console.error("Unable to mark notifications as read:", error);
+    }
 }
 
 function handleDocumentClick(event: MouseEvent) {
@@ -53,9 +138,10 @@ function handleDocumentClick(event: MouseEvent) {
 }
 
 onMounted(() => document.addEventListener("click", handleDocumentClick));
-onBeforeUnmount(() =>
-    document.removeEventListener("click", handleDocumentClick),
-);
+onBeforeUnmount(() => {
+    document.removeEventListener("click", handleDocumentClick);
+    stopListening?.();
+});
 </script>
 
 <template>
@@ -82,10 +168,10 @@ onBeforeUnmount(() =>
                 />
             </svg>
             <span
-                v-if="(unreadCount ?? 0) > 0"
+                v-if="unreadCount > 0"
                 class="absolute right-1 top-1 flex min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-semibold leading-4 text-white"
             >
-                {{ (unreadCount ?? 0) > 99 ? "99+" : unreadCount }}
+                {{ unreadCount > 99 ? "99+" : unreadCount }}
             </span>
         </button>
 
@@ -110,21 +196,21 @@ onBeforeUnmount(() =>
                             Notifications
                         </h2>
                         <p class="mt-0.5 text-xs text-slate-500">
-                            {{ unreadCount ?? 0 }} unread
+                            {{ unreadCount }} unread
                         </p>
                     </div>
                     <button
-                        v-if="(unreadCount ?? 0) > 0"
+                        v-if="unreadCount > 0"
                         type="button"
                         class="text-xs font-medium text-indigo-600 hover:text-indigo-700 disabled:opacity-50"
                         :disabled="markAllAsRead.isPending.value"
-                        @click="markAllAsRead.mutate()"
+                        @click="markEverythingAsRead"
                     >
                         Mark all read
                     </button>
                 </header>
 
-                <div class="max-h-104 overflow-y-auto">
+                <div class="max-h-[26rem] overflow-y-auto">
                     <div
                         v-if="isPending"
                         class="px-4 py-10 text-center text-sm text-slate-500"
@@ -154,30 +240,17 @@ onBeforeUnmount(() =>
                             New updates will appear here.
                         </p>
                     </div>
+
                     <button
                         v-for="notification in notifications"
                         :key="notification.id"
                         type="button"
-                        class="flex w-full gap-3 border-b border-slate-100 px-4 py-3 text-left transition hover:bg-slate-50"
-                        :class="
-                            notification.read_at
-                                ? 'bg-white'
-                                : 'bg-indigo-50/50'
-                        "
-                        @click="
-                            openNotification(
-                                notification.id,
-                                notification.read_at,
-                            )
-                        "
+                        class="flex w-full gap-3 border-b border-slate-100 bg-indigo-50/50 px-4 py-3 text-left transition hover:bg-indigo-50 disabled:cursor-wait disabled:opacity-60"
+                        :disabled="markAsRead.isPending.value"
+                        @click="openNotification(notification)"
                     >
                         <span
-                            class="mt-1.5 h-2 w-2 shrink-0 rounded-full"
-                            :class="
-                                notification.read_at
-                                    ? 'bg-transparent'
-                                    : 'bg-indigo-500'
-                            "
+                            class="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-indigo-500"
                         />
                         <span class="min-w-0 flex-1">
                             <span
