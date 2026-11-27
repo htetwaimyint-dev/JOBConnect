@@ -7,6 +7,10 @@ use App\Models\Interview;
 use App\Models\Interviewer;
 use App\Models\User;
 use App\Repositories\Contracts\InterviewRepositoryInterface;
+use App\Notifications\InterviewScheduledNotification;
+use App\Notifications\InterviewRescheduledNotification;
+use App\Notifications\InterviewCancelledNotification;
+use App\Notifications\InterviewRescheduleRequestedNotification;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -30,7 +34,19 @@ class InterviewService
 
     public function requestReschedule(User $jobSeeker, int $interviewId, array $data): Interview
     {
-        return $this->interviewRepository->requestReschedule($jobSeeker->id, $interviewId, $data);
+        $interview = $this->interviewRepository->requestReschedule(
+            $jobSeeker->id,
+            $interviewId,
+            $data
+        );
+
+        $interview->loadMissing(['application.job.company.employer']);
+
+        $interview->application?->job?->company?->employer?->notify(
+            new InterviewRescheduleRequestedNotification($interview)
+        );
+
+        return $interview;
     }
 
     public function getInterview(Company $company, int $interviewId): Interview
@@ -46,7 +62,7 @@ class InterviewService
 
     public function createInterview(Company $company, array $data): Interview
     {
-        return DB::transaction(function () use ($company, $data) {
+        $interview = DB::transaction(function () use ($company, $data) {
             $application = $this->interviewRepository->findAvailableApplicationForCompany(
                 $company->id,
                 (int) $data['application_id'],
@@ -64,39 +80,53 @@ class InterviewService
             );
 
             unset($data['interviewer_ids']);
-
             $data['status'] = 'scheduled';
 
-            // Create the interview.
             $interview = $this->interviewRepository->createInterview(
                 $data,
                 $interviewerIds,
             );
 
-            // Update the associated application status.
             $this->interviewRepository->markApplicationAsInterview($application);
 
             return $interview;
         });
+
+        // Notify only after the scheduling transaction has committed.
+        $interview->loadMissing(['application.job.company', 'application.jobSeeker']);
+        $interview->application?->jobSeeker?->notify(
+            new InterviewScheduledNotification($interview)
+        );
+
+        return $interview;
     }
 
     public function updateInterview(Company $company, int $interviewId, array $data): Interview
     {
-        return DB::transaction(function () use ($company, $interviewId, $data) {
-            $interview = $this->interviewRepository->findForCompanyForUpdate(
+        $previousScheduledAt = null;
+
+        $interview = DB::transaction(function () use (
+            $company,
+            $interviewId,
+            $data,
+            &$previousScheduledAt
+        ) {
+            $lockedInterview = $this->interviewRepository->findForCompanyForUpdate(
                 $company->id,
                 $interviewId,
             );
 
-            if (!$interview) {
+            if (!$lockedInterview) {
                 throw (new ModelNotFoundException())->setModel(Interview::class, [$interviewId]);
             }
 
-            if (($data['status'] ?? null) === 'rescheduled' && $interview->status !== 'scheduled') {
+            if (($data['status'] ?? null) === 'rescheduled' && $lockedInterview->status !== 'scheduled') {
                 throw ValidationException::withMessages([
                     'status' => 'Only scheduled interviews can be rescheduled.',
                 ]);
             }
+
+            $previousScheduledAt = $lockedInterview->scheduled_at?->copy();
 
             $interviewerIds = array_key_exists('interviewer_ids', $data)
                 ? $this->validatedInterviewerIds($company, $data['interviewer_ids'] ?? [])
@@ -105,33 +135,65 @@ class InterviewService
             unset($data['interviewer_ids']);
 
             return $this->interviewRepository->updateInterview(
-                $interview,
+                $lockedInterview,
                 $data,
                 $interviewerIds,
             );
         });
+
+        $interview->loadMissing(['application.jobSeeker']);
+        $newScheduledAt = $interview->scheduled_at;
+        $dateChanged = $previousScheduledAt && $newScheduledAt
+            && $previousScheduledAt->toIso8601String() !== $newScheduledAt->toIso8601String();
+        $explicitlyRescheduled = ($data['status'] ?? null) === 'rescheduled';
+
+        if ($dateChanged || $explicitlyRescheduled) {
+            $interview->application?->jobSeeker?->notify(
+                new InterviewRescheduledNotification($interview)
+            );
+        }
+
+        return $interview;
     }
 
     public function updateStatus(Company $company, int $interviewId, string $status): Interview
     {
-        return DB::transaction(function () use ($company, $interviewId, $status) {
-            $interview = $this->interviewRepository->findForCompanyForUpdate(
+        $previousStatus = null;
+
+        $interview = DB::transaction(function () use (
+            $company,
+            $interviewId,
+            $status,
+            &$previousStatus
+        ) {
+            $lockedInterview = $this->interviewRepository->findForCompanyForUpdate(
                 $company->id,
                 $interviewId,
             );
 
-            if (!$interview) {
+            if (!$lockedInterview) {
                 throw (new ModelNotFoundException())->setModel(Interview::class, [$interviewId]);
             }
 
-            if (!in_array($interview->status, ['scheduled', 'rescheduled'], true) && $status !== $interview->status) {
+            $previousStatus = $lockedInterview->status;
+
+            if (!in_array($lockedInterview->status, ['scheduled', 'rescheduled'], true) && $status !== $lockedInterview->status) {
                 throw ValidationException::withMessages([
                     'status' => 'Only scheduled interviews can be completed or cancelled.',
                 ]);
             }
 
-            return $this->interviewRepository->updateStatus($interview, $status);
+            return $this->interviewRepository->updateStatus($lockedInterview, $status);
         });
+
+        if ($status === 'cancelled' && $previousStatus !== 'cancelled') {
+            $interview->loadMissing(['application.jobSeeker']);
+            $interview->application?->jobSeeker?->notify(
+                new InterviewCancelledNotification($interview)
+            );
+        }
+
+        return $interview;
     }
 
     public function getInterviewers(Company $company): Collection
