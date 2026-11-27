@@ -7,7 +7,12 @@ const employers: Employer[] = [
     email: "contact@techcorp.com",
     role: "Employer",
     logo: "https://images.unsplash.com/photo-1549923746-c502d488b3ea?w=100&h=100&fit=crop",
-    company: "TechCorp Solutions",
+    company: {
+      id: 1,
+      name: "TechCorp Solutions",
+      logo: "https://images.unsplash.com/photo-1549923746-c502d488b3ea?w=100&h=100&fit=crop",
+      jobs_count: 12,
+    }
     companyLogo:
       "https://images.unsplash.com/photo-1549923746-c502d488b3ea?w=100&h=100&fit=crop",
     jobCount: 12,

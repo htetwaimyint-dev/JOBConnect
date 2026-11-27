@@ -529,7 +529,7 @@ onMounted(() => {
                       Website
                     </p>
                     <a
-                      :href="company.website"
+                      :href="company.website ?? undefined"
                       target="_blank"
                       class="text-sm font-semibold text-indigo-600 hover:underline truncate block"
                     >

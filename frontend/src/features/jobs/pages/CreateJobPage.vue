@@ -67,7 +67,7 @@ const isEditingLocked = computed(
 
 function goBack() {
   if (isEditMode.value) {
-    router.push({ name: "job-detail", params: { id: jobId.value } });
+    router.push({ name: "jobdetail", params: { id: jobId.value } });
     return;
   }
 
@@ -91,7 +91,7 @@ watch(
       );
 
       router.replace({
-        name: "job-detail",
+        name: "jobdetail",
         params: { id: job.id },
       });
     } else if (job && isEditMode.value) {
@@ -202,12 +202,12 @@ async function submitJob(status: SubmissionStatus) {
         data: { ...form },
       });
 
-      router.push({ name: "job-detail", params: { id: jobId.value } });
+      router.push({ name: "jobdetail", params: { id: jobId.value } });
     } else {
       const response = await createJob.mutateAsync({ ...form });
       createdJobId = response?.data?.id || response?.id;
 
-      router.push({ name: "job-detail", params: { id: createdJobId } });
+      router.push({ name: "jobdetail", params: { id: createdJobId } });
     }
   } catch (error) {
     if (axios.isAxiosError(error)) {
