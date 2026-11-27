@@ -49,14 +49,13 @@ const formatValue = (value: unknown): string => {
 const formatLabel = (value: string): string =>
     value.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
 
-
 const formatPeriod = (
-    start: string | null,
-    end: string | null,
-    isCurrent: boolean = false,
-): string => {
-    const formatMonth = (value: string | null): string => {
-        if (!value) return "";
+    start: unknown,
+    end: unknown,
+    isCurrent?: unknown,
+) => {
+    const formatMonth = (value: unknown) => {
+        if (!value || typeof value !== "string") return "";
 
         const date = new Date(value);
 
@@ -69,13 +68,11 @@ const formatPeriod = (
     };
 
     const startDate = formatMonth(start);
-    const endDate = isCurrent ? "Present" : formatMonth(end);
+    const endDate = isCurrent === true ? "Present" : formatMonth(end);
 
-    if (!startDate && !endDate) {
-        return "Date not provided";
-    }
+    if (!startDate && !endDate) return "Date not provided";
 
-    return `${startDate || "Unknown"} - ${endDate || "End date not provided"}`;
+    return `${startDate || "Unknown"} - ${endDate || "Present"}`;
 };
 </script>
 
@@ -113,8 +110,7 @@ const formatPeriod = (
                         <p class="text-xs text-slate-400">Expected Salary</p>
                         <p class="mt-1 text-sm font-medium text-slate-800">
                             {{
-                                profile.expected_salary !== null &&
-                                    profile.expected_salary !== ""
+                                profile.expected_salary
                                     ? Number(profile.expected_salary).toLocaleString()
                                     : "Not provided"
                             }}
@@ -152,7 +148,7 @@ const formatPeriod = (
             <div v-if="application.job_seeker?.skills?.length" class="flex flex-wrap gap-2">
                 <span v-for="(skill, index) in application.job_seeker.skills" :key="index"
                     class="rounded-lg border border-blue-100 bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-800">
-                    {{ formatValue(skill.name) }}
+                    {{ formatValue(skill.name ?? skill.skill_name ?? skill) }}
                 </span>
             </div>
 
@@ -254,7 +250,7 @@ const formatPeriod = (
                 Resume
             </h3>
 
-            <div v-if="application.resume?.id"
+            <div v-if="application.resume"
                 class="flex flex-col gap-4 rounded-xl border border-slate-200 p-4 sm:flex-row sm:items-center sm:justify-between">
                 <div class="flex min-w-0 items-center gap-3">
                     <div class="shrink-0 rounded-lg bg-red-50 p-3 text-red-600">

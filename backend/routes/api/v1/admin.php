@@ -63,7 +63,7 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
             [UserManagementController::class, 'restoreJobSeeker']
         );
 
-        // Company_Approval Management
+        // Company Approval Management
         Route::get('/companies/pending', [
             CompanyApprovalController::class,
             'index'
@@ -97,7 +97,7 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
             'show'
         ]);
 
-        // Approve and Reject job
+        // Approve / Reject job
         Route::patch('/jobs/{jobId}/approval', [
             JobApprovalController::class,
             'update'
