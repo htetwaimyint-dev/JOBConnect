@@ -18,7 +18,6 @@ import {
 import { useAuthStore } from "@/stores/auth.store";
 import { useUiStore } from "@/stores/ui.store";
 import { useUserStore } from "@/stores/user.store";
-import NotificationBell from "@/features/notifications/components/NotificationBell.vue";
 
 const route = useRoute();
 const router = useRouter();
@@ -275,133 +274,70 @@ const logout = async () => {
             v-if="isAdmin"
             class="mx-2 hidden min-w-0 flex-1 items-center justify-center gap-2 xl:flex 2xl:mx-3"
         >
-            <!-- Left Section -->
-            <div class="flex shrink-0 items-center gap-3 xl:gap-4">
-                <!-- Sidebar Toggle -->
-                <button
-                    type="button"
-                    class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-slate-600 transition hover:bg-slate-100 hover:text-blue-600 xl:hidden"
-                    aria-label="Toggle sidebar"
-                    :aria-expanded="uiStore.isSidebarOpen"
-                    @click="uiStore.toggleSidebar()"
-                >
-                    <Menu v-if="!uiStore.isSidebarOpen" :size="22" />
-                    <X v-else :size="22" />
-                </button>
-
-                <!-- Logo -->
-                <RouterLink
-                    to="/"
-                    class="flex shrink-0 items-center gap-2 no-underline"
-                    @click="closeMenus"
-                >
-                    <span
-                        class="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-600 text-white shadow-sm sm:h-10 sm:w-10"
-                    >
-                        <BriefcaseBusiness :size="22" />
-                    </span>
-
-                    <h2
-                        class="m-0 whitespace-nowrap text-lg font-bold tracking-tight text-blue-700 sm:text-xl"
-                    >
-                        JobConnect
-                    </h2>
-                </RouterLink>
-            </div>
-
-            <!-- Admin Navigation -->
-            <nav
-                v-if="isAdmin"
-                class="mx-2 hidden min-w-0 flex-1 items-center justify-center gap-2 xl:flex 2xl:mx-3"
-            >
-                <template v-for="item in adminNavigation" :key="item.title">
-                    <div v-if="item.children" class="relative">
-                        <button
-                            type="button"
-                            class="nav-link flex items-center gap-1"
-                            :class="
-                                isUserMenuOpen ||
-                                route.path.includes('/admin/companies') ||
-                                route.path.includes('/admin/job-seekers')
-                                    ? 'bg-blue-50 text-blue-700'
-                                    : 'text-slate-600 hover:bg-slate-100 hover:text-blue-600'
-                            "
-                            :aria-expanded="isUserMenuOpen"
-                            @click="toggleUserMenu"
-                        >
-                            {{ item.title }}
-
-                            <ChevronDown
-                                :size="14"
-                                class="transition-transform"
-                                :class="{ 'rotate-180': isUserMenuOpen }"
-                            />
-                        </button>
-
-                        <!-- User Dropdown -->
-                        <Transition name="dropdown">
-                            <div
-                                v-if="isUserMenuOpen"
-                                class="absolute left-1/2 top-full z-50 mt-2 w-48 -translate-x-1/2 overflow-hidden rounded-xl border border-slate-200 bg-white py-1 shadow-xl"
-                            >
-                                <RouterLink
-                                    v-for="child in item.children"
-                                    :key="child.path"
-                                    :to="child.path"
-                                    class="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 hover:text-blue-600"
-                                    :class="{
-                                        'bg-blue-50 text-blue-700':
-                                            route.path === child.path,
-                                    }"
-                                    @click="closeMenus"
-                                >
-                                    <Building2
-                                        v-if="child.title === 'Companies'"
-                                        :size="18"
-                                        class="shrink-0 text-slate-400"
-                                    />
-
-                                    <UserSearch
-                                        v-else-if="
-                                            child.title === 'Job Seekers'
-                                        "
-                                        :size="18"
-                                        class="shrink-0 text-slate-400"
-                                    />
-
-                                    <span class="whitespace-nowrap">
-                                        {{ child.title }}
-                                    </span>
-                                </RouterLink>
-                            </div>
-                        </Transition>
-                    </div>
-
-                    <!-- Admin Normal Links -->
-                    <RouterLink
-                        v-else
-                        :to="item.path"
-                        class="nav-link"
+            <template v-for="item in adminNavigation" :key="item.title">
+                <div v-if="item.children" class="relative">
+                    <button
+                        type="button"
+                        class="nav-link flex items-center gap-1"
                         :class="
-                            route.path === item.path
+                            isUserMenuOpen ||
+                            route.path.includes('/admin/companies') ||
+                            route.path.includes('/admin/job-seekers')
                                 ? 'bg-blue-50 text-blue-700'
                                 : 'text-slate-600 hover:bg-slate-100 hover:text-blue-600'
                         "
-                        @click="closeMenus"
+                        :aria-expanded="isUserMenuOpen"
+                        @click="toggleUserMenu"
                     >
                         {{ item.title }}
-                    </RouterLink>
-                </template>
-            </nav>
 
-            <!-- Employer Navigation -->
-            <nav
-                v-if="isEmployer"
-                class="mx-2 hidden min-w-0 flex-1 items-center justify-center gap-2 xl:flex 2xl:mx-3"
-            >
+                        <ChevronDown
+                            :size="14"
+                            class="transition-transform"
+                            :class="{ 'rotate-180': isUserMenuOpen }"
+                        />
+                    </button>
+
+                    <!-- User Dropdown -->
+                    <Transition name="dropdown">
+                        <div
+                            v-if="isUserMenuOpen"
+                            class="absolute left-1/2 top-full z-50 mt-2 w-48 -translate-x-1/2 overflow-hidden rounded-xl border border-slate-200 bg-white py-1 shadow-xl"
+                        >
+                            <RouterLink
+                                v-for="child in item.children"
+                                :key="child.path"
+                                :to="child.path"
+                                class="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 hover:text-blue-600"
+                                :class="{
+                                    'bg-blue-50 text-blue-700':
+                                        route.path === child.path,
+                                }"
+                                @click="closeMenus"
+                            >
+                                <Building2
+                                    v-if="child.title === 'Companies'"
+                                    :size="18"
+                                    class="shrink-0 text-slate-400"
+                                />
+
+                                <UserSearch
+                                    v-else-if="child.title === 'Job Seekers'"
+                                    :size="18"
+                                    class="shrink-0 text-slate-400"
+                                />
+
+                                <span class="whitespace-nowrap">
+                                    {{ child.title }}
+                                </span>
+                            </RouterLink>
+                        </div>
+                    </Transition>
+                </div>
+
+                <!-- Admin Normal Links -->
                 <RouterLink
-                    v-for="item in employerNavigation"
-                    :key="item.path"
+                    v-else
                     :to="item.path"
                     class="nav-link"
                     :class="
@@ -413,86 +349,140 @@ const logout = async () => {
                 >
                     {{ item.title }}
                 </RouterLink>
-            </nav>
+            </template>
+        </nav>
 
-            <!-- Right Section -->
-            <div class="ml-auto flex shrink-0 items-center gap-2 sm:gap-4">
-                <!-- Notification -->
-                <div class="relative">
-                    <!-- <button
-          type="button"
-          aria-label="Notifications"
-          :aria-expanded="isNotificationOpen"
-          class="relative flex h-10 w-10 items-center justify-center rounded-full text-slate-600 transition hover:bg-slate-100 hover:text-blue-600"
-          @click="toggleNotifications"
+        <!-- Employer Navigation -->
+        <nav
+            v-if="isEmployer"
+            class="mx-2 hidden min-w-0 flex-1 items-center justify-center gap-2 xl:flex 2xl:mx-3"
         >
-          <Bell :size="21" />
-        </button>
-
-        
-        <Transition name="dropdown">
-          <div
-            v-if="isNotificationOpen"
-            class="absolute right-0 top-12 z-50 w-72 rounded-xl border border-slate-200 bg-white p-4 shadow-xl sm:w-80"
-          >
-            <div
-              class="flex items-center justify-between border-b border-slate-100 pb-3"
+            <RouterLink
+                v-for="item in employerNavigation"
+                :key="item.path"
+                :to="item.path"
+                class="nav-link"
+                :class="
+                    route.path === item.path
+                        ? 'bg-blue-50 text-blue-700'
+                        : 'text-slate-600 hover:bg-slate-100 hover:text-blue-600'
+                "
+                @click="closeMenus"
             >
-              <h3 class="text-sm font-semibold text-slate-800">
-                Notifications
-              </h3>
+                {{ item.title }}
+            </RouterLink>
+        </nav>
 
-              <button
-                type="button"
-                aria-label="Close notifications"
-                class="text-slate-400 hover:text-slate-700"
-                @click="isNotificationOpen = false"
-              >
-                <X :size="18" />
-              </button>
-            </div>
+        <!-- Right Section -->
+        <div class="ml-auto flex shrink-0 items-center gap-2 sm:gap-4">
+            <!-- Notification -->
+            <div class="relative">
+                <button
+                    type="button"
+                    aria-label="Notifications"
+                    :aria-expanded="isNotificationOpen"
+                    class="relative flex h-10 w-10 items-center justify-center rounded-full text-slate-600 transition hover:bg-slate-100 hover:text-blue-600"
+                    @click="toggleNotifications"
+                >
+                    <Bell :size="21" />
+                </button>
 
-            <div class="py-6 text-center">
-              <Bell :size="28" class="mx-auto mb-2 text-slate-300" />
-              <p class="text-sm text-slate-500">No notifications yet.</p>
-            </div>
-          </div>
-        </Transition> -->
-                    <NotificationBell />
-                </div>
-
-                <!-- Profile Dropdown -->
-                <div ref="profileDropdownRef" class="relative">
-                    <button
-                        type="button"
-                        class="flex items-center gap-2 rounded-xl p-1.5 transition hover:bg-slate-100 sm:gap-3 sm:px-2"
-                        :aria-expanded="isProfileOpen"
-                        aria-haspopup="true"
-                        aria-label="Open profile menu"
-                        @click="toggleProfile"
+                <!-- Notification Dropdown -->
+                <Transition name="dropdown">
+                    <div
+                        v-if="isNotificationOpen"
+                        class="absolute right-0 top-12 z-50 w-72 rounded-xl border border-slate-200 bg-white p-4 shadow-xl sm:w-80"
                     >
-                        <img
-                            v-if="profilePhoto"
-                            :src="profilePhoto"
-                            alt="Profile"
-                            class="h-9 w-9 rounded-full object-cover"
-                        />
-
                         <div
-                            v-else
-                            class="flex h-9 w-9 items-center justify-center rounded-full bg-blue-100 font-semibold text-blue-700"
+                            class="flex items-center justify-between border-b border-slate-100 pb-3"
                         >
-                            {{ userInitial }}
+                            <h3 class="text-sm font-semibold text-slate-800">
+                                Notifications
+                            </h3>
+
+                            <button
+                                type="button"
+                                aria-label="Close notifications"
+                                class="text-slate-400 hover:text-slate-700"
+                                @click="isNotificationOpen = false"
+                            >
+                                <X :size="18" />
+                            </button>
                         </div>
 
-                        <div class="hidden text-left sm:block">
+                        <div class="py-6 text-center">
+                            <Bell
+                                :size="28"
+                                class="mx-auto mb-2 text-slate-300"
+                            />
+                            <p class="text-sm text-slate-500">
+                                No notifications yet.
+                            </p>
+                        </div>
+                    </div>
+                </Transition>
+            </div>
+
+            <!-- Profile Dropdown -->
+            <div ref="profileDropdownRef" class="relative">
+                <button
+                    type="button"
+                    class="flex items-center gap-2 rounded-xl p-1.5 transition hover:bg-slate-100 sm:gap-3 sm:px-2"
+                    :aria-expanded="isProfileOpen"
+                    aria-haspopup="true"
+                    aria-label="Open profile menu"
+                    @click="toggleProfile"
+                >
+                    <img
+                        v-if="profilePhoto"
+                        :src="profilePhoto"
+                        alt="Profile"
+                        class="h-9 w-9 rounded-full object-cover"
+                    />
+
+                    <div
+                        v-else
+                        class="flex h-9 w-9 items-center justify-center rounded-full bg-blue-100 font-semibold text-blue-700"
+                    >
+                        {{ userInitial }}
+                    </div>
+
+                    <div class="hidden text-left sm:block">
+                        <p
+                            class="max-w-32 truncate text-sm font-semibold text-slate-800"
+                        >
+                            {{ userName }}
+                        </p>
+
+                        <p class="text-xs capitalize text-slate-500">
+                            {{
+                                authStore.user?.role?.replace(/_/g, " ") ||
+                                "User"
+                            }}
+                        </p>
+                    </div>
+
+                    <ChevronDown
+                        :size="16"
+                        class="hidden text-slate-500 transition sm:block"
+                        :class="{ 'rotate-180': isProfileOpen }"
+                    />
+                </button>
+
+                <!-- Profile Dropdown Menu -->
+                <Transition name="dropdown">
+                    <div
+                        v-if="isProfileOpen"
+                        class="absolute right-0 top-14 z-50 w-56 rounded-xl border border-slate-200 bg-white p-2 shadow-lg"
+                    >
+                        <div class="border-b border-slate-100 px-3 py-3">
                             <p
-                                class="max-w-32 truncate text-sm font-semibold text-slate-800"
+                                class="truncate text-sm font-semibold text-slate-800"
                             >
                                 {{ userName }}
                             </p>
 
-                            <p class="text-xs capitalize text-slate-500">
+                            <p class="mt-1 text-xs capitalize text-slate-500">
                                 {{
                                     authStore.user?.role?.replace(/_/g, " ") ||
                                     "User"
@@ -500,69 +490,36 @@ const logout = async () => {
                             </p>
                         </div>
 
-                        <ChevronDown
-                            :size="16"
-                            class="hidden text-slate-500 transition sm:block"
-                            :class="{ 'rotate-180': isProfileOpen }"
-                        />
-                    </button>
-
-                    <!-- Profile Dropdown Menu -->
-                    <Transition name="dropdown">
-                        <div
-                            v-if="isProfileOpen"
-                            class="absolute right-0 top-14 z-50 w-56 rounded-xl border border-slate-200 bg-white p-2 shadow-lg"
+                        <RouterLink
+                            :to="profilePath"
+                            class="dropdown-link"
+                            @click="closeMenus"
                         >
-                            <div class="border-b border-slate-100 px-3 py-3">
-                                <p
-                                    class="truncate text-sm font-semibold text-slate-800"
-                                >
-                                    {{ userName }}
-                                </p>
+                            <UserRound :size="17" />
+                            My Profile
+                        </RouterLink>
 
-                                <p
-                                    class="mt-1 text-xs capitalize text-slate-500"
-                                >
-                                    {{
-                                        authStore.user?.role?.replace(
-                                            /_/g,
-                                            " ",
-                                        ) || "User"
-                                    }}
-                                </p>
-                            </div>
+                        <RouterLink
+                            :to="settingsPath"
+                            class="dropdown-link"
+                            @click="closeMenus"
+                        >
+                            <Settings :size="17" />
+                            Settings
+                        </RouterLink>
 
-                            <RouterLink
-                                :to="profilePath"
-                                class="dropdown-link"
-                                @click="closeMenus"
-                            >
-                                <UserRound :size="17" />
-                                My Profile
-                            </RouterLink>
-
-                            <RouterLink
-                                :to="settingsPath"
-                                class="dropdown-link"
-                                @click="closeMenus"
-                            >
-                                <Settings :size="17" />
-                                Settings
-                            </RouterLink>
-
-                            <button
-                                type="button"
-                                class="flex w-full items-center gap-3 rounded-lg px-3 py-3 text-sm text-red-600 transition hover:bg-red-50"
-                                @click="logout"
-                            >
-                                <LogOut :size="17" />
-                                Logout
-                            </button>
-                        </div>
-                    </Transition>
-                </div>
+                        <button
+                            type="button"
+                            class="flex w-full items-center gap-3 rounded-lg px-3 py-3 text-sm text-red-600 transition hover:bg-red-50"
+                            @click="logout"
+                        >
+                            <LogOut :size="17" />
+                            Logout
+                        </button>
+                    </div>
+                </Transition>
             </div>
-        </nav>
+        </div>
     </header>
 </template>
 
