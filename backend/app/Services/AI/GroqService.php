@@ -41,17 +41,7 @@ class GroqService
                     $payload
                 );
 
-            if ($response->failed()) {
-                logger()->error('Groq API Error Details', [
-                    'status' => $response->status(),
-                    'body' => $response->body(),
-                ]);
-
-                throw new RuntimeException(
-                    'Groq API request failed with status '
-                        . $response->status()
-                );
-            }
+            $response->throw();
 
             $content = $response->json('choices.0.message.content');
 
@@ -70,13 +60,11 @@ class GroqService
         }
     }
 
-
     /**
-     * Generate a structured JSON response from Groq.
+     * Generate a JSON response from Groq.
      *
      * @throws JsonException
      */
-
     public function chatJson(
         array $messages,
         array $options = []

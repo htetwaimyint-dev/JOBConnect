@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from "vue";
-import { useRoute } from "vue-router";
 
 import ApplicantsFilters from "@/features/employer/components/applicants/ApplicantsFilters.vue";
 import ApplicantsTable from "@/features/employer/components/applicants/ApplicantsTable.vue";
@@ -17,8 +16,6 @@ import type {
     UpdateEmployerApplicationStatusData,
 } from "@/features/applications/types/employer-application.types";
 
-const route = useRoute();
-
 // Employer Applications
 const {
     applications,
@@ -29,18 +26,10 @@ const {
     errorMessage,
     searchKeyword,
     selectedStatus,
-    selectedJobId,
     pagination,
     evaluatingApplicant,
     evaluationError,
     evaluateSingleApplicant,
-    // Batch AI Evaluation
-    evaluatingAllApplicants,
-    batchEvaluationError,
-    batchEvaluationSummary,
-    topTenEvaluations,
-    evaluateAllApplicants,
-
     fetchApplications,
     fetchApplicationDetail,
     updateApplicationStatus,
@@ -213,40 +202,11 @@ const runApplicantEvaluation = async () => {
         return;
     }
 
-    const applicationId = selectedApplication.value.id;
-
-    console.log("Before Evaluation:", selectedApplication.value);
-
-    const success = await evaluateSingleApplicant(applicationId);
-
-    console.log("Evaluation Success:", success);
-    console.log("After Evaluation:", selectedApplication.value);
-    console.log(
-        "AI Evaluation:",
-        selectedApplication.value?.ai_evaluation,
-    );
-};
-
-// Run batch AI evaluation for the current job.
-const runBatchEvaluation = async () => {
-    if (!selectedJobId.value || evaluatingAllApplicants.value) {
-        return;
-    }
-
-    await evaluateAllApplicants(selectedJobId.value);
+    await evaluateSingleApplicant(selectedApplication.value.id);
 };
 
 // Initial Applications Fetch
 onMounted(() => {
-    const queryJobId = route.query.job_id;
-
-    const jobId =
-        typeof queryJobId === "string" ? Number(queryJobId) : NaN;
-
-    if (Number.isInteger(jobId) && jobId > 0) {
-        selectedJobId.value = jobId;
-    }
-
     fetchApplications();
 });
 </script>
@@ -273,146 +233,6 @@ onMounted(() => {
             <!-- Search and Filters -->
             <ApplicantsFilters v-model:search-keyword="searchKeyword" v-model:selected-status="selectedStatus"
                 :status-options="statusOptions" :loading="loading" @search="applyFilters" @reset="resetFilters" />
-
-            <!-- Batch AI Evaluation -->
-            <section v-if="selectedJobId" class="rounded-2xl border border-blue-100 bg-white p-5 shadow-sm">
-                <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                    <div>
-                        <div class="flex items-center gap-2">
-                            <h2 class="text-lg font-bold text-slate-900">
-                                AI Applicant Ranking
-                            </h2>
-
-                            <span class="rounded-full bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700">
-                                Top 10
-                            </span>
-                        </div>
-
-                        <p class="mt-1 text-sm text-slate-500">
-                            Evaluate eligible applicants and identify the strongest matches for this job.
-                        </p>
-                    </div>
-
-                    <button type="button" :disabled="evaluatingAllApplicants || loading" @click="runBatchEvaluation"
-                        class="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50">
-                        <span v-if="evaluatingAllApplicants"
-                            class="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-
-                        {{ evaluatingAllApplicants
-                            ? "Evaluating Applicants..."
-                            : "Evaluate All & Get Top 10"
-                        }}
-                    </button>
-                </div>
-
-                <!-- Batch Error -->
-                <div v-if="batchEvaluationError"
-                    class="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
-                    {{ batchEvaluationError }}
-                </div>
-
-                <!-- Evaluation Summary -->
-                <div v-if="batchEvaluationSummary.returned > 0 || batchEvaluationSummary.total_applicants > 0"
-                    class="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
-                    <div class="rounded-xl bg-slate-50 p-3">
-                        <p class="text-xs text-slate-500">Total Applicants</p>
-                        <p class="mt-1 text-xl font-bold text-slate-900">
-                            {{ batchEvaluationSummary.total_applicants }}
-                        </p>
-                    </div>
-
-                    <div class="rounded-xl bg-emerald-50 p-3">
-                        <p class="text-xs text-emerald-700">Successful</p>
-                        <p class="mt-1 text-xl font-bold text-emerald-800">
-                            {{ batchEvaluationSummary.successful }}
-                        </p>
-                    </div>
-
-                    <div class="rounded-xl bg-red-50 p-3">
-                        <p class="text-xs text-red-700">Failed</p>
-                        <p class="mt-1 text-xl font-bold text-red-800">
-                            {{ batchEvaluationSummary.failed }}
-                        </p>
-                    </div>
-
-                    <div class="rounded-xl bg-blue-50 p-3">
-                        <p class="text-xs text-blue-700">Top Results</p>
-                        <p class="mt-1 text-xl font-bold text-blue-800">
-                            {{ batchEvaluationSummary.returned }}
-                        </p>
-                    </div>
-                </div>
-
-                <!-- Top 10 Results -->
-                <div v-if="topTenEvaluations.length > 0" class="mt-6">
-                    <div class="mb-4">
-                        <h3 class="font-bold text-slate-900">
-                            Top Matching Applicants
-                        </h3>
-
-                        <p class="mt-1 text-xs text-slate-500">
-                            Ranked by AI match score. Review each applicant before making a decision.
-                        </p>
-                    </div>
-
-                    <div class="space-y-3">
-                        <article v-for="(evaluation, index) in topTenEvaluations" :key="evaluation.application_id"
-                            class="flex flex-col gap-4 rounded-xl border border-slate-200 p-4 sm:flex-row sm:items-center sm:justify-between">
-                            <div class="flex min-w-0 items-start gap-3">
-                                <div
-                                    class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-sm font-bold text-blue-700">
-                                    {{ index + 1 }}
-                                </div>
-
-                                <div class="min-w-0">
-                                    <h4 class="truncate font-semibold text-slate-900">
-                                        {{
-                                            applications.find(
-                                                (item) => item.id === evaluation.application_id
-                                            )?.applicant_name || `Applicant #${evaluation.application_id}`
-                                        }}
-                                    </h4>
-
-                                    <p class="mt-1 text-xs text-slate-500">
-                                        Application #{{ evaluation.application_id }}
-                                        ·
-                                        {{ evaluation.recommendation.replace("_", " ") }}
-                                    </p>
-
-                                    <div class="mt-2 flex flex-wrap gap-1.5">
-                                        <span v-for="skill in evaluation.result.matched_skills.slice(0, 4)" :key="skill"
-                                            class="rounded-md bg-emerald-50 px-2 py-1 text-xs text-emerald-700">
-                                            {{ skill }}
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="flex shrink-0 items-center justify-between gap-4 sm:justify-end">
-                                <div class="text-right">
-                                    <p class="text-2xl font-bold text-blue-700">
-                                        {{ evaluation.match_score }}%
-                                    </p>
-
-                                    <p class="text-xs text-slate-500">
-                                        Match Score
-                                    </p>
-                                </div>
-
-                                <button type="button" @click="openApplicant(evaluation.application_id)"
-                                    class="rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700">
-                                    View Details
-                                </button>
-                            </div>
-                        </article>
-                    </div>
-
-                    <p class="mt-4 rounded-lg bg-amber-50 p-3 text-xs leading-5 text-amber-800">
-                        AI evaluations are recommendations only. The employer must review
-                        applicant details and manually decide whether to shortlist or reject.
-                    </p>
-                </div>
-            </section>
 
             <!-- Error -->
             <div v-if="errorMessage && !drawerOpen"

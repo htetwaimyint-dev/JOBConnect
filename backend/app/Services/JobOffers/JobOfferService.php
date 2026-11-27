@@ -34,7 +34,7 @@ class JobOfferService
         return [
             'candidate' => $candidate,
             'company' => $company,
-            'jobs' => $this->jobOfferRepository->getPublishedJobsForCompany($company, $jobSeekerId),
+            'jobs' => $this->jobOfferRepository->getPublishedJobsForCompany($company),
         ];
     }
 

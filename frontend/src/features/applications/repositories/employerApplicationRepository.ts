@@ -8,7 +8,6 @@ import type {
     EmployerApplicationParams,
     UpdateEmployerApplicationStatusData,
     EmployerAiEvaluationResponse,
-    EmployerBatchAiEvaluationResponse,
 } from "../types/employer-application.types";
 
 const employerApplicationRepository = {
@@ -70,17 +69,6 @@ const employerApplicationRepository = {
         const response = await api.post<EmployerAiEvaluationResponse>(
             `/employer/applications/${applicationId}/ai-screening`,
         );
-
-        return response.data;
-    },
-    // Run batch AI evaluation for all eligible applicants of a job
-    async evaluateAllApplicants(
-        jobId: number,
-    ): Promise<EmployerBatchAiEvaluationResponse> {
-        const response =
-            await api.post<EmployerBatchAiEvaluationResponse>(
-                `/employer/jobs/${jobId}/ai-screening`,
-            );
 
         return response.data;
     },

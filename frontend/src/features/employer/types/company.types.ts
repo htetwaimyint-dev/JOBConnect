@@ -1,6 +1,5 @@
 import type { Job } from "@/features/jobs/types/job.types";
 export interface Company {
-  rejection_reason: any;
   id: number;
   employer_id: number;
 

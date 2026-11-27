@@ -11,6 +11,10 @@ use App\Repositories\Contracts\ApplicationRepositoryInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Validation\ValidationException;
 use App\Services\AI\ApplicantEvaluationInputBuilder;
+use App\Notifications\ApplicationSubmittedNotification;
+use App\Notifications\NewApplicationReceivedNotification;
+use App\Notifications\ApplicationStatusChangedNotification;
+use App\Notifications\ApplicationWithdrawnNotification;
 
 class ApplicationService
 {
@@ -140,11 +144,27 @@ class ApplicationService
         // Remove answers from application data.
         unset($data['answers']);
 
-        // Save application and answers together.
-        return $this->applicationRepository->createWithAnswers(
+        // Save application and answers first. The repository transaction
+        // completes before any queued notification is dispatched.
+        $application = $this->applicationRepository->createWithAnswers(
             $data,
             $answers
         );
+
+        $application->loadMissing([
+            'job.company.employer',
+            'jobSeeker',
+        ]);
+
+        $application->jobSeeker?->notify(
+            new ApplicationSubmittedNotification($application)
+        );
+
+        $application->job?->company?->employer?->notify(
+            new NewApplicationReceivedNotification($application)
+        );
+
+        return $application;
     }
 
     /**
@@ -240,10 +260,21 @@ class ApplicationService
             ]);
         }
 
-        return $this->applicationRepository->updateStatus(
+        $updatedApplication = $this->applicationRepository->updateStatus(
             $application,
             $data
         );
+
+        $updatedApplication->loadMissing([
+            'job.company',
+            'jobSeeker',
+        ]);
+
+        $updatedApplication->jobSeeker?->notify(
+            new ApplicationStatusChangedNotification($updatedApplication)
+        );
+
+        return $updatedApplication;
     }
 
     /**
@@ -267,7 +298,7 @@ class ApplicationService
         }
 
         // Update status and create history.
-        return $this->applicationRepository->updateStatus(
+        $updatedApplication = $this->applicationRepository->updateStatus(
             $application,
             [
                 'new_status' => ApplicationStatus::Withdrawn->value,
@@ -275,5 +306,16 @@ class ApplicationService
                 'note' => 'Withdrawn by job seeker.',
             ]
         );
+
+        $updatedApplication->loadMissing([
+            'job.company.employer',
+            'jobSeeker',
+        ]);
+
+        $updatedApplication->job?->company?->employer?->notify(
+            new ApplicationWithdrawnNotification($updatedApplication)
+        );
+
+        return $updatedApplication;
     }
 }

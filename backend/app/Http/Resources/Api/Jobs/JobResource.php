@@ -13,7 +13,7 @@ class JobResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'applications_count' => $this->whenCounted('applications'),
+
             'company_id' => $this->company_id,
 
             'company' => [

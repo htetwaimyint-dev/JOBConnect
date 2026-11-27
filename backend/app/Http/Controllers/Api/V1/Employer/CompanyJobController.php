@@ -15,7 +15,6 @@ use App\Services\Jobs\EmployerJobService;
 use App\Enums\JobStatus;
 use App\Models\Job;
 use App\Services\Jobs\JobQuestionService;
-use App\Services\Activity\ActivityLogService;
 
 class CompanyJobController extends Controller
 {
@@ -51,13 +50,10 @@ class CompanyJobController extends Controller
         ]);
     }
 
-    public function store(
-        StoreJobRequest $request,
-        ActivityLogService $activityLogService
-    ) {
+    public function store(StoreJobRequest $request)
+    {
         $company = $this->getEmployerCompany($request->user());
-
-        // Admin verification check
+        //admin verify to job post
         abort_unless(
             $company->verification_status === 'verified',
             403,
@@ -70,21 +66,12 @@ class CompanyJobController extends Controller
 
         unset($validated['job_questions']);
 
-        // Create Job
         $job = $this->jobService->createJob(
             $company,
             $validated
         );
 
-        // Sync Job Questions
         $this->jobQuestionService->sync($job, $questions);
-
-        // Record Activity
-        $activityLogService->log(
-            'Created Job',
-            'Created a new job: ' . $job->title,
-            $job
-        );
 
         $job->load('jobQuestion');
 

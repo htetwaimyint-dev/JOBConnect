@@ -8,7 +8,6 @@ import type {
     EmployerApplicationParams,
     ApplicationStatus,
     UpdateEmployerApplicationStatusData,
-    EmployerBatchAiEvaluationItem,
 } from "../types/employer-application.types";
 
 export function useEmployerApplications() {
@@ -22,36 +21,8 @@ export function useEmployerApplications() {
     const updatingStatus = ref(false);
     const errorMessage = ref("");
 
-    // AI Evaluation
     const evaluatingApplicant = ref(false);
     const evaluationError = ref("");
-
-    // Batch AI Evaluation
-    const evaluatingAllApplicants = ref(false);
-    const batchEvaluationError = ref("");
-
-    const batchEvaluationResults = ref<
-        EmployerBatchAiEvaluationItem[]
-    >([]);
-
-    const batchEvaluationSummary = ref({
-        total_applicants: 0,
-        successful: 0,
-        failed: 0,
-        returned: 0,
-    });
-
-    const topTenEvaluations = computed(() =>
-        [...batchEvaluationResults.value]
-            .sort((a, b) => {
-                if (b.match_score !== a.match_score) {
-                    return b.match_score - a.match_score;
-                }
-
-                return a.application_id - b.application_id;
-            })
-            .slice(0, 10),
-    );
 
     // Search and Filters
     const searchKeyword = ref("");
@@ -214,17 +185,13 @@ export function useEmployerApplications() {
                     applicationId,
                 );
 
-            console.log("AI Evaluation API Response:", response);
-            console.log("AI Evaluation Result:", response.data.result);
-
             // Update only the currently selected applicant.
-            if (selectedApplication.value?.id === applicationId) {
-                selectedApplication.value = {
-                    ...selectedApplication.value,
-                    ai_evaluation: {
-                        ...response.data.result,
-                        analysis_id: response.data.analysis_id,
-                    },
+            if (
+                selectedApplication.value?.id === applicationId
+            ) {
+                selectedApplication.value.ai_evaluation = {
+                    ...response.data.result,
+                    analysis_id: response.data.analysis_id,
                 };
             }
 
@@ -245,115 +212,6 @@ export function useEmployerApplications() {
             return false;
         } finally {
             evaluatingApplicant.value = false;
-        }
-    };
-
-    // Evaluate all eligible applicants for a job
-    const evaluateAllApplicants = async (
-        jobId: number,
-    ): Promise<boolean> => {
-        if (!Number.isInteger(jobId) || jobId <= 0) {
-            batchEvaluationError.value = "Invalid job ID.";
-            return false;
-        }
-
-        if (evaluatingAllApplicants.value) {
-            return false;
-        }
-
-        evaluatingAllApplicants.value = true;
-        batchEvaluationError.value = "";
-        batchEvaluationResults.value = [];
-
-        batchEvaluationSummary.value = {
-            total_applicants: 0,
-            successful: 0,
-            failed: 0,
-            returned: 0,
-        };
-
-        try {
-            const response =
-                await employerApplicationRepository.evaluateAllApplicants(
-                    jobId,
-                );
-
-            const { data } = response;
-
-            batchEvaluationSummary.value = {
-                total_applicants: data.total_applicants,
-                successful: data.successful,
-                failed: data.failed,
-                returned: data.returned,
-            };
-
-            batchEvaluationResults.value = [...data.evaluations]
-                .sort((a, b) => {
-                    if (b.match_score !== a.match_score) {
-                        return b.match_score - a.match_score;
-                    }
-
-                    return a.application_id - b.application_id;
-                })
-                .slice(0, 10);
-
-            // Update AI evaluation data for applicants
-            // already available in the current application list.
-            const evaluationMap = new Map(
-                batchEvaluationResults.value.map((item) => [
-                    item.application_id,
-                    item,
-                ]),
-            );
-
-            applications.value = applications.value.map((application) => {
-                const evaluation = evaluationMap.get(application.id);
-
-                if (!evaluation) return application;
-
-                return {
-                    ...application,
-                    ai_evaluation: {
-                        ...evaluation.result,
-                        analysis_id: evaluation.analysis_id,
-                    },
-                };
-            });
-
-            // Update the currently selected applicant if applicable.
-            if (selectedApplication.value) {
-                const evaluation = evaluationMap.get(
-                    selectedApplication.value.id,
-                );
-
-                if (evaluation) {
-                    selectedApplication.value = {
-                        ...selectedApplication.value,
-                        ai_evaluation: {
-                            ...evaluation.result,
-                            analysis_id: evaluation.analysis_id,
-                        },
-                    };
-                }
-            }
-
-            return true;
-        } catch (error: unknown) {
-            const apiError = error as {
-                response?: {
-                    data?: {
-                        message?: string;
-                    };
-                };
-            };
-
-            batchEvaluationError.value =
-                apiError.response?.data?.message ??
-                "Batch AI evaluation failed. Please try again.";
-
-            return false;
-        } finally {
-            evaluatingAllApplicants.value = false;
         }
     };
 
@@ -383,12 +241,11 @@ export function useEmployerApplications() {
         fetchApplications(1);
     };
 
-    // Reset search and status/category filters.
-    // Keep selectedJobId so the current job filter remains active.
     const resetFilters = () => {
         searchKeyword.value = "";
         selectedStatus.value = "";
         selectedCategory.value = "";
+        selectedJobId.value = null;
 
         fetchApplications(1);
     };
@@ -439,12 +296,6 @@ export function useEmployerApplications() {
         pageStats,
         evaluatingApplicant,
         evaluationError,
-        evaluatingAllApplicants,
-        batchEvaluationError,
-        batchEvaluationResults,
-        batchEvaluationSummary,
-        topTenEvaluations,
-        evaluateAllApplicants,
         evaluateSingleApplicant,
         fetchApplications,
         fetchApplicationDetail,

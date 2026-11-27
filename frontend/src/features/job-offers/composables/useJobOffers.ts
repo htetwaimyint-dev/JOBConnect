@@ -60,36 +60,13 @@ export function useJobOffers() {
             const response = await jobOfferRepository.create(payload);
             return response.data.data;
         },
-        onSuccess: async (_data, variables) => {
-            const contextKey = jobOfferKeys.employerContext(
-                Number(variables.job_seeker_id),
-            );
-
-            // 1. Remove the offered job from the dropdown immediately
-            queryClient.setQueryData(contextKey, (oldData: any) => {
-                if (!oldData) return oldData;
-
-                return {
-                    ...oldData,
-                    jobs: (oldData.jobs ?? []).filter(
-                        (job: { id: number }) =>
-                            Number(job.id) !== Number(variables.job_id),
-                    ),
-                };
+        onSuccess: async () => {
+            await queryClient.invalidateQueries({
+                queryKey: jobOfferKeys.employerList(),
             });
-
-            // 2. Keep all relevant queries synced in the background
-            await Promise.all([
-                queryClient.invalidateQueries({
-                    queryKey: contextKey,
-                }),
-                queryClient.invalidateQueries({
-                    queryKey: jobOfferKeys.employerList(),
-                }),
-                queryClient.invalidateQueries({
-                    queryKey: jobOfferKeys.seekerInbox(),
-                }),
-            ]);
+            await queryClient.invalidateQueries({
+                queryKey: jobOfferKeys.seekerInbox(),
+            });
         },
     });
 

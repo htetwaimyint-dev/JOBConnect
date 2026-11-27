@@ -9,9 +9,6 @@ import type {
     JobOfferCompany,
 } from "../types/jobOffer.types.ts";
 
-import { ArrowLeft } from "lucide-vue-next";
-import { useRouter } from "vue-router";
-
 const props = withDefaults(
     defineProps<{
         candidate: JobOfferCandidate;
@@ -130,12 +127,6 @@ function formatEnum(value: string): string {
         .replaceAll("_", " ")
         .replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
-
-const router = useRouter();
-
-function goBack() {
-    router.push({ name: "EmployerJobSeekerProfiles" });
-}
 </script>
 
 <template>
@@ -159,21 +150,14 @@ function goBack() {
                     Extend a Direct Job Offer
                 </h1>
             </div>
-            <button
-                type="button"
-                @click="goBack"
-                class="group inline-flex items-center gap-2.5 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:text-blue-700 hover:shadow-md"
+            <div
+                class="flex items-center gap-2 self-start rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600 shadow-sm sm:self-auto"
             >
+                <span class="h-2 w-2 rounded-full bg-emerald-500" />
                 <span
-                    class="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 transition group-hover:bg-blue-50"
+                    >Review the candidate profile before sending an offer</span
                 >
-                    <ArrowLeft
-                        class="h-4 w-4 transition-transform group-hover:-translate-x-1"
-                    />
-                </span>
-
-                Back to Jobs-Seekers
-            </button>
+            </div>
         </div>
 
         <div

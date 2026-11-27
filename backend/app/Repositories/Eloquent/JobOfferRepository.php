@@ -13,17 +13,10 @@ use Illuminate\Support\Collection;
 
 class JobOfferRepository implements JobOfferRepositoryInterface
 {
-    public function getPublishedJobsForCompany(Company $company, int $jobSeekerId): Collection
+    public function getPublishedJobsForCompany(Company $company): Collection
     {
         return $company->jobs()
             ->where('status', 'published')
-            ->whereDoesntHave('jobOffers', function ($query) use ($jobSeekerId) {
-                $query->where('job_seeker_id', $jobSeekerId)
-                    ->whereIn('status', [
-                        'pending',
-                        'accepted',
-                    ]);
-            })
             ->orderBy('title')
             ->get([
                 'id',

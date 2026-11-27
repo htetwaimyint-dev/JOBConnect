@@ -6,25 +6,25 @@ import JobListPage from "@/features/jobs/pages/JobListPage.vue";
 import JobDetail from "@/features/jobs/pages/JobDetail.vue";
 
 export const publicRoutes: RouteRecordRaw[] = [
-    {
-        path: "/",
-        component: PublicLayout,
-        children: [
-            {
-                path: "",
-                name: "Home",
-                component: HomePage,
-            },
-            {
-                path: "jobs",
-                name: "PublicJobs",
-                component: JobListPage,
-            },
-            {
-                path: "/jobs/:id",
-                name: "job-detail",
-                component: JobDetail,
-            },
-        ],
-    },
+  {
+    path: "/",
+    component: PublicLayout,
+    children: [
+      {
+        path: "",
+        name: "Home",
+        component: HomePage,
+      },
+      {
+        path: "jobs",
+        name: "PublicJobs",
+        component: JobListPage,
+      },
+      {
+        path: "/jobs/:id",
+        name: "jobdetail",
+        component: JobDetail,
+      },
+    ],
+  },
 ];

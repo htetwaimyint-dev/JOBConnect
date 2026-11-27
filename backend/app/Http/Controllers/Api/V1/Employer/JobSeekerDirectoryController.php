@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Api\V1\Employer;
 
 use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
-use App\Http\Resources\Api\Employer\JobSeekerDirectoryResource;
+use App\Http\Resources\Employer\JobSeekerDirectoryResource;
 use App\Models\User;
 use Illuminate\Http\Request;
 

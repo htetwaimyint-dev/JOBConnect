@@ -1,13 +1,6 @@
 import api from "@/services/api";
 
 export const adminRepository = {
-
-  // Dashboard
-  async getDashboard() {
-    const res = await api.get("/admin/dashboard");
-    return res.data;
-  },
-
   // Company Management
   async getCompanies(
     params: {
